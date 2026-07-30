@@ -88,5 +88,5 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path <file.md|dir>
 - [ ] 独立した数式に `\tag{n}` があるか
 - [ ] 図に 図 n、表に 表 n のキャプションがあるか（図は下、表は上）
 - [ ] すべての図・表・番号付き数式を本文から番号で参照したか
-- [ ] 他文書の番号をフェーズ番号付き（ `式 (P01-1)` ）で参照したか
+- [ ] 他文書の番号をスライス番号付き（ `式 (S01-1)` ）で参照したか
 - [ ] `check_numbering.ps1` と `check_diagrams.ps1` が 0 で通ったか

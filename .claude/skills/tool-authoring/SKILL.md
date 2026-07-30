@@ -19,7 +19,7 @@ allowed-tools: Read, Write, Edit, Bash
 
 次のすべてを満たすときだけ作る（安易に増やさない）:
 
-1. **反復性**: 同じ操作が 2 回以上（複数フェーズ・複数エージェントで）必要
+1. **反復性**: 同じ操作が 2 回以上（複数スライス・複数エージェントで）必要
 2. **決定論性**: 同じ入力に対して同じ出力・同じ終了コードを返せる操作である
 3. **事故実績または事故リスク**: 手作業・場当たりのワンライナーで
    間違えた実績がある（例: Markdown 抽出のエンコーディング事故、
@@ -30,7 +30,7 @@ allowed-tools: Read, Write, Edit, Bash
 
 ## 作成順序（必ずこの順。逆順・省略の禁止）
 
-1. **エージェント**: そのツールを「誰が・どのフェーズで」使うかを特定し、
+1. **エージェント**: そのツールを「誰が・どの工程で」使うかを特定し、
    `.claude/agents/` の該当エージェント定義に使用箇所を明記する
    （利用者の決まっていないツールは作らない）
 2. **スキル**: 本ファイル末尾の「ツール一覧」に行を追加し、
@@ -91,7 +91,7 @@ allowed-tools: Read, Write, Edit, Bash
 | `check_mermaid.ps1` | Mermaid 専用の旧ツール（`check_diagrams.ps1` の前身。既存呼び出しの互換のために残す） | `powershell -File .claude/tools/check_mermaid.ps1 -Path <file.md>` | 全ブロック OK なら 0。NG があれば 1 | 新規の検証では使わない |
 | `check_doc_examples.py` | Markdown 内の ` ```python ` 例を実行し、直後の出力ブロックと照合する（Python プロジェクト専用） | `<ツール実行コマンド> .claude/tools/check_doc_examples.py docs/manual.md` | 全て一致なら 0（`N compared` を出力）。不一致・実行失敗は 1。引数エラーは 2 | doc-syncer（マニュアル更新）・doc-reviewer |
 | `check_unchanged.py` | `.claude/core_files.txt` に列挙した中核ファイルが、指定コミット以降で無変更であることを検証する（家風「core 無変更」の機械検証） | `<ツール実行コマンド> .claude/tools/check_unchanged.py --since <commit> [--include-worktree]` | 全て無変更なら 0。変更があれば 1。一覧が無い / 空 / 存在しないパスは 2 | tdd-implementer（実装ループ完了時）・implementation-validator |
-| `mutate.py` | 実装に意図的な変異を加え、テストが検出できるか（KILLED / SURVIVED）を確認する | `<ツール実行コマンド> .claude/tools/mutate.py --spec .claude/mutations/P##-<対象>.json [--test-command "<テストコマンド>"]` | 全て KILLED なら 0。SURVIVED があれば 1。引数エラーは 2 | tdd-implementer（Red を確保できなかったとき）・test-analyzer |
+| `mutate.py` | 実装に意図的な変異を加え、テストが検出できるか（KILLED / SURVIVED）を確認する | `<ツール実行コマンド> .claude/tools/mutate.py --spec .claude/mutations/S##-<対象>.json [--test-command "<テストコマンド>"]` | 全て KILLED なら 0。SURVIVED があれば 1。引数エラーは 2 | tdd-implementer（Red を確保できなかったとき）・test-analyzer |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか（messages / system / tools / streaming）を実際に投げて検査する | `<ツール実行コマンド> .claude/tools/check_llm_endpoint.py --model <モデル名>` | 全項目合格なら 0。落ちた項目があれば 1。base URL / モデル未指定は 2 | `/local-mode check`（ローカル LLM 駆動時のみ） |
 
 変異仕様（`.claude/mutations/`）の書式は `.claude/mutations/README.md`。

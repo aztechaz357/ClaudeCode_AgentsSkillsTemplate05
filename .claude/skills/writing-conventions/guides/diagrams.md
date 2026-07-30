@@ -56,7 +56,7 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path docs
 
 ## 設計書に最低限入れる図
 
-実装前設計書（`docs/design/proposals/P##-*.md`）には、少なくとも
+実装前設計書（`docs/design/proposals/S##-*.md`）には、少なくとも
 次の 2 枚を入れる。
 
 - **クラス図** —— 契約と実装の関係、層の所属が分かるもの

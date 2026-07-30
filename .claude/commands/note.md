@@ -16,9 +16,10 @@ description: 調べたこと・踏んだ罠・決めたこと・思いつきを�
 
 | 内容 | 案内先 |
 |---|---|
-| プロジェクトの狙い・割り切り・フェーズ計画 | `concept-definition`（`docs/concept.md`） |
-| フェーズの受け入れ条件 | `requirements-definition` |
-| 進行中フェーズの判断・ブロッカー | `steering`（`.steering/`） |
+| ゴール・完走の定義・非目標・割り切り | `concept-definition`（`docs/concept.md`） |
+| スライスの受け入れ条件・薄い設計 | `slice-definition`（`docs/slices/`） |
+| 残した手抜き・負債 | `docs/backlog.md` の負債表（`agile-process`） |
+| 反復中の判断・ブロッカー | `steering`（`.steering/`） |
 | ツールの使い方 | そのツールの `README.md` |
 | 用語の定義 | `glossary-creation`（`docs/glossary.md`） |
 | 恒久的な規約 | `CLAUDE.md` または該当スキル |

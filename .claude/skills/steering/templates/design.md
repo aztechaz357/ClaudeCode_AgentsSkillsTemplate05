@@ -1,13 +1,13 @@
-# 設計参照と実装中の判断メモ: {P## 機能名}
+# 設計参照と実装中の判断メモ: {S## 機能名}
 
-> 設計の正は `docs/design/proposals/P##-<name>.md`。このファイルに設計を
+> 設計の正は `docs/design/proposals/S##-<name>.md`。このファイルに設計を
 > 書き直さない。ここには「設計書への参照」と「実装中に発生した判断の記録」
 > だけを残す。
 
 ## 設計書（正）
 
-- 要求仕様書: `docs/requirements/P##-<name>.md`
-- 設計書: `docs/design/proposals/P##-<name>.md`
+- 要求仕様書: `docs/requirements/S##-<name>.md`
+- 設計書: `docs/design/proposals/S##-<name>.md`
 - 影響する現状設計書: {該当レイヤー文書のパス}
 
 ## 実装方針の要点（設計書からの抜き書き）

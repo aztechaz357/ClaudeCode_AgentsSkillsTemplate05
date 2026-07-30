@@ -80,5 +80,5 @@ description: ローカル LLM（gemma・qwen 等）で駆動するときの検�
   シェル（`.claude/local-llm/env.example.*`）の役割
 - `.steering/` は gitignore 対象。モードの状態は環境ごとに独立する
 - ローカル LLM で走らせた記録（どこで止まったか）は `.steering/` に残る。
-  数フェーズ分たまったら `/improve-process` で、止まりやすい工程を
+  数反復分たまったら `/improve-process` で、止まりやすい工程を
   ツール化・チェックリスト化する材料にする

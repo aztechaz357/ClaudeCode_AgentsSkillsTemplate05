@@ -1,6 +1,12 @@
 {
   "permissions": {
     "allow": [
+      "Skill(agile-process)",
+      "Skill(walking-skeleton)",
+      "Skill(slice-definition)",
+      "Skill(refactoring)",
+      "Skill(layered-architecture)",
+      "Skill(concept-definition)",
       "Skill(requirements-definition)",
       "Skill(functional-design)",
       "Skill(architecture-design)",

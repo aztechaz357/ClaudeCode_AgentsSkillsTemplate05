@@ -1,6 +1,6 @@
-# 要求内容: {P## 機能名}
+# 要求内容: {S## 機能名}
 
-> 正の要求仕様書は `docs/requirements/P##-<name>.md`。
+> 正の要求仕様書は `docs/requirements/S##-<name>.md`。
 > ここにはそこからの作業向け抜粋だけを置き、要求そのものを書き足さない。
 
 ## 概要
@@ -32,6 +32,6 @@
 
 ## 参照ドキュメント
 
-- `docs/requirements/P##-<name>.md` - 本フェーズの要求仕様（正）
-- `docs/design/proposals/P##-<name>.md` - 本フェーズの実装前設計（正）
+- `docs/requirements/S##-<name>.md` - 本フェーズの要求仕様（正）
+- `docs/design/proposals/S##-<name>.md` - 本フェーズの実装前設計（正）
 - {全体概要・該当レイヤーの現状設計}

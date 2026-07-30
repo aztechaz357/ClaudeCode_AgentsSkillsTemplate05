@@ -18,15 +18,17 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 | 記録したいこと | 書く場所 |
 |---|---|
 | 調べたこと・踏んだ罠・手順・思いつき | `workshop/notes/`（このスキル） |
-| プロジェクトの狙い・割り切り・フェーズ計画 | `docs/concept.md`（`concept-definition`） |
-| フェーズの受け入れ条件 | `docs/requirements/`（`requirements-definition`） |
-| フェーズ中の判断・ブロッカー・振り返り | `.steering/`（`steering`） |
+| ゴール・完走の定義・非目標・割り切り | `docs/concept.md`（`concept-definition`） |
+| スライスの受け入れ条件・薄い設計 | `docs/slices/`（`slice-definition`） |
+| 進捗・優先順位・負債 | `docs/backlog.md`（`agile-process`） |
+| 反復中の判断・ブロッカー・振り返り | `.steering/`（`steering`） |
 | ツールの使い方 | そのツールの `README.md`（`quick-tool`） |
 | 用語の定義 | `docs/glossary.md`（`glossary-creation`） |
 | 恒久的な規約になったもの | `CLAUDE.md` またはスキル |
 
-**フェーズ進行中の判断は `.steering/` へ** 。工房のノートは
-フェーズに紐づかない、いつでも読み返す知識を置く場所。
+**反復中の判断は `.steering/` へ、残した手抜きは `docs/backlog.md` の
+負債表へ** 。工房のノートは、スライスに紐づかない、いつでも読み返す
+知識を置く場所。
 
 ## status の選び方
 
