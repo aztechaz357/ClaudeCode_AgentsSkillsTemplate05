@@ -25,18 +25,21 @@ tools: Read, Grep, Glob, Write, Edit
 
 **プロファイルの「ディレクトリ構成」節を出発点にする** 。一般形:
 
-- コードは層ごとのディレクトリ（domain / application / infrastructure /
-  presentation）＋ Composition Root
-- テストはテストルート配下でソースをミラー
-- 文書は要求仕様（`docs/requirements/`）・設計（`docs/design/` と
-  `proposals/P##-*`）・リファレンス・マニュアル・ロードマップ表
+- コードは層ごとのディレクトリ（presentation / application / domain /
+  infrastructure）。 **成熟度 L1 のコードは層に分かれていない**
+  （1 ファイルにまとまっていることがある）ので、層のパスだけで探さない
+- テストはテストルート配下でソースをミラー。E2E は統合テストのパス
+- 文書はゴール（`docs/concept.md`）・バックログ（`docs/backlog.md`）・
+  スライス（`docs/slices/S##-*`）・現状設計（`docs/design.md`）・
+  リファレンス・マニュアル。厚い経路のものは `docs/requirements/` と
+  `docs/design/proposals/S##-*`
 - 探索から除外: 依存ディレクトリ・ビルド生成物・`.git/`・キャッシュ・
   `.steering/`（プロファイルの除外パス）
 
 ## 検索プロセス
 
 1. 依頼から検索キーを複数作る（クラス名・公開名の文字列・日本語の概念名・
-   フェーズ番号 P##。日本語ドキュメントは日本語キーでも検索する）
+   スライス番号 S##。日本語ドキュメントは日本語キーでも検索する）
 2. Glob（ファイル名）と Grep（内容）の両方で探す。1 回で決め打ちせず、
    キーを変えて数回試す
 3. ヒットしたファイルは冒頭（docstring・見出し）を読んで関連度を判定する
