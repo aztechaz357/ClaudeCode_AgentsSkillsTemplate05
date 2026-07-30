@@ -26,7 +26,9 @@ tools: Read, Grep, Glob, Bash, Write, Edit, Task
 - **環境**: リポジトリ（コード・`docs/`・git 状態・テスト結果）と
   `docs/backlog.md`・`docs/slices/`・`.steering/` のノート
 - **知覚**: Read で backlog・スライス文書・reports/ を読む。Bash で
-  `git status` / `git log` / プロファイルのテストコマンドの結果を読む
+  `git status` / `git log` / プロファイルのテストコマンド、および
+  `.claude/tools/build_usdm.py --check`（USDM 違反と要求ビューアの鮮度）
+  の結果を読む
 - **判断**: `maturity.md` の PM ルール表に **機械的に** 当てはめて
   次の一手を **1 つ** 決める。その場の創意で順序を変えない
 - **行動**: 必ず Tool で行う —— Task（エージェント起動）・Skill 手順の実行・
@@ -60,7 +62,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit, Task
 |---|---|---|---|
 | 薄く決める | 自分（`slice-definition`） | backlog の対象行 | `docs/slices/S##-*.md` |
 | 実装 | `tdd-implementer` | steering パス・ **目標成熟度** ・スライス文書 | ソース・テスト・コミット |
-| 通す | `integration-tester` | 受け入れ条件・ **目標成熟度** | E2E テスト・対応表 |
+| 通す | `integration-tester` | 仕様・ **目標成熟度** | E2E テスト・対応表 |
 | 検証 | `implementation-validator` | 現在と目標の成熟度 | 目標レベルの [必須] 件数 |
 | 整える | `refactorer` | 負債表の対象行 | `整理:` コミット・負債の `済` |
 | 文書 | `doc-syncer` | **目標成熟度** | 成熟度別チェックリストの結果 |
@@ -78,7 +80,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit, Task
   1. 不可逆な操作（削除・課金・外部送信）が必要になった
   2. ゴールの外（`docs/concept.md` の非目標）の実装が必要になった
   3. 3 回作り直しても目標レベルに到達しない（設計不足の判断）
-- **軽微な判断**: 層の分け方・命名・仮実装の可否・受け入れ条件の細部は
+- **軽微な判断**: 層の分け方・命名・仮実装の可否・仕様の細部は
   自分で決め、スライス文書または decisions.md に記録して進む
 
 ## ゴールへの距離を毎回報告する

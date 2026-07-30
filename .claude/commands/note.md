@@ -17,7 +17,7 @@ description: 調べたこと・踏んだ罠・決めたこと・思いつきを�
 | 内容 | 案内先 |
 |---|---|
 | ゴール・完走の定義・非目標・割り切り | `concept-definition`（`docs/concept.md`） |
-| スライスの受け入れ条件・薄い設計 | `slice-definition`（`docs/slices/`） |
+| スライスの仕様・薄い設計 | `slice-definition`（`docs/slices/`） |
 | 残した手抜き・負債 | `docs/backlog.md` の負債表（`agile-process`） |
 | 反復中の判断・ブロッカー | `steering`（`.steering/`） |
 | ツールの使い方 | そのツールの `README.md` |

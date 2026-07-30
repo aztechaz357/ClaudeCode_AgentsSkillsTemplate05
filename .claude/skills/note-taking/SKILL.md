@@ -19,7 +19,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 |---|---|
 | 調べたこと・踏んだ罠・手順・思いつき | `workshop/notes/`（このスキル） |
 | ゴール・完走の定義・非目標・割り切り | `docs/concept.md`（`concept-definition`） |
-| スライスの受け入れ条件・薄い設計 | `docs/slices/`（`slice-definition`） |
+| スライスの仕様・薄い設計 | `docs/slices/`（`slice-definition`） |
 | 進捗・優先順位・負債 | `docs/backlog.md`（`agile-process`） |
 | 反復中の判断・ブロッカー・振り返り | `.steering/`（`steering`） |
 | ツールの使い方 | そのツールの `README.md`（`quick-tool`） |

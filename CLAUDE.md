@@ -23,7 +23,7 @@
 | 成熟度 | 一言 | テスト | 許されること |
 |---|---|---|---|
 | `L1 動く` | 使える | E2E 1 本 + 芯のユニット | 仮実装・ハードコード・層の逆流（ **記録必須** ） |
-| `L2 固い` | 壊れない | 受け入れ条件ごとに 1 本以上 | 構造の不揃い・文書の未整備 |
+| `L2 固い` | 壊れない | 仕様ごとに 1 本以上 | 構造の不揃い・文書の未整備 |
 | `L3 整った` | 渡せる | 全緑 + 回帰 | なし（他人に渡すときだけ到達する） |
 
 **プロセスの正は `.claude/skills/agile-process/`**
@@ -36,7 +36,7 @@
 |---|---|---|
 | 単位 / 起点 | ツール 1 本・ノート 1 本 / 思いつき | 縦切りスライス（S##）/ ゴール |
 | 前工程 | なし | ゴールと完走の定義 → バックログ |
-| 文書 | `README.md` 1 枚 | スライス 1 枚（条件 3 行 + 設計 5 行） |
+| 文書 | `README.md` 1 枚 | スライス 1 枚（要求＋理由＋仕様 3 行 + 設計 5 行） |
 | 構造 | 1 ディレクトリ完結・層構成なし | レイヤード（L1 では 1 ファイル可） |
 | テスト | 必須（テスト先行） | 必須（テスト先行 + E2E） |
 | 入口 | `/tool` `/note` `/workshop` | `/backlog` `/skeleton` `/iterate` `/refactor` |
@@ -132,7 +132,8 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 |---|---|---|
 | ゴールと完走の定義 | `docs/concept.md` | 最初（一行 + 完走の定義だけでよい） |
 | **バックログ（進捗と負債の正）** | `docs/backlog.md` | ゴール定義の直後 |
-| スライス 1 枚 | `docs/slices/S##-*.md` | 各スライスに着手するとき |
+| スライス 1 枚（USDM の要求・理由・仕様） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
+| 要求ビューア（**生成物**。gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成。手で編集しない |
 | 現状設計（1 枚） | `docs/design.md` | **L3 に上げるときだけ** |
 | リファレンス / マニュアル / 用語集 | `docs/reference.md` / `docs/manual.md` / `docs/glossary.md` | 必要になったとき（先に作らない） |
 | 要求仕様書 / 実装前設計書（厚い経路） | `docs/requirements/S##-*.md` / `docs/design/proposals/S##-*.md` | 厚い経路のスライスだけ |
@@ -213,6 +214,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | スライス 1 枚を書く | `.claude/skills/slice-definition/` |
 | きれいにする・負債を返す | `.claude/skills/refactoring/` |
 | 層をどう分けるか・どこに置くか | `.claude/skills/layered-architecture/` |
+| **要求を書く（要求・理由・仕様の記法）** | `.claude/skills/usdm/` |
 | ゴールと完走の定義を決める | `.claude/skills/concept-definition/` |
 | コードを書く・コミットする | `.claude/skills/development-guidelines/` |
 | 反復のタスク管理・振り返り | `.claude/skills/steering/` |
