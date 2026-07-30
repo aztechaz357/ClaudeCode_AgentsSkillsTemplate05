@@ -1,0 +1,14 @@
+# 改行コードの正規化
+#
+# この環境は core.autocrlf=true で、放っておくとチェックアウト時に .sh が
+# CRLF になる。CRLF のシェルスクリプトは Linux で
+# 「/usr/bin/env: 'bash\r': No such file or directory」で落ちるため、
+# コンテナ側で使うファイルは LF に固定する。
+
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+.devcontainer/* text eol=lf
+
+# PowerShell スクリプトは Windows 側で使う。CRLF でも LF でも動くので
+# git の既定（テキストとして正規化）に任せる。
+*.ps1           text

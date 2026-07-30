@@ -1,0 +1,41 @@
+# 送信を許可するドメイン（init-firewall.sh が読む）
+#
+# ここに書いたドメインの解決結果（A レコード）だけが ipset に入り、
+# それ以外への外向き通信は DROP される。
+#
+# 書き方:
+#   - 1 行 1 ドメイン。ワイルドカードは使えない（IP 解決するため）
+#   - 空行と # で始まる行は無視される
+#
+# 注意:
+#   - IP ベースの許可なので、CDN の IP が変わると通らなくなる。
+#     長時間のセッションで詰まったら sudo /usr/local/bin/init-firewall.sh を
+#     再実行する（名前ベースの制御は Claude Code サンドボックス側が担う）
+#   - このファイルはイメージに焼き込まれる。変更にはリビルドが必要
+#     （実行中のエージェントに書き換えられないようにするため）
+
+# --- Claude Code の動作に必要 ---
+api.anthropic.com
+console.anthropic.com
+claude.ai
+statsig.anthropic.com
+statsig.com
+sentry.io
+
+# --- パッケージ取得（プロジェクトに合わせて削る） ---
+registry.npmjs.org
+pypi.org
+files.pythonhosted.org
+astral.sh
+github.com
+api.github.com
+codeload.github.com
+objects.githubusercontent.com
+raw.githubusercontent.com
+
+# --- このプロジェクト固有の宛先をここに足す ---
+# 例: 社内パッケージレジストリ・API のホスト
+#
+# IP / CIDR はそのまま書ける（名前解決せず literal として許可される）。
+# 例: ローカル LLM（EdgeXpert の Ollama）へコンテナから直接出す場合
+# 192.168.11.17

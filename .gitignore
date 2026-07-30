@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# 作業ノート（steering スキルが書く。共有しない）
+.steering/
+
+# Claude Code の個人設定（許可リストは環境ごとに違う）
+.claude/settings.local.json
+
+
+ignore/

@@ -1,0 +1,23 @@
+[
+  {
+    "file": "src/<pkg>/domain/<module>.py",
+    "find": "        self._total += value * weight",
+    "replace": "        self._total += value",
+    "expect": "test_weighted_sum_applies_weight",
+    "label": "重みの掛け忘れ"
+  },
+  {
+    "file": "src/<pkg>/domain/<module>.py",
+    "find": "        if count <= 0:\n            raise ValueError",
+    "replace": "        if count < 0:\n            raise ValueError",
+    "expect": "test_zero_count_is_rejected",
+    "label": "境界値（0 件）の判定をずらす"
+  },
+  {
+    "file": "src/<pkg>/application/<usecase>.py",
+    "find": "    def is_ready(self) -> bool:\n        return self._loaded and self._valid",
+    "replace": "    def is_ready(self) -> bool:\n        return self._loaded or self._valid",
+    "expect": "test_not_ready_when_invalid",
+    "label": "前提条件の連言を選言にする"
+  }
+]

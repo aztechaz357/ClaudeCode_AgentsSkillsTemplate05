@@ -1,0 +1,100 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(requirements-definition)",
+      "Skill(functional-design)",
+      "Skill(architecture-design)",
+      "Skill(repository-structure)",
+      "Skill(development-guidelines)",
+      "Skill(glossary-creation)",
+      "Skill(steering)",
+      "Skill(tool-authoring)",
+      "Skill(writing-conventions)",
+      "Skill(workshop)",
+      "Skill(quick-tool)",
+      "Skill(note-taking)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(powershell -File .claude/tools/check_numbering.ps1:*)",
+      "Bash(powershell -File .claude/tools/check_diagrams.ps1:*)",
+      "Bash(powershell -File .claude/tools/check_mermaid.ps1:*)",
+      "Bash(powershell -File .claude/tools/new_tool.ps1:*)",
+      "Bash(powershell -File .claude/tools/new_note.ps1:*)",
+      "Bash(powershell -File .claude/tools/index_workshop.ps1:*)",
+      "PowerShell(git status:*)",
+      "PowerShell(git diff:*)",
+      "PowerShell(git log:*)",
+      "PowerShell(git show:*)",
+      "PowerShell(& .\\.claude\\tools\\check_numbering.ps1:*)",
+      "PowerShell(& .\\.claude\\tools\\check_diagrams.ps1:*)",
+      "PowerShell(& .\\.claude\\tools\\check_mermaid.ps1:*)",
+      "PowerShell(& .\\.claude\\tools\\new_tool.ps1:*)",
+      "PowerShell(& .\\.claude\\tools\\new_note.ps1:*)",
+      "PowerShell(& .\\.claude\\tools\\index_workshop.ps1:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/session-start-context.ps1",
+            "timeout": 20,
+            "statusMessage": "作業ツリーの状態を読み込み中"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/pre-tool-guard.ps1",
+            "timeout": 20,
+            "statusMessage": "保護対象・破壊的操作を検査中"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/post-edit-markdown.ps1",
+            "timeout": 90,
+            "statusMessage": "Markdown の番号を検証中"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/notify.ps1",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/stop-uncommitted.ps1",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
