@@ -104,7 +104,8 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 
 ### 7. 記録してコミットする
 
-- `docs/slices/S01-<name>.md` を作る（`slice-definition` のテンプレート）
+- `docs/usdm/src/S01-<name>.html`（要求）と `docs/slices/S01-<name>.md`
+  （設計・実績・手抜き）を作る（`slice-definition` のテンプレート）
 - バックログの S01 を `L1 動く` に、「骨組み」を「通った（S01・日付）」に更新
 - コミット（接頭辞 `骨組み:`）
 

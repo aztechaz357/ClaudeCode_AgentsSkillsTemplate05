@@ -30,9 +30,10 @@ tools: Read, Grep, Glob, Write, Edit
   （1 ファイルにまとまっていることがある）ので、層のパスだけで探さない
 - テストはテストルート配下でソースをミラー。E2E は統合テストのパス
 - 文書はゴール（`docs/concept.md`）・バックログ（`docs/backlog.md`）・
+  要求（`docs/usdm/src/S##-*.html` `Q##-*.html`）・
   スライス（`docs/slices/S##-*`）・現状設計（`docs/design.md`）・
   リファレンス・マニュアル。厚い経路のものは `docs/requirements/` と
-  `docs/design/proposals/S##-*`
+  `docs/design/proposals/S##-*`。`docs/usdm/index.html` は生成物なので挙げない
 - 探索から除外: 依存ディレクトリ・ビルド生成物・`.git/`・キャッシュ・
   `.steering/`（プロファイルの除外パス）
 

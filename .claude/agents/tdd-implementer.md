@@ -19,8 +19,10 @@ L1 の依頼で層を分け始める・失敗経路を網羅する・文書を�
 最初に `.claude/agents/report-protocol.md`（知覚-行動ループ含む）と
 `CLAUDE.md`（プロジェクトプロファイル含む）を読むこと。要点:
 
-1. 渡された `.steering/` 作業ディレクトリのノート・スライス文書
-   （`docs/slices/S##-*.md`）・decisions.md を読んでから始める
+1. 渡された `.steering/` 作業ディレクトリのノート・ **要求**
+   （`docs/usdm/src/S##-*.html`。仕様はここが正）・スライス文書
+   （`docs/slices/S##-*.md`。薄い設計はここ）・decisions.md を
+   読んでから始める
 2. 結果は `reports/[NN]-tdd-implementer.md` に書き出す
 3. 親への応答はレポートパスと 5 行以内の要約のみ
 

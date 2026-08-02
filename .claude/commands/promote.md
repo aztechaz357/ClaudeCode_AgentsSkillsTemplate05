@@ -73,8 +73,8 @@ description: 育った工房ツールを反復開発レーン（S## スライス
 **工房のディレクトリは削除しない。** 次の 2 点だけ変更する。
 
 1. `README.md` の front matter を `status: promoted` にし、`updated` を今日に
-2. `README.md` の本文先頭に、昇格先（`docs/slices/S##-*.md` と
-   本実装のパス）へのリンクを 1 行足す
+2. `README.md` の本文先頭に、昇格先（`docs/usdm/src/S##-*.html`・
+   `docs/slices/S##-*.md` と本実装のパス）へのリンクを 1 行足す
 
 ```
 powershell -File .claude/tools/index_workshop.ps1
@@ -101,7 +101,8 @@ docs: <name> を S## へ昇格（工房 → 反復開発レーン）
 - workshop/tools/<name>/README.md を status: promoted に更新し昇格先へのリンクを追加
 - 昇格の根拠: <該当した条件>
 - docs/backlog.md に S## を追加（出発レベル: L1）
-- docs/slices/S##-<name>.md に仕様と薄い設計を記載
+- docs/usdm/src/S##-<name>.html に要求・理由・仕様を記載
+- docs/slices/S##-<name>.md に薄い設計を記載
 - 負債表に <n> 件を登録（工房から持ち込む手抜き）
 - CATALOG.md を再生成
 ```

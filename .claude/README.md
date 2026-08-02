@@ -104,8 +104,8 @@
 |---|---|---|
 | ゴール定義 | `docs/concept.md`（一行 + 完走の定義） | concept-definition |
 | バックログ | `docs/backlog.md`（スライス 3〜8 本） | agile-process |
-| 骨組み | E2E 1 本 + 通る実装 + `docs/slices/S01-*.md` | walking-skeleton / integration-tester |
-| 反復（薄く決める） | `docs/slices/S##-*.md` | slice-definition |
+| 骨組み | E2E 1 本 + 通る実装 + `docs/usdm/src/S01-*.html` + `docs/slices/S01-*.md` | walking-skeleton / integration-tester |
+| 反復（薄く決める） | `docs/usdm/src/S##-*.html`（要求）+ `docs/slices/S##-*.md`（設計） | slice-definition |
 | 反復（実装） | ソース・テスト・マイクロコミット | tdd-implementer |
 | 反復（通す） | E2E テスト・実物の出力 | integration-tester |
 | 反復（検証） | 目標レベルの合否 | implementation-validator / security-checker |
@@ -119,8 +119,10 @@
 反復とリファクタリングを行き来します。
 
 トレーサビリティの背骨は **要求 →（理由）→ 仕様 → E2E テスト** の 1 本。
-要求は USDM で書き、理由の欠落と番号の不整合は `build_usdm.py` が
-終了コードで落とす（LLM の判断に頼らない）。
+要求は USDM を HTML の表（Excel の USDM テンプレート相当）で書き、
+理由の欠落と番号の不整合は `build_usdm.py` が終了コードで落とす
+（LLM の判断に頼らない）。同じツールが全スライスを束ねた
+**要求一覧 1 枚**（`docs/usdm/index.html`）を生成する。
 `/check-docs` はこの線の欠落と、バックログと実物の食い違いを検出します。
 
 ## 構成
@@ -173,8 +175,8 @@
 |---|---|---|
 | **`agile-process`** | 反復開発 | **プロセスの正** （成熟度・DoD・反復の型・厚く書く判定） |
 | `walking-skeleton` | 反復開発 | 骨組みを作り切る手順（E2E 先行） |
-| **`usdm`** | 反復開発 | **要求記述の正**（要求は「〜したい」・理由は必須・仕様は番号で導出） |
-| `slice-definition` | 反復開発 | スライス 1 枚（要求＋理由＋仕様 3 行 + 設計 5 行） |
+| **`usdm`** | 反復開発 | **要求記述の正**（HTML の表・要求は「〜したい」・理由は必須・仕様は番号で導出・機能要求と品質要求） |
+| `slice-definition` | 反復開発 | 要求 1 枚（USDM の表）+ スライス 1 枚（設計 5 行・実績・手抜き） |
 | `refactoring` | 反復開発 | 負債の返し方（緑を保ち 1 手 1 コミット） |
 | `layered-architecture` | 反復開発 | 層の正（逆流禁止の 1 ルール・育て方） |
 | `concept-definition` | 反復開発 | ゴールと完走の定義 |
@@ -209,7 +211,7 @@
 | `check_doc_examples.py` | マニュアルの Python 例を実行して出力を照合 | Python プロジェクト |
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
-| `build_usdm.py` | USDM の記法を検証し、要求ビューア（自己完結 HTML）を生成する。`--check` で古さを検出 | Python プロジェクト |
+| `build_usdm.py` | 手書きの要求 HTML（`docs/usdm/src/`）を検証し、束ねた要求一覧（自己完結 HTML・折りたたみと絞り込みつき）を生成する。`--check` で古さを検出 | Python プロジェクト |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |

@@ -21,8 +21,9 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 
 最初に `.claude/agents/report-protocol.md` を読み、従うこと。要点:
 
-1. 渡された `.steering/` 作業ディレクトリのノートと、対象スライス文書
-   （`docs/slices/S##-*.md`）・`docs/backlog.md` を読み、経緯を回復してから始める
+1. 渡された `.steering/` 作業ディレクトリのノートと、対象の要求
+   （`docs/usdm/src/S##-*.html`）・スライス文書（`docs/slices/S##-*.md`）・
+   `docs/backlog.md` を読み、経緯を回復してから始める
 2. 検証結果は `reports/[NN]-implementation-validator.md` に書き出す
 3. 親への応答はレポートパスと 5 行以内の要約のみ
 
@@ -48,7 +49,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 
 ### 目標 L2（固い）
 
-- [ ] 仕様がすべて `[x]` で、1 条につきテスト 1 本以上ある
+- [ ] 要求 HTML の仕様がすべて `☑` で、1 条につきテスト 1 本以上ある
 - [ ] 境界値・失敗経路のテストが存在する
 - [ ] **仮実装が残っていない** （スライス文書の「残した手抜き」の
       仮実装行が `済` になっている。Grep で `TODO` / `FIXME` / ハードコードを確認）

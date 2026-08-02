@@ -27,7 +27,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit, Task
   `docs/backlog.md`・`docs/slices/`・`.steering/` のノート
 - **知覚**: Read で backlog・スライス文書・reports/ を読む。Bash で
   `git status` / `git log` / プロファイルのテストコマンド、および
-  `.claude/tools/build_usdm.py --check`（USDM 違反と要求ビューアの鮮度）
+  `.claude/tools/build_usdm.py --check`（USDM 違反と要求一覧の鮮度）
   の結果を読む
 - **判断**: `maturity.md` の PM ルール表に **機械的に** 当てはめて
   次の一手を **1 つ** 決める。その場の創意で順序を変えない
@@ -60,7 +60,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit, Task
 
 | 段 | 起動するもの | 渡すもの | 受け取るもの |
 |---|---|---|---|
-| 薄く決める | 自分（`slice-definition`） | backlog の対象行 | `docs/slices/S##-*.md` |
+| 薄く決める | 自分（`slice-definition`） | backlog の対象行 | `docs/usdm/src/S##-*.html` + `docs/slices/S##-*.md` |
 | 実装 | `tdd-implementer` | steering パス・ **目標成熟度** ・スライス文書 | ソース・テスト・コミット |
 | 通す | `integration-tester` | 仕様・ **目標成熟度** | E2E テスト・対応表 |
 | 検証 | `implementation-validator` | 現在と目標の成熟度 | 目標レベルの [必須] 件数 |

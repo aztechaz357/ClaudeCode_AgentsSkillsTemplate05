@@ -30,7 +30,8 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 |---|---|---|
 | ゴールと完走の定義 | `docs/concept.md` | 何ができたら完走かを 1 か所で決める（`concept-definition`） |
 | バックログ | `docs/backlog.md` | 縦切りスライスと負債の優先順位・成熟度（PM の正） |
-| スライス 1 枚 | `docs/slices/S##-<name>.md` | 仕様・薄い設計・残した手抜き（`slice-definition`） |
+| 要求（USDM の表） | `docs/usdm/src/S##-<name>.html` | 要求・理由・仕様（`usdm`）。 **要求の正** |
+| スライス 1 枚 | `docs/slices/S##-<name>.md` | 薄い設計・実績・残した手抜き（`slice-definition`） |
 
 進捗は **バックログの成熟度列だけ** が正。他の文書に進捗を書かない。
 

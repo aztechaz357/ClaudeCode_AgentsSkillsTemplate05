@@ -12,8 +12,8 @@ wheels/
 # 作業ノート（steering スキルが書く。共有しない）
 .steering/
 
-# 要求ビューア（build_usdm.py の生成物。要求の正は docs/slices/）
-docs/usdm/
+# 要求一覧（build_usdm.py の生成物。要求の正は docs/usdm/src/ の手書き HTML）
+docs/usdm/index.html
 
 # Claude Code の個人設定（許可リストは環境ごとに違う）
 .claude/settings.local.json

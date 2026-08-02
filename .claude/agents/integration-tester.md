@@ -19,7 +19,8 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 最初に `.claude/agents/report-protocol.md`（知覚-行動ループ含む）と
 `CLAUDE.md`（プロジェクトプロファイル含む）を読むこと。要点:
 
-1. 渡された `.steering/` 作業ディレクトリのノートと、対象スライス文書
+1. 渡された `.steering/` 作業ディレクトリのノートと、 **要求**
+   （`docs/usdm/src/S##-*.html`。仕様はここが正）・対象スライス文書
    （`docs/slices/S##-*.md`。厚い経路なら `docs/requirements/S##-*.md`）・
    `docs/backlog.md` を読んでから始める
 2. 結果は `reports/[NN]-integration-tester.md` に書き出す
@@ -67,7 +68,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 ## MUST / NEVER
 
 **MUST**:
-- **仕様番号（`<2-1>` 形式）と E2E テスト名の対応表** をレポートに残す
+- **仕様番号（`2-1` 形式）と E2E テスト名の対応表** をレポートに残す
   （未カバーの仕様番号を明示する。番号は USDM の導出関係のキー）
 - テスト出力の数値（passed / failed / skipped）をそのまま記載する
 - 骨組みの E2E が赤い場合は、それを最優先の所見として報告する

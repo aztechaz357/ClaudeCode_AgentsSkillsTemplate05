@@ -79,14 +79,16 @@ description: 新規プロジェクトにこのエージェント・スキル一�
 2. **バックログ**（`docs/backlog.md`）—— `agile-process` スキルの
    `backlog-template.md` を写し、典型シナリオを縦切りスライス 3〜8 本に割る。
    S01 は最も薄い経路（骨組み）にする
-3. `docs/slices/` のディレクトリ（空でよい。反復ごとに 1 枚ずつ増える）
+3. `docs/slices/` と `docs/usdm/src/` のディレクトリ
+   （空でよい。反復ごとに 1 枚ずつ増える）
 4. 層ディレクトリとテストのミラー構成 —— **作らなくてよい** 。
    骨組みが通ってから L2 の反復で分ける（`layered-architecture` の
    「成熟度に応じた守り方」）。既存プロジェクトなら実物の構成を尊重する
 5. **アーキテクチャテスト**（逆流の機械検証）—— 骨組みが通ってから作る。
    L1 では逆流が許されるので、この段階では意味がない。
    プロファイルの該当行には「未導入（L2 で導入）」と書く
-6. `.gitignore` に `.steering/` と `.claude/settings.local.json` を追加
+6. `.gitignore` に `.steering/` `.claude/settings.local.json`
+   `docs/usdm/index.html`（要求一覧は生成物）を追加
 7. `.claude/skills/repository-structure/template.md` のスナップショットを
    実物に合わせて更新（テンプレート版は `{}` の雛形のまま）
 8. `.claude/core_files.txt` は **空のままでよい** 。L3 に到達し今後

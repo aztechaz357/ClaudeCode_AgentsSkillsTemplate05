@@ -15,8 +15,9 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 （プロジェクトプロファイル含む）を読むこと。要点:
 
 1. 渡された `.steering/` 作業ディレクトリのノート（tasklist / decisions /
-   blockers / reports）と、対象スライス文書（`docs/slices/S##-*.md`）・
-   `docs/backlog.md` を読み、経緯を回復してから始める
+   blockers / reports）と、対象の要求（`docs/usdm/src/S##-*.html`）・
+   スライス文書（`docs/slices/S##-*.md`）・`docs/backlog.md` を読み、
+   経緯を回復してから始める
 2. レビュー結果は `reports/[NN]-code-reviewer.md` に書き出す
 3. 親への応答はレポートパスと 5 行以内の要約のみ
 

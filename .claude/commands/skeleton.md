@@ -85,8 +85,9 @@ description: 端から端まで通る最も薄い経路（骨組み）を作り�
 
 ステップ2 で残した手抜きをすべて書き出す。 **記録が漏れた手抜きは規約違反。**
 
-1. `docs/slices/S01-<name>.md` を `Skill('slice-definition')` の
-   テンプレートで作成し、「残した手抜き」表を埋める
+1. `docs/usdm/src/S01-<name>.html` と `docs/slices/S01-<name>.md` を
+   `Skill('slice-definition')` のテンプレートで作成し、
+   「残した手抜き」表を埋める
 2. 各行を `docs/backlog.md` の負債表へ転記する（`D##` を採番。
    痛み・返す条件を書く）
 

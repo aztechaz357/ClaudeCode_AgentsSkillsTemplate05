@@ -132,8 +132,9 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 |---|---|---|
 | ゴールと完走の定義 | `docs/concept.md` | 最初（一行 + 完走の定義だけでよい） |
 | **バックログ（進捗と負債の正）** | `docs/backlog.md` | ゴール定義の直後 |
-| スライス 1 枚（USDM の要求・理由・仕様） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
-| 要求ビューア（**生成物**。gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成。手で編集しない |
+| スライス 1 枚（薄い設計・実績・手抜き） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
+| **要求（USDM。手書きの正）** | `docs/usdm/src/S##-*.html` / `Q##-*.html` | 各スライス（品質特性）に着手するとき |
+| 要求一覧（**生成物**。gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成。手で編集しない |
 | 現状設計（1 枚） | `docs/design.md` | **L3 に上げるときだけ** |
 | リファレンス / マニュアル / 用語集 | `docs/reference.md` / `docs/manual.md` / `docs/glossary.md` | 必要になったとき（先に作らない） |
 | 要求仕様書 / 実装前設計書（厚い経路） | `docs/requirements/S##-*.md` / `docs/design/proposals/S##-*.md` | 厚い経路のスライスだけ |
@@ -214,7 +215,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | スライス 1 枚を書く | `.claude/skills/slice-definition/` |
 | きれいにする・負債を返す | `.claude/skills/refactoring/` |
 | 層をどう分けるか・どこに置くか | `.claude/skills/layered-architecture/` |
-| **要求を書く（要求・理由・仕様の記法）** | `.claude/skills/usdm/` |
+| **要求を書く（USDM の表・理由・仕様の記法）** | `.claude/skills/usdm/` |
 | ゴールと完走の定義を決める | `.claude/skills/concept-definition/` |
 | コードを書く・コミットする | `.claude/skills/development-guidelines/` |
 | 反復のタスク管理・振り返り | `.claude/skills/steering/` |

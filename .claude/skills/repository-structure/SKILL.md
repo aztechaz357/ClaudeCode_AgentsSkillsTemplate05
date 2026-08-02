@@ -34,7 +34,9 @@ allowed-tools: Read, Write
 |---|---|---|
 | ゴールと完走の定義 | `docs/concept.md` | 最初（一行 + 完走の定義だけでよい） |
 | バックログ（進捗の正） | `docs/backlog.md` | ゴール定義の直後 |
-| スライス 1 枚 | `docs/slices/S##-<name>.md` | 各スライスに着手するとき |
+| スライス 1 枚（設計・実績・手抜き） | `docs/slices/S##-<name>.md` | 各スライスに着手するとき |
+| 要求（USDM。手書きの正） | `docs/usdm/src/S##-<name>.html` / `Q##-<name>.html` | 同上（品質要求は必要になったとき） |
+| 要求一覧（生成物・gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成 |
 | 現状設計（1 枚） | `docs/design.md` | **L3 に上げるときだけ** |
 | リファレンス | `docs/reference.md` | L3。無くてもよい |
 | マニュアル | `docs/manual.md` | 外から呼べるものを他人に渡すとき |
