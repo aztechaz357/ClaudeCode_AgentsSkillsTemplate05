@@ -20,254 +20,362 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import build_usdm  # noqa: E402
+import build_usdm
 
-VALID = """\
-# S02. CSV のフィルタ
+# 記入例（`.claude/skills/usdm/example/`）。テンプレートと実装が
+# 食い違ったらここが落ちる。
+EXAMPLE_DIR = (
+    Path(__file__).resolve().parent.parent / "skills" / "usdm" / "example"
+)
 
-**成熟度: `L1 動く`** ｜ 依存: S01
 
-## 要求
-
-### 【REQ2】列を指定して絞り込みたい
-
-- **理由**: 実データが 5 万行あり、全件出ると目的の行を目で探すことになる
-- **範囲**: 完全一致のみ。部分一致・正規表現は対象外
-
-**仕様**:
-
-- [ ] `<2-1>` `--col NAME=値` を渡すと、その列が完全一致する行だけを数える
-- [x] `<2-2>` 一致行が 0 件なら `0 行` と出す
-"""
-
-WITH_CHILD = """\
-# S02. CSV のフィルタ
-
-**成熟度: `L2 固い`**
-
-## 要求
-
-### 【REQ2】列を指定して絞り込みたい
-
-- **理由**: 全件出ると目的の行を目で探すことになる
-
-**仕様**:
-
-- [ ] `<2-1>` 一致する行だけを数える
-
-### 【REQ2.1】複数列を AND で指定したい
-
-- **理由**: 1 列では絞り切れないデータがある
-
-**仕様**:
-
-- [ ] `<2.1-1>` `--col` を 2 回渡すと両方に一致する行だけを数える
+def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") -> str:
+    """要求 HTML 1 枚を組み立てる（テストの読みやすさのための最小骨格）。"""
+    return f"""<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>{title}</title></head>
+<body>
+<h1>{title}</h1>
+<p class="meta"><span class="badge maturity">L1 動く</span></p>
+<table class="usdm {kind}">
+<thead><tr><th>カテゴリ名</th><th>要求</th><th>要求ID</th><th>要求仕様</th></tr></thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+</body></html>
 """
 
 
-def _write(directory: Path, name: str, text: str) -> Path:
-    path = directory / name
-    path.write_text(text, encoding="utf-8")
-    return path
+VALID = _doc("""\
+<tr class="requirement">
+  <td class="category">抽出</td><td class="kind">要求</td>
+  <td class="id">REQ2</td><td class="body">列を指定して絞り込みたい</td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td class="kind">理由</td>
+  <td class="body">実データが 5 万行あり、全件出ると目で探すことになる</td>
+</tr>
+<tr class="spec-group">
+  <td></td><td></td><td class="kind">＜列指定＞</td><td></td>
+</tr>
+<tr class="spec">
+  <td></td><td class="check">□</td><td class="id">2-1</td>
+  <td class="body">--col NAME=値 を渡すと完全一致する行だけを数える</td>
+</tr>
+""")
+
+WITH_CHILD = _doc("""\
+<tr class="requirement">
+  <td class="category">抽出</td><td class="kind">要求</td>
+  <td class="id">REQ2</td><td class="body">列を指定して絞り込みたい</td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td class="kind">理由</td>
+  <td class="body">実データが 5 万行ある</td>
+</tr>
+<tr class="spec">
+  <td></td><td class="check">☑</td><td class="id">2-1</td>
+  <td class="body">--col NAME=値 で完全一致する行を数える</td>
+</tr>
+<tr class="requirement">
+  <td></td><td class="kind">要求</td>
+  <td class="id">REQ2.1</td><td class="body">複数列を AND で指定したい</td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td class="kind">理由</td>
+  <td class="body">1 列では絞り切れないデータがある</td>
+</tr>
+<tr class="spec">
+  <td></td><td class="check">□</td><td class="id">2.1-1</td>
+  <td class="body">--col を 2 回渡すと両方に一致する行だけを数える</td>
+</tr>
+""")
+
+
+def _kinds(doc: build_usdm.Document) -> list[str]:
+    """違反の種別だけを取り出す（メッセージ本文には依存しない）。"""
+    return [v.kind for v in doc.violations]
 
 
 class ParseTest(unittest.TestCase):
-    """記法どおりの文書を構造として取り出せることの検証。"""
+    """記法どおりの HTML を構造として取り出せること。"""
 
-    def test_parses_requirement_reason_scope_and_specs(self):
-        """テスト対象: parse_document
-        入力: 要求 1 個・理由・範囲・仕様 2 条（1 条は [x]）の S02 文書
-        期待値: 要求 1 件が取れ、理由・範囲・成熟度・仕様の検証状態が読める
-        理由: これが USDM 記法の最小単位であり、他の全機能の土台のため
-        """
-        doc = build_usdm.parse_document(VALID, slice_id="S02")
-
+    def test_要求と理由と仕様を取り出す(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
         self.assertEqual(doc.violations, [])
+        self.assertEqual(doc.title, "フィルタ")
         self.assertEqual(doc.maturity, "L1 動く")
+        self.assertEqual(doc.kind, "functional")
         self.assertEqual(len(doc.requirements), 1)
 
         req = doc.requirements[0]
         self.assertEqual(req.number, "2")
         self.assertEqual(req.title, "列を指定して絞り込みたい")
-        self.assertIn("5 万行", req.reason)
-        self.assertIn("完全一致のみ", req.scope)
-        self.assertEqual([s.number for s in req.specs], ["2-1", "2-2"])
-        self.assertEqual([s.verified for s in req.specs], [False, True])
+        self.assertEqual(req.category, "抽出")
+        self.assertTrue(req.reason.startswith("実データが"))
+        self.assertEqual([s.number for s in req.specs], ["2-1"])
+        self.assertEqual(req.specs[0].group, "＜列指定＞")
+        self.assertFalse(req.specs[0].verified)
 
-    def test_title_drops_the_leading_slice_number(self):
-        """テスト対象: parse_document
-        入力: 見出しが `# S02. CSV のフィルタ` の文書
-        期待値: title が「CSV のフィルタ」になる（S02. を含まない）
-        理由: 表示側がスライス番号を前置するため、含めると
-              「S02. S02. CSV のフィルタ」と重複する（実物で発生した不具合）
-        """
-        doc = build_usdm.parse_document(VALID, slice_id="S02")
-        self.assertEqual(doc.title, "CSV のフィルタ")
-
-    def test_builds_parent_child_from_dotted_number(self):
-        """テスト対象: parse_document + build_tree
-        入力: REQ2 と REQ2.1 を持つ文書（どちらも見出しレベルは ###）
-        期待値: REQ2.1 が REQ2 の子として組まれ、根は REQ2 だけになる
-        理由: 階層は番号のドットだけが正であり、見出しレベルで表さない仕様のため
-        """
-        doc = build_usdm.parse_document(WITH_CHILD, slice_id="S02")
+    def test_チェック済みの仕様を検証済みとして読む(self) -> None:
+        doc = build_usdm.parse_document(WITH_CHILD, doc_id="S02")
         self.assertEqual(doc.violations, [])
+        self.assertTrue(doc.requirements[0].specs[0].verified)
 
+    def test_番号のドットから親子を組む(self) -> None:
+        doc = build_usdm.parse_document(WITH_CHILD, doc_id="S02")
         roots = build_usdm.build_tree(doc.requirements)
         self.assertEqual([r.number for r in roots], ["2"])
         self.assertEqual([c.number for c in roots[0].children], ["2.1"])
 
+    def test_build_tree_は冪等(self) -> None:
+        doc = build_usdm.parse_document(WITH_CHILD, doc_id="S02")
+        build_usdm.build_tree(doc.requirements)
+        roots = build_usdm.build_tree(doc.requirements)
+        self.assertEqual(len(roots[0].children), 1)
+
+    def test_セルの意味は位置ではなくclassで決まる(self) -> None:
+        # 空の <td> を増やしても構造は変わらない（表示の都合に依存しない）
+        padded = VALID.replace(
+            '<td class="category">抽出</td>',
+            '<td></td><td class="category">抽出</td>',
+        )
+        doc = build_usdm.parse_document(padded, doc_id="S02")
+        self.assertEqual(doc.violations, [])
+        self.assertEqual(doc.requirements[0].category, "抽出")
+
+    def test_コメントの中の行は読まない(self) -> None:
+        # テンプレートは使い方をコメントで示す。それが要求として拾われると困る
+        commented = VALID.replace(
+            "</tbody>",
+            '<!-- <tr class="requirement"><td></td><td class="kind">要求</td>'
+            '<td class="id">REQ9</td><td class="body">x</td></tr> -->\n</tbody>',
+        )
+        doc = build_usdm.parse_document(commented, doc_id="S02")
+        self.assertEqual([r.number for r in doc.requirements], ["2"])
+
 
 class ViolationTest(unittest.TestCase):
-    """記法違反を実際に検出できることの検証（空振り防止）。"""
+    """記法違反を検出できること（ここが本体）。"""
 
-    def test_missing_reason_is_violation(self):
-        """テスト対象: parse_document
-        入力: 理由の行が無い要求
-        期待値: 種別 missing-reason の違反が 1 件出る
-        理由: 理由の必須性は USDM の核心ルールであり、機械検証の第一目的のため
-        """
-        text = VALID.replace(
-            "- **理由**: 実データが 5 万行あり、全件出ると目的の行を目で探すことになる\n",
-            "",
+    def test_理由がなければ落とす(self) -> None:
+        text = VALID.replace('<tr class="reason">', '<tr class="note">')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("missing-reason", _kinds(doc))
+
+    def test_仕様が0条なら落とす(self) -> None:
+        text = _doc("""\
+<tr class="requirement">
+  <td></td><td class="kind">要求</td>
+  <td class="id">REQ2</td><td class="body">絞り込みたい</td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td class="kind">理由</td>
+  <td class="body">5 万行ある</td>
+</tr>
+""")
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("no-spec", _kinds(doc))
+
+    def test_仕様番号が親要求と違えば落とす(self) -> None:
+        text = VALID.replace('<td class="id">2-1</td>', '<td class="id">3-1</td>')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("spec-number-mismatch", _kinds(doc))
+
+    def test_要求番号の重複を落とす(self) -> None:
+        text = WITH_CHILD.replace("REQ2.1", "REQ2").replace(
+            '<td class="id">2.1-1</td>', '<td class="id">2-9</td>'
         )
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        kinds = [v.kind for v in doc.violations]
-        self.assertIn("missing-reason", kinds)
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("duplicate-requirement", _kinds(doc))
 
-    def test_requirement_without_spec_is_violation(self):
-        """テスト対象: parse_document
-        入力: 要求と理由だけで仕様が 0 条の文書
-        期待値: 種別 no-spec の違反が出る
-        理由: L1 でも仕様は 1 条必要。要求だけ書いて止まった状態を検出するため
-        """
-        text = """\
-# S02. テスト
+    def test_仕様番号の重複を落とす(self) -> None:
+        text = WITH_CHILD.replace('<td class="id">2.1-1</td>', '<td class="id">2-1</td>')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("duplicate-spec", _kinds(doc))
 
-**成熟度: `L1 動く`**
+    def test_ファイル番号と最上位要求のずれを落とす(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S03")
+        self.assertIn("doc-number-mismatch", _kinds(doc))
 
-## 要求
+    def test_親のない下位要求を落とす(self) -> None:
+        text = VALID.replace("REQ2", "REQ2.1").replace(
+            '<td class="id">2-1</td>', '<td class="id">2.1-1</td>'
+        )
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("orphan-requirement", _kinds(doc))
 
-### 【REQ2】絞り込みたい
+    def test_要求の外の仕様を落とす(self) -> None:
+        text = _doc("""\
+<tr class="spec">
+  <td></td><td class="check">□</td><td class="id">2-1</td>
+  <td class="body">迷子の仕様</td>
+</tr>
+""")
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("spec-without-requirement", _kinds(doc))
 
-- **理由**: 目で探すことになる
+    def test_class_のない行を落とす(self) -> None:
+        text = VALID.replace("</tbody>", "<tr><td>なにか</td></tr>\n</tbody>")
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("unknown-row", _kinds(doc))
+
+    def test_要求IDの書式違反を落とす(self) -> None:
+        text = VALID.replace('<td class="id">REQ2</td>', '<td class="id">R-2</td>')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("missing-id", _kinds(doc))
+
+    def test_検証欄が空なら落とす(self) -> None:
+        text = VALID.replace('<td class="check">□</td>', '<td class="check"></td>')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("bad-check", _kinds(doc))
+
+    def test_表の種別とファイル名の不一致を落とす(self) -> None:
+        text = VALID.replace('class="usdm functional"', 'class="usdm quality"')
+        doc = build_usdm.parse_document(text, doc_id="S02")
+        self.assertIn("kind-mismatch", _kinds(doc))
+
+
+class QualityTest(unittest.TestCase):
+    """品質要求だけのルール（定義・解釈・メトリクス・評価尺度）。"""
+
+    QUALITY = """<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"></head><body>
+<h1>Q01. 性能効率性</h1>
+<p class="meta"><span class="badge maturity">L2 固い</span></p>
+<table class="usdm quality">
+<thead><tr><th>品質特性</th><th>品質副特性</th><th>要求</th><th>要求ID</th>
+<th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th></tr></thead>
+<tbody>
+<tr class="characteristic">
+  <td class="characteristic">性能効率性</td>
+  <td class="subcharacteristic">時間効率性</td>
+  <td></td><td class="kind">定義</td>
+  <td class="body">応答時間が要求事項を満足する度合い</td><td></td><td></td>
+</tr>
+<tr class="interpretation">
+  <td></td><td></td><td></td><td class="kind">解釈</td>
+  <td class="body">朝の支度に支障がない程度か</td><td></td><td></td>
+</tr>
+<tr class="metrics">
+  <td></td><td></td><td></td><td class="kind">メトリクス</td>
+  <td class="body">通電から沸騰までの経過時間</td><td></td><td></td>
+</tr>
+<tr class="requirement">
+  <td></td><td></td><td class="kind">要求</td><td class="id">QUA1</td>
+  <td class="body">沸騰までの待ち時間を少なくしたい</td><td></td><td></td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td></td><td class="kind">理由</td>
+  <td class="body">朝は 15 分しか余裕がない</td><td></td><td></td>
+</tr>
+<tr class="spec">
+  <td></td><td></td><td class="check">□</td><td class="id">Q1-1</td>
+  <td class="body">100 mL の水を 1 分以内に沸騰させる</td>
+  <td class="measure">通電から沸騰検知までの秒数</td>
+  <td class="knowledge">ヒータ出力設計</td>
+</tr>
+</tbody></table></body></html>
 """
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        self.assertIn("no-spec", [v.kind for v in doc.violations])
 
-    def test_spec_number_not_matching_parent_is_violation(self):
-        """テスト対象: parse_document
-        入力: REQ2 の配下に `<3-1>` という仕様番号
-        期待値: 種別 spec-number-mismatch の違反が出る
-        理由: 仕様は親要求から導出される。番号の食い違いは導出関係の破れのため
-        """
-        text = VALID.replace("`<2-1>`", "`<3-1>`")
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        self.assertIn("spec-number-mismatch", [v.kind for v in doc.violations])
+    def test_品質要求を取り出す(self) -> None:
+        doc = build_usdm.parse_document(self.QUALITY, doc_id="Q01")
+        self.assertEqual(doc.violations, [])
+        self.assertEqual(doc.kind, "quality")
+        self.assertEqual(doc.characteristics[0].name, "性能効率性")
+        self.assertEqual(doc.characteristics[0].sub, "時間効率性")
+        # QUA1 は番号 Q1（仕様 Q1-1 の親）として扱う
+        self.assertEqual(doc.requirements[0].number, "Q1")
+        self.assertEqual(doc.requirements[0].specs[0].measure, "通電から沸騰検知までの秒数")
 
-    def test_duplicate_requirement_number_is_violation(self):
-        """テスト対象: parse_document
-        入力: 同じ REQ2 を 2 回宣言した文書
-        期待値: 種別 duplicate-requirement の違反が出る
-        理由: 番号が要求の同一性を決めるため、重複すると参照が壊れる
-        """
-        text = WITH_CHILD.replace("【REQ2.1】", "【REQ2】").replace("`<2.1-1>`", "`<2-9>`")
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        self.assertIn("duplicate-requirement", [v.kind for v in doc.violations])
+    def test_解釈がなければ落とす(self) -> None:
+        text = self.QUALITY.replace('<tr class="interpretation">', '<tr class="note">')
+        doc = build_usdm.parse_document(text, doc_id="Q01")
+        self.assertIn("missing-interpretation", _kinds(doc))
 
-    def test_duplicate_spec_number_is_violation(self):
-        """テスト対象: parse_document
-        入力: 同じ仕様番号 <2-1> を 2 回書いた文書
-        期待値: 種別 duplicate-spec の違反が出る
-        理由: 仕様番号はテストとの対応キーであり、重複すると対応が決まらないため
-        """
-        text = VALID.replace("`<2-2>`", "`<2-1>`")
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        self.assertIn("duplicate-spec", [v.kind for v in doc.violations])
+    def test_メトリクスがなければ落とす(self) -> None:
+        text = self.QUALITY.replace('<tr class="metrics">', '<tr class="note">')
+        doc = build_usdm.parse_document(text, doc_id="Q01")
+        self.assertIn("missing-metrics", _kinds(doc))
 
-    def test_slice_number_mismatch_is_violation(self):
-        """テスト対象: parse_document
-        入力: ファイルが S02 なのに最上位要求が REQ3
-        期待値: 種別 slice-number-mismatch の違反が出る
-        理由: バックログのスライス行が要求一覧を兼ねる前提が崩れるため
-        """
-        text = VALID.replace("【REQ2】", "【REQ3】").replace("`<2-", "`<3-")
-        doc = build_usdm.parse_document(text, slice_id="S02")
-        self.assertIn("slice-number-mismatch", [v.kind for v in doc.violations])
+    def test_評価尺度のない仕様を落とす(self) -> None:
+        text = self.QUALITY.replace(
+            '<td class="measure">通電から沸騰検知までの秒数</td>',
+            '<td class="measure"></td>',
+        )
+        doc = build_usdm.parse_document(text, doc_id="Q01")
+        self.assertIn("missing-measure", _kinds(doc))
+
+    def test_品質特性ブロックがなければ落とす(self) -> None:
+        text = self.QUALITY.replace('<tr class="characteristic">', '<tr class="note">')
+        doc = build_usdm.parse_document(text, doc_id="Q01")
+        self.assertIn("missing-characteristic", _kinds(doc))
 
 
-class MainTest(unittest.TestCase):
-    """コマンドとしての終了コードと --check の検証。"""
+class ExampleTest(unittest.TestCase):
+    """配布する記入例が、実装した記法どおりであること。"""
 
-    def test_valid_document_generates_html_and_exits_zero(self):
-        """テスト対象: main
-        入力: 正しい USDM 文書 1 本を含むディレクトリ
-        期待値: 終了コード 0 で、出力先の HTML が生成される
-        理由: 正常な入力で誤検出しないことの確認（tool-authoring の必須項目）
-        """
+    def test_記入例に違反がない(self) -> None:
+        documents = build_usdm.collect([str(EXAMPLE_DIR)])
+        self.assertEqual(len(documents), 2)
+        for doc in documents:
+            self.assertEqual(doc.violations, [], f"{doc.source} に違反がある")
+
+    def test_記入例は機能要求と品質要求を1枚ずつ持つ(self) -> None:
+        documents = build_usdm.collect([str(EXAMPLE_DIR)])
+        self.assertEqual(
+            sorted(d.kind for d in documents), ["functional", "quality"]
+        )
+
+
+class CommandTest(unittest.TestCase):
+    """コマンドとしての終了コードと生成物。"""
+
+    def _write(self, directory: Path, name: str, text: str) -> None:
+        (directory / name).write_text(text, encoding="utf-8")
+
+    def test_正常な文書なら0で生成する(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            src = Path(tmp) / "slices"
+            src = Path(tmp) / "src"
             src.mkdir()
-            _write(src, "S02-csv-filter.md", VALID)
             out = Path(tmp) / "usdm" / "index.html"
-
-            buf = io.StringIO()
-            with redirect_stdout(buf):
+            self._write(src, "S02-filter.html", VALID)
+            with redirect_stdout(io.StringIO()):
                 code = build_usdm.main(["--source", str(src), "--out", str(out)])
-
-            self.assertEqual(code, 0, buf.getvalue())
+            self.assertEqual(code, 0)
             self.assertTrue(out.exists())
+            self.assertIn("要求一覧", out.read_text(encoding="utf-8"))
 
-    def test_violation_exits_one(self):
-        """テスト対象: main
-        入力: 理由が無い USDM 文書
-        期待値: 終了コード 1 で、違反の種別が標準出力に出る
-        理由: 検査結果が終了コードで機械判定できること（呼び出し側の契約）のため
-        """
+    def test_違反があれば1を返し生成しない(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            src = Path(tmp) / "slices"
+            src = Path(tmp) / "src"
             src.mkdir()
-            _write(src, "S02-csv-filter.md", VALID.replace("- **理由**: 実データが 5 万行あり、全件出ると目的の行を目で探すことになる\n", ""))
             out = Path(tmp) / "usdm" / "index.html"
-
+            broken = VALID.replace('<tr class="reason">', '<tr class="note">')
+            self._write(src, "S02-filter.html", broken)
             buf = io.StringIO()
             with redirect_stdout(buf):
                 code = build_usdm.main(["--source", str(src), "--out", str(out)])
-
             self.assertEqual(code, 1)
+            self.assertFalse(out.exists())
             self.assertIn("missing-reason", buf.getvalue())
 
-    def test_no_source_file_exits_two(self):
-        """テスト対象: main
-        入力: USDM 文書が 1 本も無いディレクトリ
-        期待値: 終了コード 2
-        理由: 対象 0 件を成功にすると、何も検査しないまま緑を返すツールになるため
-        """
+    def test_対象が0件なら2を返す(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            src = Path(tmp) / "slices"
+            src = Path(tmp) / "src"
             src.mkdir()
             out = Path(tmp) / "usdm" / "index.html"
-
-            buf = io.StringIO()
-            with redirect_stdout(buf):
+            with redirect_stdout(io.StringIO()):
                 code = build_usdm.main(["--source", str(src), "--out", str(out)])
-
             self.assertEqual(code, 2)
 
-    def test_check_reports_stale_after_requirement_changes(self):
-        """テスト対象: main --check
-        入力: HTML を生成した後、要求の本文を 1 行変える
-        期待値: 変更前は 0（最新）、変更後は 1（STALE）
-        理由: 生成物を gitignore する運用では、古さの検出だけが乖離を防ぐため
-        """
+    def test_checkは古い生成物を検出する(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            src = Path(tmp) / "slices"
+            src = Path(tmp) / "src"
             src.mkdir()
-            doc = _write(src, "S02-csv-filter.md", VALID)
             out = Path(tmp) / "usdm" / "index.html"
-
-            buf = io.StringIO()
-            with redirect_stdout(buf):
+            self._write(src, "S02-filter.html", VALID)
+            with redirect_stdout(io.StringIO()):
                 self.assertEqual(
                     build_usdm.main(["--source", str(src), "--out", str(out)]), 0
                 )
@@ -277,47 +385,45 @@ class MainTest(unittest.TestCase):
                     ),
                     0,
                 )
-
-                doc.write_text(
-                    VALID.replace("絞り込みたい", "絞り込んで並べ替えたい"),
-                    encoding="utf-8",
+            self._write(src, "S02-filter.html", WITH_CHILD)
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = build_usdm.main(
+                    ["--source", str(src), "--out", str(out), "--check"]
                 )
-                self.assertEqual(
-                    build_usdm.main(
-                        ["--source", str(src), "--out", str(out), "--check"]
-                    ),
-                    1,
-                )
+            self.assertEqual(code, 1)
             self.assertIn("STALE", buf.getvalue())
 
 
-class HtmlTest(unittest.TestCase):
-    """生成される HTML が自己完結かつ日本語を保つことの検証。"""
+class RenderTest(unittest.TestCase):
+    """生成物が自己完結であること（file:// で開ける）。"""
 
-    def test_japanese_text_survives_into_html(self):
-        """テスト対象: render_html
-        入力: 日本語の要求・理由・仕様を含む文書
-        期待値: HTML の中に日本語がそのまま現れる
-        理由: Windows のコードページ由来の文字化けを検出するため（既知の事故）
-        """
-        doc = build_usdm.parse_document(VALID, slice_id="S02")
-        html = build_usdm.render_html([doc])
+    def test_外部参照を含まない(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        rendered = build_usdm.render_html([doc])
+        for forbidden in ("http://", "https://", "<link", "src="):
+            self.assertNotIn(forbidden, rendered)
 
-        self.assertIn("列を指定して絞り込みたい", html)
-        self.assertIn("目で探すことになる", html)
-        self.assertIn("完全一致する行だけを数える", html)
+    def test_日時を埋め込まない(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        first = build_usdm.render_html([doc])
+        second = build_usdm.render_html([doc])
+        self.assertEqual(first, second)
 
-    def test_html_has_no_external_reference(self):
-        """テスト対象: render_html
-        入力: 正しい USDM 文書
-        期待値: http(s):// への参照・fetch・外部 src/href が含まれない
-        理由: file:// で開ける自己完結ページであることが要求のため
-        """
-        doc = build_usdm.parse_document(VALID, slice_id="S02")
-        html = build_usdm.render_html([doc])
+    def test_手書きと同じ列見出しを持つ(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        rendered = build_usdm.render_html([doc])
+        for column in ("カテゴリ名", "要求ID", "要求仕様", "評価尺度"):
+            self.assertIn(column, rendered)
 
-        for forbidden in ("http://", "https://", "fetch(", "XMLHttpRequest", "<script src", "<link "):
-            self.assertNotIn(forbidden, html, f"外部参照が残っている: {forbidden}")
+    def test_折りたたみと絞り込みの操作を備える(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        rendered = build_usdm.render_html([doc])
+        for control in ('id="open"', 'id="close"', 'id="f"', "未検証のみ"):
+            self.assertIn(control, rendered)
+        # 4 段階（文書 / 要求グループ / 要求 / 仕様グループ）の折りたたみキー
+        for key in ("'D:'", "'G:'", "'R:'", "'S:'"):
+            self.assertIn(key, rendered)
 
 
 if __name__ == "__main__":
