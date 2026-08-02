@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Q01. 性能効率性 / 時間効率性 —— 品質要求（USDM）</title>
+<style>
+:root{color-scheme:light dark;--bg:#fbfbfd;--fg:#1a1a1f;--muted:#5d5d6b;
+ --line:#c9c9d4;--card:#fff;--head:#eceffb;--accent:#3a5ccc;--req:#f2f5ff;
+ --ok:#1f7a4d;--todo:#8a6d1f}
+@media (prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#ececf2;--muted:#a0a0b0;
+ --line:#3a3a46;--card:#1e1e24;--head:#252a3d;--accent:#8fa6f5;--req:#212739;
+ --ok:#5fd39b;--todo:#e0bf6a}}
+:root[data-theme="dark"]{--bg:#16161a;--fg:#ececf2;--muted:#a0a0b0;--line:#3a3a46;
+ --card:#1e1e24;--head:#252a3d;--accent:#8fa6f5;--req:#212739;--ok:#5fd39b;--todo:#e0bf6a}
+:root[data-theme="light"]{--bg:#fbfbfd;--fg:#1a1a1f;--muted:#5d5d6b;--line:#c9c9d4;
+ --card:#fff;--head:#eceffb;--accent:#3a5ccc;--req:#f2f5ff;--ok:#1f7a4d;--todo:#8a6d1f}
+*{box-sizing:border-box}
+body{margin:0;padding:2rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
+ font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
+ line-height:1.7}
+.wrap{max-width:78rem;margin:0 auto}
+h1{font-size:1.35rem;margin:0 0 .35rem}
+.meta{color:var(--muted);font-size:.85rem;margin:0 0 1.2rem}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:1rem;
+ padding:.05rem .55rem;margin-right:.4rem;white-space:nowrap}
+.scroll{overflow-x:auto}
+table.usdm{border-collapse:collapse;width:100%;min-width:62rem;background:var(--card);
+ font-size:.92rem}
+table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
+ vertical-align:top;text-align:left}
+table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}
+td.kind{white-space:nowrap;color:var(--muted);font-weight:600}
+td.id{white-space:nowrap;color:var(--accent);
+ font-family:ui-monospace,Consolas,"Cascadia Mono",monospace}
+td.check{text-align:center;width:2.6rem;font-size:1rem}
+td.characteristic,td.subcharacteristic{white-space:nowrap;color:var(--muted)}
+td.measure,td.knowledge{font-size:.86rem;color:var(--muted)}
+tr.requirement>td{background:var(--req);font-weight:600}
+tr.req-group>td.kind,tr.spec-group>td.kind{font-weight:700;color:var(--fg)}
+tr.characteristic>td,tr.interpretation>td,tr.metrics>td{background:var(--head)}
+tr.note>td{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Q01. 性能効率性 / 時間効率性</h1>
+<p class="meta">
+  <span class="badge maturity">L2 固い</span>
+  <span class="badge">品質要求</span>
+  記入例（話題沸騰ポット）。実プロジェクトでは
+  <code>docs/usdm/src/Q01-time-efficiency.html</code> に置く。
+</p>
+
+<div class="scroll">
+<table class="usdm quality">
+<colgroup>
+  <col style="width:8rem"><col style="width:8rem"><col style="width:5rem">
+  <col style="width:7rem"><col><col style="width:12rem"><col style="width:10rem">
+</colgroup>
+<thead>
+<tr>
+  <th>品質特性</th><th>品質副特性</th><th>要求</th><th>要求ID</th>
+  <th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="characteristic">
+  <td class="characteristic">性能効率性</td>
+  <td class="subcharacteristic">時間効率性</td>
+  <td></td>
+  <td class="kind">定義</td>
+  <td class="body">製品又はシステムの機能を実行するとき、製品又はシステムの
+    応答時間及び処理時間、並びにスループット速度が要求事項を満足する度合い。
+    （JIS X 25010:2013 から引用）</td>
+  <td></td><td></td>
+</tr>
+<tr class="interpretation">
+  <td></td><td></td><td></td>
+  <td class="kind">解釈</td>
+  <td class="body">機能の応答時間及び処理時間が、朝の支度という作業に
+    支障のない程度かどうか。応答速度・一定の処理を完了するのに要する時間・
+    一定時間内に何件の処理ができるかというスループットの 3 つで見る。</td>
+  <td></td><td></td>
+</tr>
+<tr class="metrics">
+  <td></td><td></td><td></td>
+  <td class="kind">メトリクス</td>
+  <td class="body">作業者操作の応答時間 / サイクルタイム /
+    ターンアラウンドタイム充足率 ＝（ジョブ完了時刻 − ジョブ開始時刻）÷
+    目標ターンアラウンド時間</td>
+  <td></td><td></td>
+</tr>
+
+<tr class="req-group">
+  <td></td><td></td><td></td>
+  <td class="kind">＜待ち時間＞</td>
+  <td></td><td></td><td></td>
+</tr>
+<tr class="requirement">
+  <td></td><td></td>
+  <td class="kind">要求</td>
+  <td class="id">QUA1</td>
+  <td class="body">沸騰までの待ち時間を少なくしたい</td>
+  <td></td><td></td>
+</tr>
+<tr class="reason">
+  <td></td><td></td><td></td>
+  <td class="kind">理由</td>
+  <td class="body">季節を問わず朝は 15 分しか余裕がなく、
+    現行機は沸騰に 3 分かかるため、その間ほかの支度が止まる</td>
+  <td></td><td></td>
+</tr>
+<tr class="note">
+  <td></td><td></td><td></td>
+  <td class="kind">説明</td>
+  <td class="body">Excel テンプレートの元の要求 ID は <code>pot-230QR</code> だが、
+    本プロセスでは <code>QUA1</code>（ファイルの Q01 と一致）に読み替える</td>
+  <td></td><td></td>
+</tr>
+
+<tr class="spec-group">
+  <td></td><td></td><td></td>
+  <td class="kind">＜沸騰の所要時間＞</td>
+  <td></td><td></td><td></td>
+</tr>
+<tr class="spec">
+  <td></td><td></td>
+  <td class="check">☑</td>
+  <td class="id">Q1-1</td>
+  <td class="body">10 ℃ で 100 mL の水を 1 分以内に沸騰させる</td>
+  <td class="measure">通電開始から沸騰検知までの経過時間（秒）</td>
+  <td class="knowledge">ヒータ出力設計・熱容量計算</td>
+</tr>
+<tr class="spec">
+  <td></td><td></td>
+  <td class="check">□</td>
+  <td class="id">Q1-2</td>
+  <td class="body">100 mL の水をポットに注ぐ操作を 10 秒以内で完了できる</td>
+  <td class="measure">注水口へのアクセス時間（秒）</td>
+  <td class="knowledge">注水口の開口設計</td>
+</tr>
+
+<tr class="spec-group">
+  <td></td><td></td><td></td>
+  <td class="kind">＜沸騰の伝達＞</td>
+  <td></td><td></td><td></td>
+</tr>
+<tr class="spec">
+  <td></td><td></td>
+  <td class="check">□</td>
+  <td class="id">Q1-3</td>
+  <td class="body">沸騰したことを即時に表示する
+    （沸騰完了ランプ点灯および温度表示のタイムラグ 3 秒以内）</td>
+  <td class="measure">沸騰検知から表示更新までのタイムラグ（秒）</td>
+  <td class="knowledge">温度センサの応答特性</td>
+</tr>
+<tr class="spec">
+  <td></td><td></td>
+  <td class="check">□</td>
+  <td class="id">Q1-4</td>
+  <td class="body">沸騰したことを離れた人に伝える（沸騰後 3 秒以内にブザー鳴動）</td>
+  <td class="measure">沸騰検知からブザー鳴動までの時間（秒）</td>
+  <td class="knowledge">可聴距離の測定</td>
+</tr>
+
+<tr class="spec-group">
+  <td></td><td></td><td></td>
+  <td class="kind">＜連続運転＞</td>
+  <td></td><td></td><td></td>
+</tr>
+<tr class="spec">
+  <td></td><td></td>
+  <td class="check">□</td>
+  <td class="id">Q1-5</td>
+  <td class="body">上記を連続して 3 回実現できる</td>
+  <td class="measure">3 回連続実行時の各回の所要時間（秒）</td>
+  <td class="knowledge">ヒータの熱劣化・保護回路</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>
