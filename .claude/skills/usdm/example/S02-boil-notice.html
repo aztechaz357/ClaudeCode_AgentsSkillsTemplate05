@@ -4,41 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>S02. 沸騰の通知 —— 機能要求（USDM）</title>
-<style>
-:root{color-scheme:light dark;--bg:#fbfbfd;--fg:#1a1a1f;--muted:#5d5d6b;
- --line:#c9c9d4;--card:#fff;--head:#eceffb;--accent:#3a5ccc;--req:#f2f5ff;
- --ok:#1f7a4d;--todo:#8a6d1f}
-@media (prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#ececf2;--muted:#a0a0b0;
- --line:#3a3a46;--card:#1e1e24;--head:#252a3d;--accent:#8fa6f5;--req:#212739;
- --ok:#5fd39b;--todo:#e0bf6a}}
-:root[data-theme="dark"]{--bg:#16161a;--fg:#ececf2;--muted:#a0a0b0;--line:#3a3a46;
- --card:#1e1e24;--head:#252a3d;--accent:#8fa6f5;--req:#212739;--ok:#5fd39b;--todo:#e0bf6a}
-:root[data-theme="light"]{--bg:#fbfbfd;--fg:#1a1a1f;--muted:#5d5d6b;--line:#c9c9d4;
- --card:#fff;--head:#eceffb;--accent:#3a5ccc;--req:#f2f5ff;--ok:#1f7a4d;--todo:#8a6d1f}
-*{box-sizing:border-box}
-body{margin:0;padding:2rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
- font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
- line-height:1.7}
-.wrap{max-width:66rem;margin:0 auto}
-h1{font-size:1.35rem;margin:0 0 .35rem}
-.meta{color:var(--muted);font-size:.85rem;margin:0 0 1.2rem}
-.badge{display:inline-block;border:1px solid var(--line);border-radius:1rem;
- padding:.05rem .55rem;margin-right:.4rem;white-space:nowrap}
-.scroll{overflow-x:auto}
-table.usdm{border-collapse:collapse;width:100%;min-width:48rem;background:var(--card);
- font-size:.92rem}
-table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
- vertical-align:top;text-align:left}
-table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}
-td.kind{white-space:nowrap;color:var(--muted);font-weight:600}
-td.id{white-space:nowrap;color:var(--accent);
- font-family:ui-monospace,Consolas,"Cascadia Mono",monospace}
-td.check{text-align:center;width:2.6rem;font-size:1rem}
-td.category{white-space:nowrap;color:var(--muted)}
-tr.requirement>td{background:var(--req);font-weight:600}
-tr.req-group>td.kind,tr.spec-group>td.kind{font-weight:700;color:var(--fg)}
-tr.note>td{color:var(--muted)}
-</style>
+<!-- 見た目と操作（折りたたみ・絞り込み・検索）は共有の 2 ファイルが持つ -->
+<link rel="stylesheet" href="../usdm.css">
+<script defer src="../usdm.js"></script>
 </head>
 <body>
 <div class="wrap">

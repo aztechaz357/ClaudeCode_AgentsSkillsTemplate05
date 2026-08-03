@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import argparse
 import html
-import json
 import re
 import sys
 from dataclasses import dataclass, field
@@ -61,6 +60,7 @@ _REQ_ID = re.compile(r"^(REQ|QUA)([0-9]+(?:\.[0-9]+)*)$")
 _SPEC_ID = re.compile(r"^<?(Q?[0-9]+(?:\.[0-9]+)*)-([0-9]+)>?$")
 _CHECKED = "☑"
 _UNCHECKED = "□"
+_NL = chr(10)
 # 見出しの「S02.」は表示側が前置するので落とす（重複表示の防止）
 _TITLE_PREFIX = re.compile(r"^[SQ][0-9]+\s*[.．]\s*", re.IGNORECASE)
 
@@ -651,387 +651,156 @@ def collect(sources: list[str]) -> list[Document]:
     return documents
 
 
-def _to_payload(documents: list[Document]) -> list[dict]:
-    """HTML に埋め込む JSON 構造へ変換する（要求は木の形にする）。"""
+# 手書きの正（`docs/usdm/src/*.html`）と同じ見た目・同じ操作にするため、
+# CSS と JS は共有ファイルを 1 か所から読む。要求一覧は自己完結にしたいので
+# 参照ではなく埋め込む（`file://` で開けることを守る）。
+_ASSETS = Path(__file__).resolve().parent.parent / "skills" / "usdm"
 
-    def node(req: Requirement) -> dict:
-        return {
-            "number": req.number,
-            "title": req.title,
-            "category": req.category,
-            "group": req.group,
-            "reason": req.reason,
-            "note": req.note,
-            "specs": [
-                {
-                    "number": s.number,
-                    "text": s.text,
-                    "verified": s.verified,
-                    "group": s.group,
-                    "measure": s.measure,
-                    "knowledge": s.knowledge,
-                }
-                for s in req.specs
-            ],
-            "children": [node(c) for c in req.children],
-        }
-
-    return [
-        {
-            "id": doc.doc_id,
-            "kind": doc.kind,
-            "title": doc.title,
-            "maturity": doc.maturity,
-            "source": doc.source.replace("\\", "/"),
-            "characteristics": [
-                {
-                    "name": c.name,
-                    "sub": c.sub,
-                    "definition": c.definition,
-                    "interpretation": c.interpretation,
-                    "metrics": c.metrics,
-                    "note": c.note,
-                }
-                for c in doc.characteristics
-            ],
-            "requirements": [node(r) for r in build_tree(doc.requirements)],
-        }
-        for doc in documents
-    ]
-
-
-# 手書きの正（`docs/usdm/src/*.html`）と同じ見た目にする。
-# 片方だけ直すと「同じ表構造」という約束が崩れるので、必ず両方を直す。
-_STYLE = """\
-:root{color-scheme:light dark;--bg:#fbfbfd;--fg:#1a1a1f;--muted:#5d5d6b;
- --line:#c9c9d4;--card:#fff;--head:#eceffb;--accent:#3a5ccc;--req:#f2f5ff;
- --ok:#1f7a4d;--todo:#8a6d1f}
-@media (prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#ececf2;--muted:#a0a0b0;
- --line:#3a3a46;--card:#1e1e24;--head:#252a3d;--accent:#8fa6f5;--req:#212739;
- --ok:#5fd39b;--todo:#e0bf6a}}
-*{box-sizing:border-box}
-body{margin:0;padding:2rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
- font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
- line-height:1.7}
-.wrap{max-width:78rem;margin:0 auto}
-h1{font-size:1.4rem;margin:0 0 .25rem}
-.lead{color:var(--muted);margin:0 0 1.25rem;font-size:.88rem}
-.tools{position:sticky;top:0;background:var(--bg);padding:.75rem 0 1rem;z-index:2}
-input[type=search]{width:100%;padding:.6rem .8rem;font-size:1rem;color:var(--fg);
- background:var(--card);border:1px solid var(--line);border-radius:.5rem}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.5rem}
-.chips select,.chips button{font:inherit;font-size:.85rem;color:var(--fg);
- background:var(--card);border:1px solid var(--line);border-radius:.4rem;
- padding:.25rem .7rem;cursor:pointer}
-.chips select:hover,.chips button:hover{border-color:var(--accent)}
-.count{color:var(--muted);font-size:.85rem;margin:0 0 0 auto}
-.caret{display:inline-block;width:1em;color:var(--muted);font-size:.8rem}
-tr.foldable{cursor:pointer}
-tr.foldable:hover>td{filter:brightness(1.05)}
-.section-title{font-size:1.05rem;margin:1.75rem 0 .9rem;padding-bottom:.3rem;
- border-bottom:2px solid var(--line)}
-.doc{margin:0 0 2.5rem}
-.doc>header{display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;
- margin:0 0 .6rem;cursor:pointer}
-.doc h2{font-size:1.05rem;margin:0 .4rem 0 0}
-.badge{display:inline-block;border:1px solid var(--line);border-radius:1rem;
- padding:.05rem .55rem;font-size:.75rem;color:var(--muted);white-space:nowrap}
-.scroll{overflow-x:auto}
-table.usdm{border-collapse:collapse;width:100%;background:var(--card);font-size:.92rem}
-table.usdm.functional{min-width:48rem}
-table.usdm.quality{min-width:62rem}
-table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
- vertical-align:top;text-align:left}
-table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}
-td.kind{white-space:nowrap;color:var(--muted);font-weight:600}
-td.id{white-space:nowrap;color:var(--accent);
- font-family:ui-monospace,Consolas,"Cascadia Mono",monospace}
-td.check{text-align:center;width:2.6rem;font-size:1rem}
-td.category,td.characteristic,td.subcharacteristic{white-space:nowrap;color:var(--muted)}
-td.measure,td.knowledge{font-size:.86rem;color:var(--muted)}
-tr.requirement>td{background:var(--req);font-weight:600}
-tr.req-group>td.kind,tr.spec-group>td.kind{font-weight:700;color:var(--fg)}
-tr.characteristic>td,tr.interpretation>td,tr.metrics>td{background:var(--head)}
-tr.note>td{color:var(--muted)}
-.empty{color:var(--muted);padding:2rem 0}
-"""
-
-_SCRIPT = """\
-var DATA = JSON.parse(document.getElementById('usdm-data').textContent);
-var root = document.getElementById('docs');
-var counter = document.getElementById('count');
-var box = document.getElementById('q');
-var filterBox = document.getElementById('f');
-
-var COLUMNS = {
-  functional: ['カテゴリ名', '要求', '要求ID', '要求仕様'],
-  quality: ['品質特性', '品質副特性', '要求', '要求ID', '要求仕様',
-            '評価尺度', '対応知識・技術']
-};
-
-// 折りたたみ状態。キーは 文書 / 要求グループ / 要求 / 仕様グループ の 4 段階。
-// 検索中は折りたたみを無視して開く（畳んだせいで結果が消えるのを防ぐ）。
-var closed = {};
-var query = '';
-
-function isClosed(key) { return !query && closed[key] === true; }
-function caretFor(key) { return isClosed(key) ? '▸' : '▾'; }
-function toggle(key) { closed[key] = !closed[key]; render(); }
-
-function el(tag, cls, text) {
-  var n = document.createElement(tag);
-  if (cls) { n.className = cls; }
-  if (text !== undefined && text !== null) { n.textContent = text; }
-  return n;
+_COLUMNS = {
+    "functional": ["カテゴリ名", "要求", "要求ID", "要求仕様"],
+    "quality": [
+        "品質特性", "品質副特性", "要求", "要求ID", "要求仕様",
+        "評価尺度", "対応知識・技術",
+    ],
+}
+_WIDTHS = {
+    "functional": ["8rem", "5rem", "7rem", ""],
+    "quality": ["8rem", "8rem", "5rem", "7rem", "", "12rem", "10rem"],
 }
 
-// 手書きの HTML と同じ列の並びを 1 か所で決める。
-// 先頭（カテゴリ名 / 品質特性・品質副特性）→ 要求欄 → 要求ID欄 →
-// 要求仕様 →（品質のみ）評価尺度・対応知識。
-function makeRow(kind, cls, f) {
-  var cells = [];
-  if (kind === 'quality') {
-    cells.push(['characteristic', f.characteristic]);
-    cells.push(['subcharacteristic', f.sub]);
-  } else {
-    cells.push(['category', f.category]);
-  }
-  // 開閉の三角は、ラベル欄（要求 / ＜グループ名＞）の頭に置く
-  cells.push(f.check !== undefined
-    ? ['check', f.check]
-    : ['kind', f.mark, null, f.mark ? f.caret : null]);
-  cells.push(f.id
-    ? ['id', f.id]
-    : ['kind', f.label, null, f.mark ? null : f.caret]);
-  cells.push(['body', f.body, f.indent]);
-  if (kind === 'quality') {
-    cells.push(['measure', f.measure]);
-    cells.push(['knowledge', f.knowledge]);
-  }
 
-  var tr = el('tr', cls);
-  cells.forEach(function (c) {
-    var td = el('td', c[0]);
-    if (c[3]) { td.appendChild(el('span', 'caret', c[3])); }
-    td.appendChild(document.createTextNode(c[1] === undefined ? '' : c[1]));
-    if (c[2]) { td.style.paddingLeft = c[2]; }
-    tr.appendChild(td);
-  });
-  return tr;
-}
+def _cell(css: str, text: str = "", indent: int = 0) -> str:
+    """セル 1 つ。意味は class が持つ（位置ではない）。"""
+    if not css and not text:
+        return "<td></td>"
+    attrs = f' class="{css}"' if css else ""
+    style = f' style="padding-left:{0.6 + indent * 1.2:.1f}rem"' if indent else ""
+    return f"<td{attrs}{style}>{html.escape(text)}</td>"
 
-function foldRow(kind, cls, f, key) {
-  var tr = makeRow(kind, cls + ' foldable', f);
-  tr.addEventListener('click', function () { toggle(key); });
-  return tr;
-}
 
-function depth(number) {
-  return number.split('.').length - 1;
-}
+def _row(
+    kind: str,
+    cls: str,
+    *,
+    category: str = "",
+    characteristic: str = "",
+    sub: str = "",
+    mark: str = "",
+    label: str = "",
+    check: str | None = None,
+    ident: str = "",
+    body: str = "",
+    indent: int = 0,
+    measure: str = "",
+    knowledge: str = "",
+) -> str:
+    """行 1 つ。列の並びはテンプレート（`skills/usdm/template*.html`）と同じ。"""
+    cells = []
+    if kind == "quality":
+        cells.append(_cell("characteristic", characteristic))
+        cells.append(_cell("subcharacteristic", sub))
+    else:
+        cells.append(_cell("category", category))
+    cells.append(_cell("check", check) if check is not None else _cell("kind", mark))
+    cells.append(_cell("id", ident) if ident else _cell("kind", label))
+    cells.append(_cell("body", body, indent))
+    if kind == "quality":
+        cells.append(_cell("measure", measure))
+        cells.append(_cell("knowledge", knowledge))
+    return f'<tr class="{cls}">' + "".join(cells) + "</tr>"
 
-function indent(number) {
-  var d = depth(number);
-  return d ? (0.6 + d * 1.2) + 'rem' : null;
-}
 
-function hit(req, q) {
-  if (!q) { return true; }
-  var hay = [req.number, req.title, req.reason, req.note, req.category,
-             req.group].join(' ');
-  req.specs.forEach(function (s) {
-    hay += ' ' + s.number + ' ' + s.text + ' ' + s.measure + ' ' + s.knowledge;
-  });
-  if (hay.toLowerCase().indexOf(q) !== -1) { return true; }
-  return req.children.some(function (c) { return hit(c, q); });
-}
+def _append_requirements(
+    rows: list[str], requirements: list[Requirement], kind: str
+) -> None:
+    """同じ要求グループが続く間はグループ行を 1 本だけ出す。"""
+    group = None
+    for req in requirements:
+        if req.group and req.group != group:
+            group = req.group
+            rows.append(_row(kind, "req-group", label=req.group))
+        elif not req.group:
+            group = None
+        _append_requirement(rows, req, kind)
 
-function specVisible(spec) {
-  if (filterBox.value === 'todo') { return !spec.verified; }
-  if (filterBox.value === 'done') { return spec.verified; }
-  return true;
-}
 
-// 同じグループが続く間はグループ行を 1 本だけ出す（手書きの HTML と同じ並び）
-function appendRequirements(body, reqs, kind, q, docId, level) {
-  var name = null;
-  var key = null;
-  reqs.forEach(function (req) {
-    if (req.group) {
-      if (req.group !== name) {
-        name = req.group;
-        key = 'G:' + docId + ':' + level + ':' + req.group;
-        body.appendChild(
-          foldRow(kind, 'req-group', { label: req.group, caret: caretFor(key) }, key)
-        );
-      }
-      if (isClosed(key)) { return; }
-    } else {
-      name = null;
-      key = null;
-    }
-    appendRequirement(body, req, kind, q, docId);
-  });
-}
+def _append_requirement(rows: list[str], req: Requirement, kind: str) -> None:
+    """要求 → 理由 → 説明 → 仕様グループ → 仕様 → 下位要求 の順に並べる。"""
+    depth = req.number.count(".")
+    ident = ("QUA" + req.number[1:]) if kind == "quality" else ("REQ" + req.number)
 
-// 手書きの HTML と同じ行の並び（要求 → 理由 → 説明 → 仕様グループ → 仕様）。
-// 要求のキャレットが畳むのは **自分の詳細（理由・説明・仕様）だけ** 。
-// 下位要求は自分のキャレットを持つので、全部畳めば要求だけの一覧になる。
-function appendRequirement(body, req, kind, q, docId) {
-  var key = 'R:' + docId + ':' + req.number;
+    rows.append(_row(kind, "requirement", category=req.category, mark="要求",
+                     ident=ident, body=req.title, indent=depth))
+    rows.append(_row(kind, "reason", label="理由", body=req.reason or "(未記入)"))
+    if req.note:
+        rows.append(_row(kind, "note", label="説明", body=req.note))
 
-  body.appendChild(foldRow(kind, 'requirement', {
-    category: req.category,
-    mark: '要求',
-    caret: caretFor(key),
-    id: kind === 'quality' ? 'QUA' + req.number.slice(1) : 'REQ' + req.number,
-    body: req.title,
-    indent: indent(req.number)
-  }, key));
+    group = None
+    for spec in req.specs:
+        if spec.group and spec.group != group:
+            group = spec.group
+            rows.append(_row(kind, "spec-group", label=spec.group))
+        elif not spec.group:
+            group = None
+        rows.append(_row(
+            kind, "spec",
+            check=_CHECKED if spec.verified else _UNCHECKED,
+            ident=spec.number, body=spec.text, indent=depth,
+            measure=spec.measure, knowledge=spec.knowledge,
+        ))
 
-  if (!isClosed(key)) {
-    body.appendChild(makeRow(kind, 'reason', {
-      label: '理由', body: req.reason || '(未記入)'
-    }));
+    _append_requirements(rows, req.children, kind)
 
-    if (req.note) {
-      body.appendChild(makeRow(kind, 'note', { label: '説明', body: req.note }));
-    }
 
-    var name = null;
-    var groupKey = null;
-    req.specs.forEach(function (s) {
-      if (!specVisible(s)) { return; }
-      if (s.group) {
-        if (s.group !== name) {
-          name = s.group;
-          groupKey = 'S:' + docId + ':' + req.number + ':' + s.group;
-          body.appendChild(foldRow(kind, 'spec-group',
-            { label: s.group, caret: caretFor(groupKey) }, groupKey));
-        }
-        if (isClosed(groupKey)) { return; }
-      } else {
-        name = null;
-        groupKey = null;
-      }
-      body.appendChild(makeRow(kind, 'spec', {
-        check: s.verified ? '☑' : '□',
-        id: s.number,
-        body: s.text,
-        indent: indent(req.number),
-        measure: s.measure,
-        knowledge: s.knowledge
-      }));
-    });
-  }
+def render_document(doc: Document) -> str:
+    """文書 1 本を、手書きの HTML と同じ表として描く。"""
+    cols = "".join(
+        (f'<col style="width:{w}">' if w else "<col>") for w in _WIDTHS[doc.kind]
+    )
+    head = "".join(f"<th>{html.escape(c)}</th>" for c in _COLUMNS[doc.kind])
 
-  appendRequirements(body,
-    req.children.filter(function (c) { return hit(c, q); }),
-    kind, q, docId, req.number);
-}
+    rows: list[str] = []
+    for char in doc.characteristics:
+        rows.append(_row(doc.kind, "characteristic", characteristic=char.name,
+                         sub=char.sub, label="定義", body=char.definition))
+        rows.append(_row(doc.kind, "interpretation", label="解釈",
+                         body=char.interpretation))
+        rows.append(_row(doc.kind, "metrics", label="メトリクス", body=char.metrics))
+        if char.note:
+            rows.append(_row(doc.kind, "note", label="説明", body=char.note))
+    _append_requirements(rows, build_tree(doc.requirements), doc.kind)
 
-function appendCharacteristic(body, c) {
-  body.appendChild(makeRow('quality', 'characteristic', {
-    characteristic: c.name, sub: c.sub, label: '定義', body: c.definition
-  }));
-  body.appendChild(makeRow('quality', 'interpretation', {
-    label: '解釈', body: c.interpretation
-  }));
-  body.appendChild(makeRow('quality', 'metrics', {
-    label: 'メトリクス', body: c.metrics
-  }));
-  if (c.note) {
-    body.appendChild(makeRow('quality', 'note', { label: '説明', body: c.note }));
-  }
-}
+    badges = []
+    if doc.maturity:
+        badges.append(f'<span class="badge">{html.escape(doc.maturity)}</span>')
+    badges.append(
+        '<span class="badge">'
+        + ("品質要求" if doc.kind == "quality" else "機能要求")
+        + "</span>"
+    )
+    badges.append(
+        f'<span class="badge">{html.escape(doc.source.replace(chr(92), "/"))}</span>'
+    )
 
-// 下位要求も 1 個として数える（表示件数を実体に合わせる）
-function countReq(req, q) {
-  return req.children.filter(function (c) { return hit(c, q); })
-    .reduce(function (a, c) { return a + countReq(c, q); }, 1);
-}
-
-function renderDoc(doc, q) {
-  var reqs = doc.requirements.filter(function (r) { return hit(r, q); });
-  if (!reqs.length) { return null; }
-
-  var key = 'D:' + doc.id;
-  var section = el('section', 'doc');
-  var header = el('header');
-  header.appendChild(el('span', 'caret', caretFor(key)));
-  header.appendChild(el('h2', null, doc.id + '. ' + doc.title));
-  if (doc.maturity) { header.appendChild(el('span', 'badge', doc.maturity)); }
-  header.appendChild(el('span', 'badge',
-    doc.kind === 'quality' ? '品質要求' : '機能要求'));
-  header.appendChild(el('span', 'badge', doc.source));
-  header.addEventListener('click', function () { toggle(key); });
-  section.appendChild(header);
-
-  var count = reqs.reduce(function (a, r) { return a + countReq(r, q); }, 0);
-  if (isClosed(key)) { return { section: section, count: count }; }
-
-  var scroll = el('div', 'scroll');
-  var table = el('table', 'usdm ' + doc.kind);
-  var thead = el('thead');
-  var head = el('tr');
-  COLUMNS[doc.kind].forEach(function (c) { head.appendChild(el('th', null, c)); });
-  thead.appendChild(head);
-  table.appendChild(thead);
-
-  var body = el('tbody');
-  if (doc.kind === 'quality') {
-    doc.characteristics.forEach(function (c) { appendCharacteristic(body, c); });
-  }
-  appendRequirements(body, reqs, doc.kind, q, doc.id, '');
-  table.appendChild(body);
-  scroll.appendChild(table);
-  section.appendChild(scroll);
-  return { section: section, count: count };
-}
-
-function render() {
-  query = box.value.trim().toLowerCase();
-  root.textContent = '';
-  var shown = 0;
-  ['functional', 'quality'].forEach(function (kind) {
-    var rendered = [];
-    DATA.filter(function (d) { return d.kind === kind; }).forEach(function (d) {
-      var r = renderDoc(d, query);
-      if (r) { shown += r.count; rendered.push(r.section); }
-    });
-    if (!rendered.length) { return; }
-    root.appendChild(el('h2', 'section-title',
-      kind === 'quality' ? '品質要求' : '機能要求'));
-    rendered.forEach(function (s) { root.appendChild(s); });
-  });
-  if (!shown) { root.appendChild(el('p', 'empty', '一致する要求がありません。')); }
-  counter.textContent = '該当する要求: ' + shown + ' 件';
-}
-
-// 「すべて閉じる」は要求の詳細だけを畳む。要求行・グループ行・文書は残るので、
-// 要求の一覧（アウトライン）として読める。
-function closeAllRequirements() {
-  closed = {};
-  DATA.forEach(function (doc) {
-    (function walk(reqs) {
-      reqs.forEach(function (r) {
-        closed['R:' + doc.id + ':' + r.number] = true;
-        walk(r.children);
-      });
-    })(doc.requirements);
-  });
-  render();
-}
-
-box.addEventListener('input', render);
-filterBox.addEventListener('change', render);
-document.getElementById('open').addEventListener('click', function () {
-  closed = {};
-  render();
-});
-document.getElementById('close').addEventListener('click', closeAllRequirements);
-render();
-"""
+    header = (
+        f"<header><h2>{html.escape(doc.doc_id)}. {html.escape(doc.title)}</h2>"
+        + "".join(badges)
+        + "</header>"
+    )
+    return _NL.join([
+        '<section class="doc">',
+        header,
+        '<div class="scroll">',
+        f'<table class="usdm {doc.kind}">',
+        f"<colgroup>{cols}</colgroup>",
+        f"<thead><tr>{head}</tr></thead>",
+        "<tbody>",
+        *rows,
+        "</tbody>",
+        "</table>",
+        "</div>",
+        "</section>",
+    ])
 
 
 def render_html(documents: list[Document]) -> str:
@@ -1039,6 +808,7 @@ def render_html(documents: list[Document]) -> str:
 
     外部への参照（CDN・リモート画像・通信）を一切含めない。
     日時などの実行ごとに変わる値も埋め込まない（--check が壊れるため）。
+    折りたたみ・絞り込み・検索は、手書きの 1 枚と同じ `usdm.js` が付ける。
 
     Args:
         documents: 表示する USDM 文書の一覧。
@@ -1046,55 +816,50 @@ def render_html(documents: list[Document]) -> str:
     Returns:
         HTML の全文。
     """
-    payload = json.dumps(_to_payload(documents), ensure_ascii=False, indent=1)
-    # <script> の中に閉じタグや < が生で出ないようにする
-    payload = payload.replace("<", "\\u003c").replace("&", "\\u0026")
+    css = (_ASSETS / "usdm.css").read_text(encoding="utf-8")
+    script = (_ASSETS / "usdm.js").read_text(encoding="utf-8")
+
+    sections: list[str] = []
+    for kind, label in (("functional", "機能要求"), ("quality", "品質要求")):
+        chosen = [d for d in documents if d.kind == kind]
+        if not chosen:
+            continue
+        sections.append(f'<h2 class="section-title">{label}</h2>')
+        sections.extend(render_document(d) for d in chosen)
+
     total = sum(len(d.requirements) for d in documents)
     specs = sum(len(r.specs) for d in documents for r in d.requirements)
     functional = sum(1 for d in documents if d.kind == "functional")
     quality = len(documents) - functional
 
-    return f"""<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>要求一覧（USDM）</title>
-<style>
-{_STYLE}</style>
-</head>
-<body>
-<div class="wrap">
-<h1>要求一覧（USDM）</h1>
-<p class="lead">機能要求 {functional} 枚 / 品質要求 {quality} 枚 ——
-要求 {total} 個 / 仕様 {specs} 条。
-理由は USDM の核心なので常に表示する。この HTML は
-{html.escape('docs/usdm/src/*.html')} を束ねた <b>生成物</b> ——
-要求を直したら再生成する（<code>build_usdm.py</code>）。</p>
-<div class="tools">
-<input type="search" id="q" placeholder="要求・理由・仕様・評価尺度を検索"
- autocomplete="off">
-<div class="chips">
-<select id="f" aria-label="仕様の絞り込み">
-<option value="all">仕様: すべて</option>
-<option value="todo">仕様: 未検証のみ</option>
-<option value="done">仕様: 検証済みのみ</option>
-</select>
-<button type="button" id="open">すべて開く</button>
-<button type="button" id="close">すべて閉じる</button>
-<p class="count" id="count"></p>
-</div>
-</div>
-<div id="docs"></div>
-</div>
-<script id="usdm-data" type="application/json">
-{payload}
-</script>
-<script>
-{_SCRIPT}</script>
-</body>
-</html>
-"""
+    return _NL.join([
+        "<!doctype html>",
+        '<html lang="ja">',
+        "<head>",
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        "<title>要求一覧（USDM）</title>",
+        "<style>",
+        css + "</style>",
+        "</head>",
+        "<body>",
+        '<div class="wrap">',
+        "<h1>要求一覧（USDM）</h1>",
+        f'<p class="lead">機能要求 {functional} 枚 / 品質要求 {quality} 枚 ——',
+        f"要求 {total} 個 / 仕様 {specs} 条。",
+        "理由は USDM の核心なので常に表示する。この HTML は",
+        "docs/usdm/src/ の手書き HTML を束ねた <b>生成物</b> ——",
+        "要求を直したら再生成する（<code>build_usdm.py</code>）。</p>",
+        '<div id="docs">',
+        *sections,
+        "</div>",
+        "</div>",
+        "<script>",
+        script + "</script>",
+        "</body>",
+        "</html>",
+        "",
+    ])
 
 
 def main(argv: list[str] | None = None) -> int:

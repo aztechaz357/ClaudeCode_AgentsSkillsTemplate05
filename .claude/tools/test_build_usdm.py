@@ -12,6 +12,7 @@ USDM の記法（`.claude/skills/usdm/SKILL.md`）が正。このテストは
 from __future__ import annotations
 
 import io
+import re
 import sys
 import tempfile
 import unittest
@@ -24,9 +25,8 @@ import build_usdm
 
 # 記入例（`.claude/skills/usdm/example/`）。テンプレートと実装が
 # 食い違ったらここが落ちる。
-EXAMPLE_DIR = (
-    Path(__file__).resolve().parent.parent / "skills" / "usdm" / "example"
-)
+SKILL_DIR = Path(__file__).resolve().parent.parent / "skills" / "usdm"
+EXAMPLE_DIR = SKILL_DIR / "example"
 
 
 def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") -> str:
@@ -395,14 +395,49 @@ class CommandTest(unittest.TestCase):
             self.assertIn("STALE", buf.getvalue())
 
 
+class AssetTest(unittest.TestCase):
+    """見た目と操作は共有の 2 ファイルが持ち、手書きと生成物で 1 つであること。"""
+
+    def test_共有アセットが実在する(self) -> None:
+        for name in ("usdm.css", "usdm.js"):
+            self.assertTrue((SKILL_DIR / name).is_file(), name)
+
+    def test_テンプレートと記入例は共有アセットを参照する(self) -> None:
+        # 各ファイルに CSS/JS を写すと、直したときに片方だけ古くなる
+        for path in [
+            SKILL_DIR / "template.html",
+            SKILL_DIR / "template-quality.html",
+            *sorted(EXAMPLE_DIR.glob("*.html")),
+        ]:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("usdm.css", text, path.name)
+            self.assertIn("usdm.js", text, path.name)
+            self.assertNotIn("<style>", text, f"{path.name} に CSS を写している")
+
+    def test_操作は共有JSが組み立てる(self) -> None:
+        script = (SKILL_DIR / "usdm.js").read_text(encoding="utf-8")
+        for control in ("すべて開く", "すべて閉じる", "仕様: 未検証のみ",
+                        "仕様: 検証済みのみ"):
+            self.assertIn(control, script)
+        # 折りたたみは 文書 / 要求グループ / 要求 / 仕様グループ の 4 段階
+        for kind in ("characteristic", "req-group", "requirement", "spec-group"):
+            self.assertIn(kind, script)
+
+
 class RenderTest(unittest.TestCase):
-    """生成物が自己完結であること（file:// で開ける）。"""
+    """生成物が自己完結で、手書きと同じ表であること。"""
 
     def test_外部参照を含まない(self) -> None:
         doc = build_usdm.parse_document(VALID, doc_id="S02")
         rendered = build_usdm.render_html([doc])
         for forbidden in ("http://", "https://", "<link", "src="):
             self.assertNotIn(forbidden, rendered)
+
+    def test_共有アセットを埋め込む(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        rendered = build_usdm.render_html([doc])
+        for name in ("usdm.css", "usdm.js"):
+            self.assertIn((SKILL_DIR / name).read_text(encoding="utf-8"), rendered)
 
     def test_日時を埋め込まない(self) -> None:
         doc = build_usdm.parse_document(VALID, doc_id="S02")
@@ -413,17 +448,45 @@ class RenderTest(unittest.TestCase):
     def test_手書きと同じ列見出しを持つ(self) -> None:
         doc = build_usdm.parse_document(VALID, doc_id="S02")
         rendered = build_usdm.render_html([doc])
-        for column in ("カテゴリ名", "要求ID", "要求仕様", "評価尺度"):
+        for column in ("カテゴリ名", "要求ID", "要求仕様"):
             self.assertIn(column, rendered)
 
-    def test_折りたたみと絞り込みの操作を備える(self) -> None:
-        doc = build_usdm.parse_document(VALID, doc_id="S02")
-        rendered = build_usdm.render_html([doc])
-        for control in ('id="open"', 'id="close"', 'id="f"', "未検証のみ"):
-            self.assertIn(control, rendered)
-        # 4 段階（文書 / 要求グループ / 要求 / 仕様グループ）の折りたたみキー
-        for key in ("'D:'", "'G:'", "'R:'", "'S:'"):
-            self.assertIn(key, rendered)
+    def test_生成物を読み直すと同じ要求になる(self) -> None:
+        # 「手書きと生成物は同じ表構造」を機械で守る。生成した HTML を
+        # 同じパーサに戻して、要求が一致し違反 0 件であることを確かめる。
+        source = build_usdm.parse_document(WITH_CHILD, doc_id="S02")
+        round_trip = build_usdm.parse_document(
+            build_usdm.render_html([source]), doc_id="S02"
+        )
+        self.assertEqual(round_trip.violations, [])
+        self.assertEqual(
+            [(r.number, r.reason) for r in round_trip.requirements],
+            [(r.number, r.reason) for r in source.requirements],
+        )
+        self.assertEqual(
+            [(s.number, s.verified) for r in round_trip.requirements for s in r.specs],
+            [(s.number, s.verified) for r in source.requirements for s in r.specs],
+        )
+
+    def test_品質要求も読み直せる(self) -> None:
+        source = build_usdm.parse_document(QualityTest.QUALITY, doc_id="Q01")
+        round_trip = build_usdm.parse_document(
+            build_usdm.render_html([source]), doc_id="Q01"
+        )
+        self.assertEqual(round_trip.violations, [])
+        self.assertEqual(round_trip.characteristics[0].metrics,
+                         source.characteristics[0].metrics)
+        self.assertEqual(round_trip.requirements[0].specs[0].measure,
+                         source.requirements[0].specs[0].measure)
+
+    def test_全ての行がヘッダと同じ列数を持つ(self) -> None:
+        documents = build_usdm.collect([str(EXAMPLE_DIR)])
+        rendered = build_usdm.render_html(documents)
+        for table in re.findall(r"<table class=\"usdm[^\"]*\">.*?</table>",
+                                rendered, re.DOTALL):
+            width = table.count("<th>")
+            for row in re.findall(r"<tr class=\"[^\"]*\">.*?</tr>", table, re.DOTALL):
+                self.assertEqual(row.count("<td"), width, row[:60])
 
 
 if __name__ == "__main__":

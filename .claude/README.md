@@ -211,7 +211,7 @@
 | `check_doc_examples.py` | マニュアルの Python 例を実行して出力を照合 | Python プロジェクト |
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
-| `build_usdm.py` | 手書きの要求 HTML（`docs/usdm/src/`）を検証し、束ねた要求一覧（自己完結 HTML・折りたたみと絞り込みつき）を生成する。`--check` で古さを検出 | Python プロジェクト |
+| `build_usdm.py` | 手書きの要求 HTML（`docs/usdm/src/`）を検証し、束ねた要求一覧（自己完結 HTML）を生成する。見た目と操作（折りたたみ・絞り込み・検索）は手書きと共有の `skills/usdm/usdm.css` / `usdm.js`。`--check` で古さを検出 | Python プロジェクト |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |
