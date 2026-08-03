@@ -43,8 +43,8 @@ h1{font-size:1.35rem;margin:0 0 .35rem}
 
 .scroll{overflow-x:auto}
 table.usdm{border-collapse:collapse;width:100%;background:var(--card);font-size:.92rem}
-table.usdm.functional{min-width:48rem}
-table.usdm.quality{min-width:62rem}
+table.usdm.functional{min-width:54rem}
+table.usdm.quality{min-width:72rem}
 table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
  vertical-align:top;text-align:left}
 table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}

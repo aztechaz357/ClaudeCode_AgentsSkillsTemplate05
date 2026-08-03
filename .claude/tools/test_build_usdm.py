@@ -37,7 +37,8 @@ def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") 
 <h1>{title}</h1>
 <p class="meta"><span class="badge maturity">L1 動く</span></p>
 <table class="usdm {kind}">
-<thead><tr><th>カテゴリ名</th><th>要求</th><th>要求ID</th><th>要求仕様</th></tr></thead>
+<thead><tr><th>カテゴリ名</th><th>項目</th><th>検証</th><th>要求ID</th>
+<th>要求仕様</th></tr></thead>
 <tbody>
 {rows}
 </tbody>
@@ -49,17 +50,22 @@ def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") 
 VALID = _doc("""\
 <tr class="requirement">
   <td class="category">抽出</td><td class="kind">要求</td>
-  <td class="id">REQ2</td><td class="body">列を指定して絞り込みたい</td>
+  <td class="check"></td><td class="id">REQ2</td>
+  <td class="body">列を指定して絞り込みたい</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td class="kind">理由</td>
+  <td class="category"></td><td class="kind">理由</td>
+  <td class="check"></td><td class="id"></td>
   <td class="body">実データが 5 万行あり、全件出ると目で探すことになる</td>
 </tr>
 <tr class="spec-group">
-  <td></td><td></td><td class="kind">＜列指定＞</td><td></td>
+  <td class="category"></td><td class="kind">仕様グループ</td>
+  <td class="check"></td><td class="id"></td>
+  <td class="body">＜列指定＞</td>
 </tr>
 <tr class="spec">
-  <td></td><td class="check">□</td><td class="id">2-1</td>
+  <td class="category"></td><td class="kind">仕様</td>
+  <td class="check">□</td><td class="id">2-1</td>
   <td class="body">--col NAME=値 を渡すと完全一致する行だけを数える</td>
 </tr>
 """)
@@ -67,26 +73,32 @@ VALID = _doc("""\
 WITH_CHILD = _doc("""\
 <tr class="requirement">
   <td class="category">抽出</td><td class="kind">要求</td>
-  <td class="id">REQ2</td><td class="body">列を指定して絞り込みたい</td>
+  <td class="check"></td><td class="id">REQ2</td>
+  <td class="body">列を指定して絞り込みたい</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td class="kind">理由</td>
+  <td class="category"></td><td class="kind">理由</td>
+  <td class="check"></td><td class="id"></td>
   <td class="body">実データが 5 万行ある</td>
 </tr>
 <tr class="spec">
-  <td></td><td class="check">☑</td><td class="id">2-1</td>
+  <td class="category"></td><td class="kind">仕様</td>
+  <td class="check">☑</td><td class="id">2-1</td>
   <td class="body">--col NAME=値 で完全一致する行を数える</td>
 </tr>
 <tr class="requirement">
-  <td></td><td class="kind">要求</td>
-  <td class="id">REQ2.1</td><td class="body">複数列を AND で指定したい</td>
+  <td class="category"></td><td class="kind">要求</td>
+  <td class="check"></td><td class="id">REQ2.1</td>
+  <td class="body">複数列を AND で指定したい</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td class="kind">理由</td>
+  <td class="category"></td><td class="kind">理由</td>
+  <td class="check"></td><td class="id"></td>
   <td class="body">1 列では絞り切れないデータがある</td>
 </tr>
 <tr class="spec">
-  <td></td><td class="check">□</td><td class="id">2.1-1</td>
+  <td class="category"></td><td class="kind">仕様</td>
+  <td class="check">□</td><td class="id">2.1-1</td>
   <td class="body">--col を 2 回渡すと両方に一致する行だけを数える</td>
 </tr>
 """)
@@ -244,33 +256,43 @@ class QualityTest(unittest.TestCase):
 <h1>Q01. 性能効率性</h1>
 <p class="meta"><span class="badge maturity">L2 固い</span></p>
 <table class="usdm quality">
-<thead><tr><th>品質特性</th><th>品質副特性</th><th>要求</th><th>要求ID</th>
-<th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th></tr></thead>
+<thead><tr><th>品質特性</th><th>品質副特性</th><th>項目</th><th>検証</th>
+<th>要求ID</th><th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th></tr></thead>
 <tbody>
 <tr class="characteristic">
   <td class="characteristic">性能効率性</td>
   <td class="subcharacteristic">時間効率性</td>
-  <td></td><td class="kind">定義</td>
-  <td class="body">応答時間が要求事項を満足する度合い</td><td></td><td></td>
+  <td class="kind">定義</td><td class="check"></td><td class="id"></td>
+  <td class="body">応答時間が要求事項を満足する度合い</td>
+  <td class="measure"></td><td class="knowledge"></td>
 </tr>
 <tr class="interpretation">
-  <td></td><td></td><td></td><td class="kind">解釈</td>
-  <td class="body">朝の支度に支障がない程度か</td><td></td><td></td>
+  <td class="characteristic"></td><td class="subcharacteristic"></td>
+  <td class="kind">解釈</td><td class="check"></td><td class="id"></td>
+  <td class="body">朝の支度に支障がない程度か</td>
+  <td class="measure"></td><td class="knowledge"></td>
 </tr>
 <tr class="metrics">
-  <td></td><td></td><td></td><td class="kind">メトリクス</td>
-  <td class="body">通電から沸騰までの経過時間</td><td></td><td></td>
+  <td class="characteristic"></td><td class="subcharacteristic"></td>
+  <td class="kind">メトリクス</td><td class="check"></td><td class="id"></td>
+  <td class="body">通電から沸騰までの経過時間</td>
+  <td class="measure"></td><td class="knowledge"></td>
 </tr>
 <tr class="requirement">
-  <td></td><td></td><td class="kind">要求</td><td class="id">QUA1</td>
-  <td class="body">沸騰までの待ち時間を少なくしたい</td><td></td><td></td>
+  <td class="characteristic"></td><td class="subcharacteristic"></td>
+  <td class="kind">要求</td><td class="check"></td><td class="id">QUA1</td>
+  <td class="body">沸騰までの待ち時間を少なくしたい</td>
+  <td class="measure"></td><td class="knowledge"></td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td></td><td class="kind">理由</td>
-  <td class="body">朝は 15 分しか余裕がない</td><td></td><td></td>
+  <td class="characteristic"></td><td class="subcharacteristic"></td>
+  <td class="kind">理由</td><td class="check"></td><td class="id"></td>
+  <td class="body">朝は 15 分しか余裕がない</td>
+  <td class="measure"></td><td class="knowledge"></td>
 </tr>
 <tr class="spec">
-  <td></td><td></td><td class="check">□</td><td class="id">Q1-1</td>
+  <td class="characteristic"></td><td class="subcharacteristic"></td>
+  <td class="kind">仕様</td><td class="check">□</td><td class="id">Q1-1</td>
   <td class="body">100 mL の水を 1 分以内に沸騰させる</td>
   <td class="measure">通電から沸騰検知までの秒数</td>
   <td class="knowledge">ヒータ出力設計</td>
@@ -478,6 +500,34 @@ class RenderTest(unittest.TestCase):
                          source.characteristics[0].metrics)
         self.assertEqual(round_trip.requirements[0].specs[0].measure,
                          source.requirements[0].specs[0].measure)
+
+    def test_列は1つの意味だけを持つ(self) -> None:
+        # 要求ID 欄にラベル（理由・説明・グループ名）を混ぜない。
+        # 混ぜると何の列か読めなくなる（列を増やしてでも固定する）。
+        documents = build_usdm.collect([str(EXAMPLE_DIR)])
+        rendered = build_usdm.render_html(documents)
+
+        def cell(row: str, css: str) -> str:
+            found = re.search(
+                f'<td class="{css}"[^>]*>(.*?)</td>', row, re.DOTALL
+            )
+            return (found.group(1) if found else "").strip()
+
+        rows = re.findall(r'<tr class="([^"]*)">(.*?)</tr>', rendered, re.DOTALL)
+        self.assertTrue(rows)
+        for kind, row in rows:
+            ident, check = cell(row, "id"), cell(row, "check")
+            if kind == "requirement":
+                self.assertRegex(ident, r"^(REQ|QUA)[0-9]+(\.[0-9]+)*$")
+                self.assertEqual(check, "", kind)
+            elif kind == "spec":
+                self.assertRegex(ident, r"^Q?[0-9]+(\.[0-9]+)*-[0-9]+$")
+                self.assertIn(check, ("□", "☑"))
+            else:
+                self.assertEqual(ident, "", f"{kind} の要求ID欄が空でない")
+                self.assertEqual(check, "", f"{kind} の検証欄が空でない")
+            # 項目欄は必ず行の種別を表す言葉が入る
+            self.assertNotEqual(cell(row, "kind"), "", f"{kind} の項目欄が空")
 
     def test_全ての行がヘッダと同じ列数を持つ(self) -> None:
         documents = build_usdm.collect([str(EXAMPLE_DIR)])

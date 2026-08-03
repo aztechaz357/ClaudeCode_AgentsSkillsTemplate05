@@ -22,74 +22,92 @@
 <div class="scroll">
 <table class="usdm functional">
 <colgroup>
-  <col style="width:8rem"><col style="width:5rem">
+  <col style="width:8rem"><col style="width:7rem"><col style="width:3.5rem">
   <col style="width:7rem"><col>
 </colgroup>
 <thead>
-<tr><th>カテゴリ名</th><th>要求</th><th>要求ID</th><th>要求仕様</th></tr>
+<tr>
+  <th>カテゴリ名</th><th>項目</th><th>検証</th><th>要求ID</th><th>要求仕様</th>
+</tr>
 </thead>
 <tbody>
 
 <tr class="requirement">
   <td class="category">沸騰</td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">REQ2</td>
   <td class="body">お湯が沸いたことに、ポットから離れていても気づきたい</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">台所を離れて別室で作業していることが多く、
     沸騰に気づかないまま 10 分以上放置して湯が冷めることが週に数回ある</td>
 </tr>
 <tr class="note">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">説明</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">ブザーの音量調整と夜間の消音は、通知そのものが通ってから考える</td>
 </tr>
 
 <tr class="spec-group">
-  <td></td><td></td>
-  <td class="kind">＜沸騰の通知＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜沸騰の通知＞</td>
 </tr>
 <tr class="spec">
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様</td>
   <td class="check">☑</td>
   <td class="id">2-1</td>
   <td class="body">沸騰完了から 3 秒以内にブザーを 1 回鳴らす</td>
 </tr>
 <tr class="spec">
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">2-2</td>
-  <td class="body">沸騰完了と同時に沸騰完了ランプを点灯し、
-    給湯するまで点灯を保つ</td>
+  <td class="body">沸騰完了と同時に沸騰完了ランプを点灯し、給湯するまで点灯を保つ</td>
 </tr>
 
 <tr class="req-group">
-  <td></td><td></td>
-  <td class="kind">＜通知手段の分割（共通）＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">要求グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜通知手段の分割（共通）＞</td>
 </tr>
 <tr class="requirement">
-  <td></td>
+  <td class="category"></td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">REQ2.1</td>
   <td class="body">音で気づけない人にも、沸いたことを伝えたい</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">同居する家族に難聴の者がおり、ブザーだけでは通知が届かない</td>
 </tr>
 <tr class="spec-group">
-  <td></td><td></td>
-  <td class="kind">＜光による通知＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜光による通知＞</td>
 </tr>
 <tr class="spec">
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">2.1-1</td>
   <td class="body">沸騰完了から 3 秒以内に本体ランプを 1 秒周期で 10 回点滅させる</td>

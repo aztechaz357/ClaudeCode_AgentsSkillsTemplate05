@@ -22,13 +22,14 @@
 <div class="scroll">
 <table class="usdm quality">
 <colgroup>
-  <col style="width:8rem"><col style="width:8rem"><col style="width:5rem">
-  <col style="width:7rem"><col><col style="width:12rem"><col style="width:10rem">
+  <col style="width:8rem"><col style="width:8rem"><col style="width:7rem">
+  <col style="width:3.5rem"><col style="width:7rem"><col>
+  <col style="width:12rem"><col style="width:10rem">
 </colgroup>
 <thead>
 <tr>
-  <th>品質特性</th><th>品質副特性</th><th>要求</th><th>要求ID</th>
-  <th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th>
+  <th>品質特性</th><th>品質副特性</th><th>項目</th><th>検証</th>
+  <th>要求ID</th><th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th>
 </tr>
 </thead>
 <tbody>
@@ -36,64 +37,97 @@
 <tr class="characteristic">
   <td class="characteristic">性能効率性</td>
   <td class="subcharacteristic">時間効率性</td>
-  <td></td>
   <td class="kind">定義</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">製品又はシステムの機能を実行するとき、製品又はシステムの
     応答時間及び処理時間、並びにスループット速度が要求事項を満足する度合い。
     （JIS X 25010:2013 から引用）</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="interpretation">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">解釈</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">機能の応答時間及び処理時間が、朝の支度という作業に
     支障のない程度かどうか。応答速度・一定の処理を完了するのに要する時間・
     一定時間内に何件の処理ができるかというスループットの 3 つで見る。</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="metrics">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">メトリクス</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">作業者操作の応答時間 / サイクルタイム /
     ターンアラウンドタイム充足率 ＝（ジョブ完了時刻 − ジョブ開始時刻）÷
     目標ターンアラウンド時間</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 
 <tr class="req-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜待ち時間＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">要求グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜待ち時間＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="requirement">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">QUA1</td>
   <td class="body">沸騰までの待ち時間を少なくしたい</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">季節を問わず朝は 15 分しか余裕がなく、
     現行機は沸騰に 3 分かかるため、その間ほかの支度が止まる</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="note">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">説明</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">Excel テンプレートの元の要求 ID は <code>pot-230QR</code> だが、
     本プロセスでは <code>QUA1</code>（ファイルの Q01 と一致）に読み替える</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 
 <tr class="spec-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜沸騰の所要時間＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜沸騰の所要時間＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="spec">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">☑</td>
   <td class="id">Q1-1</td>
   <td class="body">10 ℃ で 100 mL の水を 1 分以内に沸騰させる</td>
@@ -101,7 +135,9 @@
   <td class="knowledge">ヒータ出力設計・熱容量計算</td>
 </tr>
 <tr class="spec">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">Q1-2</td>
   <td class="body">100 mL の水をポットに注ぐ操作を 10 秒以内で完了できる</td>
@@ -110,12 +146,19 @@
 </tr>
 
 <tr class="spec-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜沸騰の伝達＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜沸騰の伝達＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="spec">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">Q1-3</td>
   <td class="body">沸騰したことを即時に表示する
@@ -124,7 +167,9 @@
   <td class="knowledge">温度センサの応答特性</td>
 </tr>
 <tr class="spec">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">Q1-4</td>
   <td class="body">沸騰したことを離れた人に伝える（沸騰後 3 秒以内にブザー鳴動）</td>
@@ -133,12 +178,19 @@
 </tr>
 
 <tr class="spec-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜連続運転＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜連続運転＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="spec">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">Q1-5</td>
   <td class="body">上記を連続して 3 回実現できる</td>

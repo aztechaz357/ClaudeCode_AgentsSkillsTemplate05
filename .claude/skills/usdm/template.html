@@ -27,20 +27,26 @@
   L1 では 要求 1 個・理由 1 行・仕様 1〜3 条。超えるならスライスが大きすぎる。
   要求ID は REQ{番号}（S## と一致）、仕様ID は {番号}-{連番}。
   書いたら build_usdm.py で検証する（理由の欠落・番号の不整合を落とす）。
-  行の意味は class が正。空の <td></td> は消さない（列がずれる）。
 
-  ブラウザで開くと、要求グループ・要求・仕様グループの行頭に ▾ が付き、
+  列は 1 つの意味だけを持つ。どの行も 5 セルで、順番と中身は固定:
+    カテゴリ名 / 項目（行の種別）/ 検証（□ ☑）/ 要求ID / 要求仕様
+  行の意味は <tr> の class が正。使わないセルも class 付きの空で残す
+  （消すと列がずれる）。
+
+  ブラウザで開くと、要求グループ・要求・仕様グループの項目欄に ▾ が付き、
   クリックで折りたためる。上部に検索と仕様の絞り込みも出る（usdm.js）。
 -->
 
 <div class="scroll">
 <table class="usdm functional">
 <colgroup>
-  <col style="width:8rem"><col style="width:5rem">
+  <col style="width:8rem"><col style="width:7rem"><col style="width:3.5rem">
   <col style="width:7rem"><col>
 </colgroup>
 <thead>
-<tr><th>カテゴリ名</th><th>要求</th><th>要求ID</th><th>要求仕様</th></tr>
+<tr>
+  <th>カテゴリ名</th><th>項目</th><th>検証</th><th>要求ID</th><th>要求仕様</th>
+</tr>
 </thead>
 <tbody>
 
@@ -48,30 +54,38 @@
 <tr class="requirement">
   <td class="category">{カテゴリ名}</td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">REQ{番号}</td>
   <td class="body">{実現したいこと（抽象的）。「〜のとき、〜して、〜したい」}</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{なぜ困っているか。要求の外側にある事実を「〜なので」で書く。
     「必要だから」「〜できないと不便」は理由になっていない}</td>
 </tr>
 <tr class="note">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">説明</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{備忘録。実装されなくてよいもの。範囲・対象外もここに書く。
     無ければこの行ごと消す}</td>
 </tr>
 
 <!-- ── 仕様グループ ─────────────────────────────────────── -->
 <tr class="spec-group">
-  <td></td><td></td>
-  <td class="kind">＜{仕様グループ名}＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜{仕様グループ名}＞</td>
 </tr>
 <tr class="spec">
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">{番号}-1</td>
   <td class="body">{要求に含まれる“動詞”と“目的語”。
@@ -82,15 +96,17 @@
   L2 に上げる反復で、同じ仕様グループに追記する:
 
   <tr class="spec">
-    <td></td><td class="check">□</td><td class="id">{番号}-2</td>
+    <td class="category"></td><td class="kind">仕様</td>
+    <td class="check">□</td><td class="id">{番号}-2</td>
     <td class="body">{境界値: 空・最大・0 件のとき何が出るか}</td>
   </tr>
   <tr class="spec">
-    <td></td><td class="check">□</td><td class="id">{番号}-3</td>
+    <td class="category"></td><td class="kind">仕様</td>
+    <td class="check">□</td><td class="id">{番号}-3</td>
     <td class="body">{失敗経路: 前提が欠けたとき何が出るか（終了コード・メッセージ）}</td>
   </tr>
 
-  検証済みになった仕様は check セルを □ から ☑ にする
+  検証済みになった仕様は検証欄を □ から ☑ にする
   （対応するテストが緑になったとき）。
 -->
 
@@ -99,28 +115,38 @@
      階層は番号のドットだけが正（REQ{番号}.1 は REQ{番号} の子）。
 
 <tr class="req-group">
-  <td></td><td></td>
-  <td class="kind">＜{要求グループ名}＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">要求グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜{要求グループ名}＞</td>
 </tr>
 <tr class="requirement">
-  <td></td>
+  <td class="category"></td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">REQ{番号}.1</td>
   <td class="body">{分割された要求。〜したい}</td>
 </tr>
 <tr class="reason">
-  <td></td><td></td>
+  <td class="category"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{上位要求とは別の、この下位要求に固有の理由}</td>
 </tr>
 <tr class="spec-group">
-  <td></td><td></td>
-  <td class="kind">＜{仕様グループ名}＞</td>
-  <td></td>
+  <td class="category"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜{仕様グループ名}＞</td>
 </tr>
 <tr class="spec">
-  <td></td><td class="check">□</td><td class="id">{番号}.1-1</td>
+  <td class="category"></td>
+  <td class="kind">仕様</td>
+  <td class="check">□</td>
+  <td class="id">{番号}.1-1</td>
   <td class="body">{入力 → 観測できる出力}</td>
 </tr>
 ──────────────────────────────────────────────────────── -->

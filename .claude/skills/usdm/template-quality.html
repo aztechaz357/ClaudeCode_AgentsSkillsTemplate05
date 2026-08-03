@@ -27,18 +27,24 @@
   要求ID は QUA{番号}（ファイルの Q## と一致）、仕様ID は Q{番号}-{連番}。
   定義 → 解釈 → メトリクス の 3 行は品質要求の前提なので省略できない。
   品質要求の仕様には評価尺度が必須（測れない品質要求は書かない）。
+
+  列は 1 つの意味だけを持つ。どの行も 8 セルで、順番と中身は固定:
+    品質特性 / 品質副特性 / 項目（行の種別）/ 検証（□ ☑）/
+    要求ID / 要求仕様 / 評価尺度 / 対応知識・技術
+  使わないセルも class 付きの空で残す（消すと列がずれる）。
 -->
 
 <div class="scroll">
 <table class="usdm quality">
 <colgroup>
-  <col style="width:8rem"><col style="width:8rem"><col style="width:5rem">
-  <col style="width:7rem"><col><col style="width:12rem"><col style="width:10rem">
+  <col style="width:8rem"><col style="width:8rem"><col style="width:7rem">
+  <col style="width:3.5rem"><col style="width:7rem"><col>
+  <col style="width:12rem"><col style="width:10rem">
 </colgroup>
 <thead>
 <tr>
-  <th>品質特性</th><th>品質副特性</th><th>要求</th><th>要求ID</th>
-  <th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th>
+  <th>品質特性</th><th>品質副特性</th><th>項目</th><th>検証</th>
+  <th>要求ID</th><th>要求仕様</th><th>評価尺度</th><th>対応知識・技術</th>
 </tr>
 </thead>
 <tbody>
@@ -47,68 +53,104 @@
 <tr class="characteristic">
   <td class="characteristic">{品質特性。例: 性能効率性}</td>
   <td class="subcharacteristic">{品質副特性。例: 時間効率性}</td>
-  <td></td>
   <td class="kind">定義</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{JIS X 25010:2013 の定義をそのまま引く。
     例: 製品又はシステムの機能を実行するとき、応答時間及び処理時間、
     並びにスループット速度が要求事項を満足する度合い}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="interpretation">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">解釈</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{上の定義を、この開発対象では何と読むかに落とす。
     定義を写しただけの解釈は書いた意味がない}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="metrics">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">メトリクス</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{達成度合いを評価する指標と測定方法。
     例: 作業者操作の応答時間 / サイクルタイム}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="note">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">説明</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{備忘録。実装されなくてよいもの。無ければこの行ごと消す}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 
 <!-- ── 品質要求 ─────────────────────────────────────────── -->
 <tr class="req-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜{要求グループ名}＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">要求グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜{要求グループ名}＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="requirement">
-  <td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">要求</td>
+  <td class="check"></td>
   <td class="id">QUA{番号}</td>
   <td class="body">{定義・解釈・メトリクスから導いた品質要求を「〜したい」で書く。
     機能に付随するものは機能的な表現で、作り方に関するものは作業者への指図で}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="reason">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">理由</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{なぜ困っているか。要求の外側にある事実}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="note">
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
   <td class="kind">説明</td>
+  <td class="check"></td>
+  <td class="id"></td>
   <td class="body">{備忘録。無ければこの行ごと消す}</td>
-  <td></td><td></td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="spec-group">
-  <td></td><td></td><td></td>
-  <td class="kind">＜{仕様グループ名}＞</td>
-  <td></td><td></td><td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様グループ</td>
+  <td class="check"></td>
+  <td class="id"></td>
+  <td class="body">＜{仕様グループ名}＞</td>
+  <td class="measure"></td>
+  <td class="knowledge"></td>
 </tr>
 <tr class="spec">
-  <td></td>
-  <td></td>
+  <td class="characteristic"></td>
+  <td class="subcharacteristic"></td>
+  <td class="kind">仕様</td>
   <td class="check">□</td>
   <td class="id">Q{番号}-1</td>
   <td class="body">{測れる形で書く。数値と単位を必ず入れる}</td>

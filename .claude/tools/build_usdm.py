@@ -412,8 +412,8 @@ def _requirement_number(raw: str) -> str | None:
 
 
 def _group_label(row: _Row) -> str:
-    """グループ行の名前（`＜…＞`）。ラベル欄（`td.kind`）に書く。"""
-    return row.cells.get("kind", "")
+    """グループ行の名前（`＜…＞`）。要求仕様欄に書く（項目欄は行の種別）。"""
+    return row.cells.get("body", "")
 
 
 def _make_spec(
@@ -656,16 +656,20 @@ def collect(sources: list[str]) -> list[Document]:
 # 参照ではなく埋め込む（`file://` で開けることを守る）。
 _ASSETS = Path(__file__).resolve().parent.parent / "skills" / "usdm"
 
+# 列は 1 つの意味だけを持つ。ID 欄にラベル（理由・説明・グループ名）を
+# 混ぜない —— 混ぜると何の列か読めなくなる。幅は横スクロールで吸収する。
 _COLUMNS = {
-    "functional": ["カテゴリ名", "要求", "要求ID", "要求仕様"],
+    "functional": ["カテゴリ名", "項目", "検証", "要求ID", "要求仕様"],
     "quality": [
-        "品質特性", "品質副特性", "要求", "要求ID", "要求仕様",
+        "品質特性", "品質副特性", "項目", "検証", "要求ID", "要求仕様",
         "評価尺度", "対応知識・技術",
     ],
 }
 _WIDTHS = {
-    "functional": ["8rem", "5rem", "7rem", ""],
-    "quality": ["8rem", "8rem", "5rem", "7rem", "", "12rem", "10rem"],
+    "functional": ["8rem", "7rem", "3.5rem", "7rem", ""],
+    "quality": [
+        "8rem", "8rem", "7rem", "3.5rem", "7rem", "", "12rem", "10rem",
+    ],
 }
 
 
@@ -685,24 +689,27 @@ def _row(
     category: str = "",
     characteristic: str = "",
     sub: str = "",
-    mark: str = "",
     label: str = "",
-    check: str | None = None,
+    check: str = "",
     ident: str = "",
     body: str = "",
     indent: int = 0,
     measure: str = "",
     knowledge: str = "",
 ) -> str:
-    """行 1 つ。列の並びはテンプレート（`skills/usdm/template*.html`）と同じ。"""
+    """行 1 つ。列の並びはテンプレート（`skills/usdm/template*.html`）と同じ。
+
+    どの行も同じ列に同じ意味のものを置く。空でよいセルは空のまま出す。
+    """
     cells = []
     if kind == "quality":
         cells.append(_cell("characteristic", characteristic))
         cells.append(_cell("subcharacteristic", sub))
     else:
         cells.append(_cell("category", category))
-    cells.append(_cell("check", check) if check is not None else _cell("kind", mark))
-    cells.append(_cell("id", ident) if ident else _cell("kind", label))
+    cells.append(_cell("kind", label))
+    cells.append(_cell("check", check))
+    cells.append(_cell("id", ident))
     cells.append(_cell("body", body, indent))
     if kind == "quality":
         cells.append(_cell("measure", measure))
@@ -718,7 +725,7 @@ def _append_requirements(
     for req in requirements:
         if req.group and req.group != group:
             group = req.group
-            rows.append(_row(kind, "req-group", label=req.group))
+            rows.append(_row(kind, "req-group", label="要求グループ", body=req.group))
         elif not req.group:
             group = None
         _append_requirement(rows, req, kind)
@@ -729,7 +736,7 @@ def _append_requirement(rows: list[str], req: Requirement, kind: str) -> None:
     depth = req.number.count(".")
     ident = ("QUA" + req.number[1:]) if kind == "quality" else ("REQ" + req.number)
 
-    rows.append(_row(kind, "requirement", category=req.category, mark="要求",
+    rows.append(_row(kind, "requirement", category=req.category, label="要求",
                      ident=ident, body=req.title, indent=depth))
     rows.append(_row(kind, "reason", label="理由", body=req.reason or "(未記入)"))
     if req.note:
@@ -739,11 +746,12 @@ def _append_requirement(rows: list[str], req: Requirement, kind: str) -> None:
     for spec in req.specs:
         if spec.group and spec.group != group:
             group = spec.group
-            rows.append(_row(kind, "spec-group", label=spec.group))
+            rows.append(_row(kind, "spec-group", label="仕様グループ",
+                             body=spec.group))
         elif not spec.group:
             group = None
         rows.append(_row(
-            kind, "spec",
+            kind, "spec", label="仕様",
             check=_CHECKED if spec.verified else _UNCHECKED,
             ident=spec.number, body=spec.text, indent=depth,
             measure=spec.measure, knowledge=spec.knowledge,
