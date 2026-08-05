@@ -17,12 +17,31 @@
 | アクティビティ図 | Mermaid `flowchart TD` | ` ```mermaid ` |
 | シーケンス図 | Mermaid `sequenceDiagram` | ` ```mermaid ` |
 | 状態遷移図 | Mermaid `stateDiagram-v2` | ` ```mermaid ` |
+| 層と依存の向き（依存グラフ） | Mermaid `flowchart TD` ＋ `classDef` で層を色分け | ` ```mermaid ` |
+| ER 図 | Mermaid `erDiagram` | ` ```mermaid ` |
 | 結線・経路の配置を細かく制御したい図（ブロック線図・データフロー図） | Graphviz (dot) | ` ```dot ` |
-| 上記で表現しきれないもの | PlantUML | ` ```plantuml ` |
+| UML のうち Mermaid に無いもの（配置図・パッケージ図・ユースケース図） | PlantUML | ` ```plantuml ` |
+| **SysML**（要求図・ブロック定義図 bdd・内部ブロック図 ibd） | PlantUML（ステレオタイプで表す） | ` ```plantuml ` |
 
 **細かい配置制御に Graphviz を使う理由** —— 分岐点・合流点・
 フィードバック経路の配置を `rankdir` と `constraint` で制御でき、
 Mermaid では表現しきれない図が書けるため。
+
+**SysML を使う場面** —— 要求と設計要素の対応（`<<satisfy>>` /
+`<<verify>>`）を図で示したいとき。要求番号（`REQ2`）と仕様番号（`2-1`）を
+そのままノード名に使い、要求 → 設計要素 → テストの線を 1 枚で見せる。
+L3 の `docs/design.md` で使う（L1・L2 では過剰）。
+
+```plantuml
+@startuml
+skinparam componentStyle rectangle
+rectangle "REQ2: CSV の行数をすぐ知りたい" as REQ2 <<requirement>>
+rectangle "CountRows（行数を数える）" as C <<block>>
+rectangle "2-1 の E2E テスト" as T <<testCase>>
+C ..> REQ2 : <<satisfy>>
+T ..> REQ2 : <<verify>>
+@enduml
+```
 
 ## 日本語を必ず併記する
 
@@ -54,14 +73,53 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path docs
 > `check_mermaid.ps1` は Mermaid 専用の旧ツール。新規の検証は
 > `check_diagrams.ps1` を使う。
 
-## 設計書に最低限入れる図
+## 見た目の規約（読みやすさは装飾ではなく仕様）
 
-実装前設計書（`docs/design/proposals/S##-*.md`）には、少なくとも
-次の 2 枚を入れる。
+図は「あれば良い」ものではなく、 **構造を一目で伝えられて初めて価値がある** 。
+次の 5 つを守る。
 
-- **クラス図** —— 契約と実装の関係、層の所属が分かるもの
-- **その機能の主経路を示す図** —— シーケンス図・アクティビティ図・
-  データフロー図など、対象に合うもの
+1. **層で色を分ける** —— クリーンアーキテクチャの 4 層は常に同じ色にする。
+   プロジェクト内で色の意味を揺らさない（色が意味を持つ）
+
+   ```mermaid
+   flowchart TD
+     P["CLI（入口）"] --> A["カウントのユースケース"]
+     A --> D["行数の数え方（純粋）"]
+     A -.->|契約| PORT[["CsvReader（契約）"]]
+     INF["ファイル読み（実装）"] -.->|実装| PORT
+     classDef presentation fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+     classDef application fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+     classDef domain fill:#fff8e1,stroke:#f9a825,color:#e65100
+     classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c
+     classDef port fill:#ffffff,stroke:#455a64,stroke-dasharray:4 3,color:#263238
+     class P presentation
+     class A application
+     class D domain
+     class INF infrastructure
+     class PORT port
+   ```
+
+2. **依存の向きを上から下に固定する** —— `flowchart TD` を使い、
+   矢印は必ず下向き。逆流があると図が上を向くので、 **図が違反を可視化する**
+3. **契約（Port）は破線と角丸で描く** —— 実装と契約が一目で区別できること
+   （上の例の `PORT`）。「どこで疎結合にしたか」が図の主題
+4. **凡例を付ける** —— 色・線種の意味を図の直後に 1 行で書く。
+   凡例の無い色分けは読者に推測を強いる
+5. **1 枚 1 主題** —— 「層」「主経路」「状態」を 1 枚に詰めない。
+   詰めたくなったら、それは 2 枚に分ける合図
+
+## 設計書に最低限入れる図（成熟度別・省略禁止）
+
+図は L3 の贅沢品ではない。 **L1 の薄い設計書にも 1 枚必須** 。
+文章 10 行より、正しい 1 枚のほうが速く読めて誤解が少ないため。
+
+| 成熟度 | 設計書（`docs/design/S##-*.md`）に入れる図 |
+|---|---|
+| **L1 動く** | **1 枚**: 層と依存の向きを示す `flowchart TD`（契約があれば破線で示す） |
+| **L2 固い** | ＋ **1 枚**: 主経路を示す図（シーケンス図・状態遷移図・データフロー図から対象に合うもの） |
+| **L3 整った** | 上記を `docs/design.md` へ統合し、クラス図（契約と実装の関係）と SysML の要求図（要求 → 設計要素 → テスト）を足す |
+
+厚い経路（`docs/design/proposals/S##-*.md`）は最初から L2 の 2 枚を入れる。
 
 ## 工房レーンでの扱い
 
