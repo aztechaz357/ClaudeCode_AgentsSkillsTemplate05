@@ -63,13 +63,22 @@ class Slice:
     line: int
 
 
+# 充足マトリクスの列（ダッシュボードと共有する。順番が表示順）
+ITEMS = ("要求仕様書", "設計書", "テスト結果", "マニュアル", "ハブ")
+
+
 @dataclass
 class Result:
-    """スライス 1 本の検査結果。"""
+    """スライス 1 本の検査結果。
+
+    `missing` は人が読む欠落の説明、`items` は表に並べるための項目別の
+    合否（`build_status.py` の充足マトリクスが使う）。
+    """
 
     ident: str
     maturity: int
     missing: list[str] = field(default_factory=list)
+    items: dict[str, bool] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -130,6 +139,7 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
         欠けている成果物の一覧を持つ Result。
     """
     result = Result(item.ident, item.maturity)
+    result.items = {name: False for name in ITEMS}
     if item.maturity < 1:
         return result  # 着手前。成果物が無いのが正常
 
@@ -180,6 +190,16 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
                 f"雛形のプレースホルダが残っている: {path.name} の {holes[0]}"
                 + (f" ほか {len(holes) - 1} 件" if len(holes) > 1 else "")
             )
+
+    # 項目別の合否（欠落の説明にその項目名が現れたら未達とみなす）
+    text = " ".join(result.missing)
+    result.items = {
+        "要求仕様書": "要求仕様書" not in text,
+        "設計書": "設計書" not in text,
+        "テスト結果": "テスト結果" not in text,
+        "マニュアル": "マニュアル" not in text,
+        "ハブ": "ハブ" not in text,
+    }
     return result
 
 
