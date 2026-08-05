@@ -162,6 +162,35 @@
 </table>
 </div>
 
+<!--
+  トレース表の規則は機能要求と同じ（`template.html` のコメントが正）。
+  品質要求では「実装」に、その品質を成立させている場所を書く。
+-->
+<h2 class="trace-title">トレース（仕様 → 成果物）</h2>
+<div class="scroll">
+<table class="trace">
+<colgroup>
+  <col style="width:6rem"><col><col><col><col><col>
+</colgroup>
+<thead>
+<tr>
+  <th>仕様ID</th><th>設計</th><th>実装</th>
+  <th>単体テスト</th><th>統合テスト</th><th>マニュアル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="trace">
+  <td class="id">Q{番号}-1</td>
+  <td class="design">docs/design/Q{番号}-{name}.md#{見出し}</td>
+  <td class="code">{ソースルート}/{層}/{file}::{関数}</td>
+  <td class="unit">{テストルート}/{層}/test_{name}.py::{テスト名}</td>
+  <td class="e2e">{統合テストルート}/test_{name}.py::{テスト名}</td>
+  <td class="manual">docs/manual.md#Q{番号}</td>
+</tr>
+</tbody>
+</table>
+</div>
+
 </div>
 </body>
 </html>

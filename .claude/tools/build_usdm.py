@@ -29,6 +29,9 @@ Excel テンプレートと同じ列（カテゴリ名 / 要求 / 要求ID / 要
     missing-interpretation   品質特性に解釈が無い
     missing-metrics          品質特性にメトリクスが無い
     missing-measure          品質要求の仕様に評価尺度が無い
+    missing-trace            検証済み（☑）の仕様に成果物へのトレースが無い
+    trace-without-spec       存在しない仕様番号を指しているトレース行
+    duplicate-trace          同じ仕様番号のトレース行が 2 つ以上ある
 
 生成物に日時を埋め込まない。埋め込むと --check が常に STALE になる。
 
@@ -75,7 +78,17 @@ _ROW_KINDS = {
     "characteristic",
     "interpretation",
     "metrics",
+    "trace",
 }
+# トレース表の列。仕様 1 条から 5 つの成果物へ線を引く（1 列 1 意味）。
+# 順番はテンプレート（`skills/usdm/template*.html`）と同じにする。
+_TRACE_COLUMNS = (
+    ("design", "設計"),
+    ("code", "実装"),
+    ("unit", "単体テスト"),
+    ("e2e", "統合テスト"),
+    ("manual", "マニュアル"),
+)
 # <td class="..."> に書けるセルの種別。`kind` はラベル欄で、
 # グループ行（＜…＞）だけが意味を持つ（他の行では表示専用）。
 _CELL_KINDS = {
@@ -88,6 +101,7 @@ _CELL_KINDS = {
     "knowledge",
     "characteristic",
     "subcharacteristic",
+    *(name for name, _ in _TRACE_COLUMNS),
 }
 
 
@@ -102,6 +116,8 @@ class Spec:
     group: str = ""
     measure: str = ""
     knowledge: str = ""
+    # 成果物へのトレース（`_TRACE_COLUMNS` の列名 → 場所の文字列）
+    trace: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -178,7 +194,9 @@ class _TableReader(HTMLParser):
         self.maturity = ""
         self.table_kind = ""
         self.rows: list[_Row] = []
+        self.trace_rows: list[_Row] = []
         self._in_h1 = False
+        self._in_trace = False
         self._in_thead = False
         self._in_maturity = False
         self._row: _Row | None = None
@@ -190,16 +208,19 @@ class _TableReader(HTMLParser):
         if tag == "h1":
             self._in_h1 = True
             self._buf = []
-        elif tag == "table" and "usdm" in classes:
-            for candidate in ("functional", "quality"):
-                if candidate in classes:
-                    self.table_kind = candidate
+        elif tag == "table":
+            # トレース表は要求表と別に読む（列も行の意味も違うため）
+            self._in_trace = "trace" in classes
+            if "usdm" in classes:
+                for candidate in ("functional", "quality"):
+                    if candidate in classes:
+                        self.table_kind = candidate
         elif tag == "thead":
             self._in_thead = True
         elif tag == "tr" and not self._in_thead:
             kind = next((c for c in classes if c in _ROW_KINDS), "")
             self._row = _Row(kind, {}, self.getpos()[0])
-            self.rows.append(self._row)
+            (self.trace_rows if self._in_trace else self.rows).append(self._row)
         elif tag == "td" and self._row is not None:
             self._cell = next((c for c in classes if c in _CELL_KINDS), "")
             self._buf = []
@@ -392,6 +413,7 @@ def parse_document(text: str, doc_id: str, source: str = "") -> Document:
             else:
                 characteristic.metrics = body
 
+    violations.extend(_attach_traces(requirements, reader.trace_rows, source))
     violations.extend(_validate(requirements, doc_id, source))
     if kind == "quality":
         violations.extend(_validate_quality(characteristics, requirements, source))
@@ -458,6 +480,78 @@ def _make_spec(
         measure=cells.get("measure", ""),
         knowledge=cells.get("knowledge", ""),
     )
+
+
+def _attach_traces(
+    requirements: list[Requirement], rows: list[_Row], source: str
+) -> list[Violation]:
+    """トレース表の行を仕様に結び付け、線の欠落を違反として返す。
+
+    USDM をトレーサビリティの背骨にするための要。
+    **検証済み（☑）の仕様は 5 つの成果物すべてに線がつながっていること** ——
+    テストが緑になったのに設計書やマニュアルが無い状態を機械で落とす。
+
+    Args:
+        requirements: 表から読み取った要求の一覧（仕様を持つ）。
+        rows: トレース表の行。
+        source: 表示用のパス（違反に添える）。
+
+    Returns:
+        `trace-without-spec` / `duplicate-trace` / `missing-trace` の一覧。
+    """
+    violations: list[Violation] = []
+    specs = {spec.number: spec for req in requirements for spec in req.specs}
+    seen: dict[str, int] = {}
+
+    for row in rows:
+        if row.kind != "trace":
+            continue
+        number = row.cells.get("id", "").strip().strip("<>")
+        spec = specs.get(number)
+        if spec is None:
+            violations.append(
+                Violation(
+                    "trace-without-spec",
+                    f"トレース行が指す仕様 {number or '(空)'} が表にない",
+                    row.line,
+                    source,
+                )
+            )
+            continue
+        if number in seen:
+            violations.append(
+                Violation(
+                    "duplicate-trace",
+                    f"仕様 {number} のトレース行が重複している"
+                    f"（{seen[number]} 行目と同じ）",
+                    row.line,
+                    source,
+                )
+            )
+            continue
+        seen[number] = row.line
+        spec.trace = {
+            name: row.cells.get(name, "").strip() for name, _ in _TRACE_COLUMNS
+        }
+
+    for req in requirements:
+        for spec in req.specs:
+            if not spec.verified:
+                continue  # 未検証の仕様はまだ成果物が無くてよい
+            missing = [
+                label for name, label in _TRACE_COLUMNS if not spec.trace.get(name)
+            ]
+            if missing:
+                violations.append(
+                    Violation(
+                        "missing-trace",
+                        f"検証済みの仕様 {spec.number} のトレースが欠けている"
+                        f"（{' / '.join(missing)}）",
+                        spec.line,
+                        source,
+                    )
+                )
+    return violations
 
 
 def _validate(
@@ -760,6 +854,46 @@ def _append_requirement(rows: list[str], req: Requirement, kind: str) -> None:
     _append_requirements(rows, req.children, kind)
 
 
+def _render_trace(doc: Document) -> list[str]:
+    """トレース表（仕様 → 成果物）を描く。線が 1 本も無ければ何も出さない。
+
+    要求表とは別の表にする理由は 2 つ。要求表を 10 列に広げると読めなくなる
+    こと、そして「どの仕様の線が切れているか」は行列の形が最も速く読めること。
+    """
+    traced = [
+        spec
+        for req in doc.requirements
+        for spec in req.specs
+        if any(spec.trace.get(name) for name, _ in _TRACE_COLUMNS)
+    ]
+    if not traced:
+        return []
+
+    head = "".join(
+        f"<th>{html.escape(label)}</th>" for label in ("仕様ID", *[
+            label for _, label in _TRACE_COLUMNS
+        ])
+    )
+    rows = []
+    for spec in sorted(traced, key=lambda s: s.number):
+        cells = [_cell("id", spec.number)]
+        cells += [
+            _cell(name, spec.trace.get(name, "")) for name, _ in _TRACE_COLUMNS
+        ]
+        rows.append('<tr class="trace">' + "".join(cells) + "</tr>")
+
+    return [
+        '<div class="scroll">',
+        '<table class="trace">',
+        f"<thead><tr>{head}</tr></thead>",
+        "<tbody>",
+        *rows,
+        "</tbody>",
+        "</table>",
+        "</div>",
+    ]
+
+
 def render_document(doc: Document) -> str:
     """文書 1 本を、手書きの HTML と同じ表として描く。"""
     cols = "".join(
@@ -807,6 +941,7 @@ def render_document(doc: Document) -> str:
         "</tbody>",
         "</table>",
         "</div>",
+        *_render_trace(doc),
         "</section>",
     ])
 

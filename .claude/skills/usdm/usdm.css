@@ -49,6 +49,22 @@ table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
  vertical-align:top;text-align:left}
 table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}
 
+/* トレース表（仕様 → 設計 / 実装 / 単体 / 統合 / マニュアル）。
+   要求表とは別の表にして、要求表の読みやすさを保つ。 */
+.trace-title{font-size:.95rem;margin:1.1rem 0 .5rem;color:var(--muted)}
+table.trace{border-collapse:collapse;width:100%;background:var(--card);
+ font-size:.85rem;min-width:60rem}
+table.trace th,table.trace td{border:1px solid var(--line);padding:.3rem .55rem;
+ vertical-align:top;text-align:left}
+table.trace thead th{background:var(--head);white-space:nowrap;font-size:.8rem}
+table.trace td.id{white-space:nowrap;color:var(--accent);font-weight:600}
+table.trace td.design,table.trace td.code,table.trace td.unit,
+table.trace td.e2e,table.trace td.manual{
+ font-family:ui-monospace,Consolas,"Cascadia Mono",monospace;
+ font-size:.78rem;word-break:break-all}
+table.trace td.unit,table.trace td.e2e{color:var(--ok)}
+table.trace td:empty::after{content:"未";color:var(--todo);font-family:inherit}
+
 td.kind{white-space:nowrap;color:var(--muted);font-weight:600}
 td.id{white-space:nowrap;color:var(--accent);
  font-family:ui-monospace,Consolas,"Cascadia Mono",monospace}

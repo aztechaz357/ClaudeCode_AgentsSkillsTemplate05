@@ -19,7 +19,9 @@
 <p class="meta">
   <span class="badge maturity">{L1 動く}</span>
   <span class="badge">機能要求</span>
-  スライス文書: <a href="../../slices/S{番号}-{name}.md">docs/slices/S{番号}-{name}.md</a>
+  ハブ: <a href="../../slices/S{番号}-{name}.md">docs/slices/S{番号}-{name}.md</a>
+  ｜ 設計書: <a href="../../design/S{番号}-{name}.md">docs/design/S{番号}-{name}.md</a>
+  ｜ テスト結果: <a href="../../test-reports/S{番号}-{name}.md">docs/test-reports/S{番号}-{name}.md</a>
 </p>
 
 <!--
@@ -151,6 +153,46 @@
 </tr>
 ──────────────────────────────────────────────────────── -->
 
+</tbody>
+</table>
+</div>
+
+<!--
+  ── トレース表（仕様 → 成果物）─────────────────────────
+  USDM をトレーサビリティの背骨にする表。1 列 1 意味は要求表と同じ。
+
+  規則:
+    - 検証欄を ☑ にした仕様は、5 列すべてを埋める
+      （build_usdm.py が missing-trace で落とす）
+    - □ のままの仕様は、行ごと省いてよい（まだ成果物が無いため）
+    - 書き方は「リポジトリからの相対パス」＋ 位置:
+        設計       docs/design/S##-<name>.md#<見出し>
+        実装       <ソースルート>/<層>/<file>::<関数・メソッド>
+        単体テスト <テストルート>/<層>/test_*.py::<テスト名>
+        統合テスト <統合テストルート>/test_*.py::<テスト名>
+        マニュアル docs/manual.md#S##
+-->
+<h2 class="trace-title">トレース（仕様 → 成果物）</h2>
+<div class="scroll">
+<table class="trace">
+<colgroup>
+  <col style="width:6rem"><col><col><col><col><col>
+</colgroup>
+<thead>
+<tr>
+  <th>仕様ID</th><th>設計</th><th>実装</th>
+  <th>単体テスト</th><th>統合テスト</th><th>マニュアル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="trace">
+  <td class="id">{番号}-1</td>
+  <td class="design">docs/design/S{番号}-{name}.md#{見出し}</td>
+  <td class="code">{ソースルート}/{層}/{file}::{関数}</td>
+  <td class="unit">{テストルート}/{層}/test_{name}.py::{テスト名}</td>
+  <td class="e2e">{統合テストルート}/test_{name}.py::{テスト名}</td>
+  <td class="manual">docs/manual.md#S{番号}</td>
+</tr>
 </tbody>
 </table>
 </div>

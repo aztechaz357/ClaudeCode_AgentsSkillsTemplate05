@@ -117,6 +117,34 @@
 </table>
 </div>
 
+<!--
+  トレース表 —— 仕様 1 条から 5 つの成果物へ線を引く。
+  検証欄が ☑ になった仕様は、5 列すべてが埋まっていること
+  （build_usdm.py が missing-trace で落とす）。
+  □ のままの仕様は、まだ成果物が無いので空でよい（行ごと省いてよい）。
+-->
+<h2 class="trace-title">トレース（仕様 → 成果物）</h2>
+<div class="scroll">
+<table class="trace">
+<thead>
+<tr>
+  <th>仕様ID</th><th>設計</th><th>実装</th>
+  <th>単体テスト</th><th>統合テスト</th><th>マニュアル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="trace">
+  <td class="id">2-1</td>
+  <td class="design">docs/design/S02-boil-notice.md#構成</td>
+  <td class="code">src/pot/application/boil_notice.py::notify_boiled</td>
+  <td class="unit">test/application/test_boil_notice.py::test_沸騰で通知を1回出す</td>
+  <td class="e2e">test/e2e/test_boil.py::test_沸騰から3秒以内にブザーが鳴る</td>
+  <td class="manual">docs/manual.md#S02</td>
+</tr>
+</tbody>
+</table>
+</div>
+
 </div>
 </body>
 </html>

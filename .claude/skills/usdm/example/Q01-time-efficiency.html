@@ -202,6 +202,32 @@
 </table>
 </div>
 
+<!--
+  品質要求でもトレースの規則は同じ（☑ になった仕様は 5 列すべて埋める）。
+  品質要求の「実装」は測定を成立させている場所を指す。
+-->
+<h2 class="trace-title">トレース（仕様 → 成果物）</h2>
+<div class="scroll">
+<table class="trace">
+<thead>
+<tr>
+  <th>仕様ID</th><th>設計</th><th>実装</th>
+  <th>単体テスト</th><th>統合テスト</th><th>マニュアル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="trace">
+  <td class="id">Q1-1</td>
+  <td class="design">docs/design/Q01-time-efficiency.md#加熱制御</td>
+  <td class="code">src/pot/domain/heater.py::required_power_w</td>
+  <td class="unit">test/domain/test_heater.py::test_100mLを1分で沸かす出力を返す</td>
+  <td class="e2e">test/e2e/test_boil.py::test_100mLが60秒以内に沸騰する</td>
+  <td class="manual">docs/manual.md#Q01</td>
+</tr>
+</tbody>
+</table>
+</div>
+
 </div>
 </body>
 </html>

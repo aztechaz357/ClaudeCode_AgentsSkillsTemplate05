@@ -29,8 +29,21 @@ SKILL_DIR = Path(__file__).resolve().parent.parent / "skills" / "usdm"
 EXAMPLE_DIR = SKILL_DIR / "example"
 
 
-def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") -> str:
+def _doc(
+    rows: str,
+    kind: str = "functional",
+    title: str = "S02. フィルタ",
+    trace: str = "",
+) -> str:
     """要求 HTML 1 枚を組み立てる（テストの読みやすさのための最小骨格）。"""
+    table = f"""<table class="trace">
+<thead><tr><th>仕様ID</th><th>設計</th><th>実装</th><th>単体テスト</th>
+<th>統合テスト</th><th>マニュアル</th></tr></thead>
+<tbody>
+{trace}
+</tbody>
+</table>
+""" if trace else ""
     return f"""<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><title>{title}</title></head>
 <body>
@@ -43,8 +56,24 @@ def _doc(rows: str, kind: str = "functional", title: str = "S02. フィルタ") 
 {rows}
 </tbody>
 </table>
-</body></html>
+{table}</body></html>
 """
+
+
+def _trace_row(number: str, **override: str) -> str:
+    """トレース行 1 行。省略した列は既定の記入例で埋める。"""
+    cells = {
+        "design": "docs/design/S02-filter.md#構成",
+        "code": "src/tool/application/filter.py::filter_rows",
+        "unit": "test/application/test_filter.py::test_完全一致で絞り込む",
+        "e2e": "test/e2e/test_cli.py::test_列指定で件数が出る",
+        "manual": "docs/manual.md#S02",
+    }
+    cells.update(override)
+    body = "".join(
+        f'<td class="{name}">{value}</td>' for name, value in cells.items()
+    )
+    return f'<tr class="trace"><td class="id">{number}</td>{body}</tr>'
 
 
 VALID = _doc("""\
@@ -69,6 +98,27 @@ VALID = _doc("""\
   <td class="body">--col NAME=値 を渡すと完全一致する行だけを数える</td>
 </tr>
 """)
+
+TRACED = _doc(
+    """\
+<tr class="requirement">
+  <td class="category">抽出</td><td class="kind">要求</td>
+  <td class="check"></td><td class="id">REQ2</td>
+  <td class="body">列を指定して絞り込みたい</td>
+</tr>
+<tr class="reason">
+  <td class="category"></td><td class="kind">理由</td>
+  <td class="check"></td><td class="id"></td>
+  <td class="body">実データが 5 万行あり、全件出ると目で探すことになる</td>
+</tr>
+<tr class="spec">
+  <td class="category"></td><td class="kind">仕様</td>
+  <td class="check">☑</td><td class="id">2-1</td>
+  <td class="body">--col NAME=値 を渡すと完全一致する行だけを数える</td>
+</tr>
+""",
+    trace=_trace_row("2-1"),
+)
 
 WITH_CHILD = _doc("""\
 <tr class="requirement">
@@ -101,7 +151,60 @@ WITH_CHILD = _doc("""\
   <td class="check">□</td><td class="id">2.1-1</td>
   <td class="body">--col を 2 回渡すと両方に一致する行だけを数える</td>
 </tr>
-""")
+""", trace=_trace_row("2-1"))
+
+
+class TraceTest(unittest.TestCase):
+    """仕様 → 設計 / 実装 / 単体 / 統合 / マニュアル のトレースを扱えること。
+
+    USDM を「要求だけの表」から「要求と成果物を結ぶ 1 枚」にするための中核。
+    検証済み（☑）の仕様は、5 つの成果物すべてに線がつながっていること。
+    """
+
+    def test_トレース表を仕様に結び付ける(self) -> None:
+        doc = build_usdm.parse_document(TRACED, doc_id="S02")
+        self.assertEqual(doc.violations, [])
+        spec = doc.requirements[0].specs[0]
+        self.assertEqual(spec.trace["design"], "docs/design/S02-filter.md#構成")
+        self.assertEqual(spec.trace["manual"], "docs/manual.md#S02")
+
+    def test_検証済みの仕様にトレース表が無ければ違反(self) -> None:
+        doc = build_usdm.parse_document(
+            TRACED.replace(_trace_row("2-1"), ""), doc_id="S02"
+        )
+        self.assertIn("missing-trace", _kinds(doc))
+
+    def test_検証済みの仕様のトレースが1つでも空なら違反(self) -> None:
+        doc = build_usdm.parse_document(
+            TRACED.replace(_trace_row("2-1"), _trace_row("2-1", unit="")),
+            doc_id="S02",
+        )
+        self.assertEqual(_kinds(doc), ["missing-trace"])
+        self.assertIn("単体テスト", doc.violations[0].message)
+
+    def test_未検証の仕様はトレースが無くてもよい(self) -> None:
+        doc = build_usdm.parse_document(VALID, doc_id="S02")
+        self.assertEqual(_kinds(doc), [])
+
+    def test_存在しない仕様番号のトレース行は違反(self) -> None:
+        doc = build_usdm.parse_document(
+            TRACED.replace(_trace_row("2-1"), _trace_row("2-1") + _trace_row("2-9")),
+            doc_id="S02",
+        )
+        self.assertIn("trace-without-spec", _kinds(doc))
+
+    def test_同じ仕様のトレース行が2つあれば違反(self) -> None:
+        doc = build_usdm.parse_document(
+            TRACED.replace(_trace_row("2-1"), _trace_row("2-1") * 2), doc_id="S02"
+        )
+        self.assertIn("duplicate-trace", _kinds(doc))
+
+    def test_生成した要求一覧にトレース表が出る(self) -> None:
+        doc = build_usdm.parse_document(TRACED, doc_id="S02")
+        rendered = build_usdm.render_document(doc)
+        self.assertIn('class="trace"', rendered)
+        self.assertIn("docs/manual.md#S02", rendered)
+        self.assertIn("単体テスト", rendered)
 
 
 def _kinds(doc: build_usdm.Document) -> list[str]:
@@ -523,6 +626,12 @@ class RenderTest(unittest.TestCase):
             elif kind == "spec":
                 self.assertRegex(ident, r"^Q?[0-9]+(\.[0-9]+)*-[0-9]+$")
                 self.assertIn(check, ("□", "☑"))
+            elif kind == "trace":
+                # トレース表は別の表。仕様IDで要求表とつながる（項目欄は無い）
+                self.assertRegex(ident, r"^Q?[0-9]+(\.[0-9]+)*-[0-9]+$")
+                for name in ("design", "code", "unit", "e2e", "manual"):
+                    self.assertNotEqual(cell(row, name), "", f"{ident} の {name}")
+                continue
             else:
                 self.assertEqual(ident, "", f"{kind} の要求ID欄が空でない")
                 self.assertEqual(check, "", f"{kind} の検証欄が空でない")
