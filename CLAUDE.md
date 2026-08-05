@@ -20,15 +20,44 @@
 ゴール定義 → バックログ → 骨組み（完走）→ 反復 ⇄ リファクタリング → 完成
 ```
 
+### 省くのは分量であって、成果物の種類ではない
+
+**スライス 1 本につき、次の 7 点を毎回そろえる。**
+
+| # | 成果物 | 置き場所 | 担当 |
+|---|---|---|---|
+| 1 | 要求仕様書 | `docs/usdm/src/S##-*.html` | `requirement-writer` |
+| 2 | 設計書 | `docs/design/S##-*.md` | `designer` |
+| 3 | 単体テスト | テストルート | `unit-tester` |
+| 4 | 実装 | ソースルート | `coder` |
+| 5 | 統合テスト | 統合テストルート | `integration-tester` |
+| 6 | テスト結果まとめ | `docs/test-reports/S##-*.md` | `test-summarizer` |
+| 7 | マニュアル | `docs/manual.md` の `## S##` 節 | `manual-writer` |
+
+代わりに L1 では 1 枚ずつを極端に薄くする（上限は
+`.claude/skills/agile-process/deliverables.md` が正）。
+**1 つでも次の反復へ送ったら、その 1 つは二度と書かれない。**
+
 | 成熟度 | 一言 | テスト | 許されること |
 |---|---|---|---|
-| `L1 動く` | 使える | E2E 1 本 + 芯のユニット | 仮実装・ハードコード・層の逆流（ **記録必須** ） |
-| `L2 固い` | 壊れない | 仕様ごとに 1 本以上 | 構造の不揃い・文書の未整備 |
+| `L1 動く` | 使える | E2E 1 本 + 芯のユニット | 仮実装・ハードコード（ **記録必須** ） |
+| `L2 固い` | 壊れない | 仕様ごとに 1 本以上 | 構造の不揃い・記述の粗さ |
 | `L3 整った` | 渡せる | 全緑 + 回帰 | なし（他人に渡すときだけ到達する） |
 
 **プロセスの正は `.claude/skills/agile-process/`**
-（`SKILL.md` と、完了条件の詳細表 `maturity.md`）。
+（`SKILL.md` ・成果物の正 `deliverables.md` ・完了条件 `maturity.md`）。
 進捗の正は `docs/backlog.md` だけ。他の文書に進捗を書かない。
+役割間の受け渡しは `.steering/` を通す（正: `steering` スキル）。
+
+### 大枠を見失わないために
+
+エージェントに任せると全体像が見えなくなる。次の 3 つで防ぐ。
+
+- **`/status`** —— ゴール・成熟度・7 点セットの充足・負債・直近の作業を
+  1 画面（`docs/status.html`）にまとめて出す
+- **バックログの「いま着手中」** —— 段と担当まで書く（例: `S03 段4 実装中（coder）`）
+- **節目報告** —— 要求が固まった時点・設計が固まった時点・全緑になった時点で、
+  承認を求めずに短い要約だけを出す
 
 ## 2 つのレーン
 
@@ -36,10 +65,10 @@
 |---|---|---|
 | 単位 / 起点 | ツール 1 本・ノート 1 本 / 思いつき | 縦切りスライス（S##）/ ゴール |
 | 前工程 | なし | ゴールと完走の定義 → バックログ |
-| 文書 | `README.md` 1 枚 | スライス 1 枚（要求＋理由＋仕様 3 行 + 設計 5 行） |
-| 構造 | 1 ディレクトリ完結・層構成なし | レイヤード（L1 では 1 ファイル可） |
+| 文書 | `README.md` 1 枚 | **7 点セット**（要求・設計・テスト結果・マニュアル ほか） |
+| 構造 | 1 ディレクトリ完結・層構成なし | クリーンアーキテクチャ（4 層 + 契約） |
 | テスト | 必須（テスト先行） | 必須（テスト先行 + E2E） |
-| 入口 | `/tool` `/note` `/workshop` | `/backlog` `/skeleton` `/iterate` `/refactor` |
+| 入口 | `/tool` `/note` `/workshop` | `/backlog` `/skeleton` `/iterate` `/refactor` `/status` |
 
 **依頼が来たらまずどちらのレーンかを決める。** 1 行の `summary` に
 収まる思いつきは工房、ゴールに寄与するものは反復開発。
@@ -101,25 +130,29 @@
 | 工房（軽量レーン） | `workshop/`（`tools/` と `notes/`。固定） |
 | 探索除外 | {例: `.venv/` `.git/` `__pycache__/` `dist/` `build/` `.steering/` `node_modules/`} |
 
-### 層構成（レイヤードアーキテクチャ）
+### 層構成（クリーンアーキテクチャ = レイヤード + 依存性逆転）
 
-依存は **上から下への一方向だけ** 。
-守るルールは **逆流禁止・循環禁止の 1 つ** （正: `layered-architecture` スキル）。
+依存は **内向きの一方向だけ** 。守るルールは 2 つ
+（正: `layered-architecture` スキル）。
 
 | 層 | パス | import してよいもの |
 |---|---|---|
-| presentation | {例: `src/<pkg>/presentation/`} | 標準ライブラリ + application + domain + infrastructure |
-| application | {例: `src/<pkg>/application/`} | 標準ライブラリ + domain + infrastructure |
+| presentation | {例: `src/<pkg>/presentation/`} | 標準ライブラリ + application + domain |
+| application | {例: `src/<pkg>/application/`} | 標準ライブラリ + domain（**契約はここに置く**） |
 | domain | {例: `src/<pkg>/domain/`} | **標準ライブラリのみ** |
-| infrastructure | {例: `src/<pkg>/infrastructure/`} | 標準ライブラリ + domain + {許可する外部ライブラリ} |
+| infrastructure | {例: `src/<pkg>/infrastructure/`} | 標準ライブラリ + domain + application の契約 + {許可する外部ライブラリ} |
+| Composition Root | {例: `src/<pkg>/container.py`} | すべて（ここだけが全部を知ってよい） |
 
-- `application` → `infrastructure` の直接呼び出しは **違反ではない**
-  （クリーンアーキテクチャは要求しない。契約を切って注入する必要はない）
-- `domain` の純粋性だけは常に守る（ここが崩れるとテストが遅くなる）
-- **L1 では層を分けなくてよい** （1 ファイルに全部書いてよい）。
-  分けるのは L2 の反復か `/refactor` の「移す」変換
-- 契約（インタフェース）を作るのは、`layered-architecture` の
-  「クリーンアーキテクチャへ育てる」の症状表に該当したときだけ
+1. **内向きの依存だけ** —— 下の層が上の層を import しない。循環しない
+2. **外部 I/O は契約（Port）を介す** —— `application` は `infrastructure` を
+   直接 import しない。契約を application に置き、実装を infrastructure に置き、
+   Composition Root で注入する
+
+- 契約にするのは **外部の世界に触るものだけ**（ファイル・DB・ネットワーク・
+  時刻・乱数・プロセス起動）。純粋な計算に契約を切るのは禁止（意味の無い中間層）
+- `domain` の純粋性は常に守る（ここが崩れるとテストが遅くなる）
+- **L1 でも 4 層に分ける** （1 層 1 ファイルでよい）。
+  契約は外部 I/O があるスライスだけ 1 本切る
 
 **外部ライブラリの配置方針** —— {どのライブラリをどの層に許すか、その理由}
 
@@ -132,15 +165,23 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 |---|---|---|
 | ゴールと完走の定義 | `docs/concept.md` | 最初（一行 + 完走の定義だけでよい） |
 | **バックログ（進捗と負債の正）** | `docs/backlog.md` | ゴール定義の直後 |
-| スライス 1 枚（薄い設計・実績・手抜き） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
-| **要求（USDM。手書きの正）** | `docs/usdm/src/S##-*.html` / `Q##-*.html` | 各スライス（品質特性）に着手するとき |
+| **① 要求仕様書（USDM。手書きの正）** | `docs/usdm/src/S##-*.html` / `Q##-*.html` | **各スライスで必ず** |
+| **② 設計書（図・判断の記録）** | `docs/design/S##-*.md` | **各スライスで必ず** |
+| **⑥ テスト結果まとめ** | `docs/test-reports/S##-*.md` | **各スライスで必ず** |
+| **⑦ マニュアル** | `docs/manual.md`（共通 3 節 + `## S##`） | **骨組みで作り、各スライスで追記** |
+| ハブ（7 点への索引・実績・手抜き） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
+| 判断の記録（スライスを越えるもの） | `docs/decisions/ADR-###-*.md` | 2 つ以上のスライスが従う判断をしたとき |
 | 要求一覧（**生成物**。gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成。手で編集しない |
+| ディレクトリ構成（**生成物**） | `docs/structure.md` | `build_structure.py` が生成。手で編集しない |
+| 現在地の 1 画面（**生成物**。gitignore） | `docs/status.html` | `build_status.py` が生成。`/status` で再生成 |
 | 現状設計（1 枚） | `docs/design.md` | **L3 に上げるときだけ** |
-| リファレンス / マニュアル / 用語集 | `docs/reference.md` / `docs/manual.md` / `docs/glossary.md` | 必要になったとき（先に作らない） |
+| リファレンス / 用語集 | `docs/reference.md` / `docs/glossary.md` | 必要になったとき（先に作らない） |
 | 要求仕様書 / 実装前設計書（厚い経路） | `docs/requirements/S##-*.md` / `docs/design/proposals/S##-*.md` | 厚い経路のスライスだけ |
 | 凍結文書（**絶対に更新しない**） | {例: `docs/Note/`。無ければ「なし」} | —— |
 
-> **空のファイルを先に作らない。** 必要になった時点で作る。
+> **7 点セット以外は空のファイルを先に作らない。** 必要になった時点で作る。
+> 7 点セットは着手したスライスでは常にそろっているのが正常
+> （`check_deliverables.py` が終了コードで判定する）。
 > 凍結文書のパスは `.claude/hooks/protected_paths.txt` にも同じものを書く
 > （PreToolUse フックが編集を機械的に拒否する）。
 
@@ -149,11 +190,13 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 > 繰り返し守る設計の型。実装レビューがここを基準に判定する。3〜5 個に絞る。
 > **どの家風も L1 では要求しない** （骨組みが通ることが優先）。
 
-- 逆流禁止: 下の層が上の層を import しない。同じ層内で循環しない
-  （L1 では逆流も可。ただし負債表に記録する。L3 で 0 件にする）
+- 内向きの依存だけ: 下の層が上の層を import しない。循環しない。
+  外部 I/O は契約（Port）を介す（L1 では契約 1 本まで。L3 で違反 0 件にする）
 - 記録された手抜きだけが許される: 仮実装・ハードコードは
-  スライス文書と `docs/backlog.md` の負債表に書けば正式に許可される。
-  **書かずに残すことだけが規約違反**
+  ハブ（`docs/slices/S##-*.md`）と `docs/backlog.md` の負債表に書けば
+  正式に許可される。 **書かずに残すことだけが規約違反**
+- 判断は理由と却下案ごと残す: 設計書の「判断の記録」に
+  なぜそう考えたか・他の選択肢・メリデメを書く。 **結論だけの設計書は不合格**
 - core 無変更（L3 到達分のみ）: `.claude/core_files.txt` に列挙した
   ファイルは書き換えない。機能を増やすときは実装を足して呼び出し側で
   差し替える。 **列挙するのは L3 に到達し今後変えないと決めたものだけ**
@@ -197,11 +240,16 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
    差分が 20〜30 行を超えたらタイミングが遅い
 7. **出力を推測で書かない**: 文書に貼るコマンド出力・実行例は、実際に
    動かして得たものだけを貼る
-8. **手抜きは記録する**: 仮実装・ハードコード・層の逆流を残すなら、
-   スライス文書と `docs/backlog.md` の負債表に書く。記録すれば許される
-9. **目標成熟度を超えて作業しない**: L1 の反復で層を切る・失敗経路を
-   網羅する・文書を整えるのは越権。サブエージェントを起動するときは
+8. **手抜きは記録する**: 仮実装・ハードコードを残すなら、
+   ハブと `docs/backlog.md` の負債表に書く。記録すれば許される
+9. **目標成熟度を超えて作業しない**: L1 の反復で失敗経路を網羅する・
+   文書を作り込むのは越権。サブエージェントを起動するときは
    **目標成熟度をプロンプトに必ず書く**
+10. **7 点セットを 1 つも落とさない**: 要求仕様書・設計書・単体テスト・
+    実装・統合テスト・テスト結果まとめ・マニュアルは毎反復そろえる。
+    薄くするのは中身であって、成果物を落とすことではない
+11. **判断は理由と却下案ごと残す**: なぜそう考えたか・他にどの選択肢が
+    あったか・それぞれのメリットとデメリットを設計書（または ADR）に書く
 
 ## ルーティング
 
@@ -211,14 +259,18 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | やること | 読むもの |
 |---|---|
 | **プロセス全体・次に何をやるか・完了と言えるか** | `.claude/skills/agile-process/` |
+| **毎スライスで何を作るか（7 点セット）** | `.claude/skills/agile-process/deliverables.md` |
 | 骨組みを作る（まず完走） | `.claude/skills/walking-skeleton/` |
-| スライス 1 枚を書く | `.claude/skills/slice-definition/` |
+| ハブ（スライス文書）を書く | `.claude/skills/slice-definition/` |
 | きれいにする・負債を返す | `.claude/skills/refactoring/` |
-| 層をどう分けるか・どこに置くか | `.claude/skills/layered-architecture/` |
-| **要求を書く（USDM の表・理由・仕様の記法）** | `.claude/skills/usdm/` |
+| 層をどう分けるか・契約を切るか | `.claude/skills/layered-architecture/` |
+| **要求を書く（USDM の表・理由・仕様・トレース）** | `.claude/skills/usdm/` |
+| **設計書を書く（薄い版・厚い版）** | `.claude/skills/functional-design/` |
+| **テスト結果をまとめる** | `.claude/skills/test-reporting/` |
+| **デバッグしやすくする（可視化・トレース）** | `.claude/skills/visual-debugging/` |
 | ゴールと完走の定義を決める | `.claude/skills/concept-definition/` |
 | コードを書く・コミットする | `.claude/skills/development-guidelines/` |
-| 反復のタスク管理・振り返り | `.claude/skills/steering/` |
+| **役割間の受け渡し・反復のタスク管理・振り返り** | `.claude/skills/steering/` |
 | ツールをサクッと作る | `.claude/skills/quick-tool/` |
 | ノートを残す | `.claude/skills/note-taking/` |
 | 工房の置き場所・status・昇格を知る | `.claude/skills/workshop/` |
@@ -236,7 +288,8 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 ```
 /backlog       … ゴールとスライス一覧を作る・現在地を見る・次の一手を決める
 /skeleton      … 骨組みを作り切る（1 回だけ。ここまでは他のことをしない）
-/iterate       … スライス 1 本の成熟度を 1 段上げる ★既定の入口
+/iterate       … スライス 1 本の 7 点セットをそろえ、成熟度を 1 段上げる ★既定の入口
+/status        … 現在地を 1 画面にまとめて出す（いつでも実行してよい）
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）
 ```

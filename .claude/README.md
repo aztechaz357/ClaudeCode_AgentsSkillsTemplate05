@@ -8,20 +8,26 @@
 ## 設計思想
 
 1. **動くものが最初の成果物**: 端から端まで通る骨組みを最初に作り切る。
-   層の分離・網羅的な仕様・完全な文書は後から足す
-2. **完璧を積み上げない**: 1 つを完璧にしてから次へ行くのではなく、
+   網羅的な仕様・詳細な文書は後の反復で厚くする
+2. **省くのは分量であって、成果物の種類ではない**: 要求仕様書・設計書・
+   単体テスト・実装・統合テスト・テスト結果まとめ・マニュアルの
+   **7 点を毎反復そろえる** 。代わりに 1 枚ずつを極端に薄くする
+3. **完璧を積み上げない**: 1 つを完璧にしてから次へ行くのではなく、
    全スライスを L1（動く）まで上げてから L2（固い）へ上げる
-3. **手抜きは許す。隠すのは許さない**: 仮実装・ハードコード・層の逆流は
+4. **手抜きは許す。隠すのは許さない**: 仮実装・ハードコードは
    負債表に書けば正式に許可される。書かずに残すことだけが規約違反
-4. **環境・行動・知覚のループ**: エージェントは会話の記憶ではなく環境
+5. **判断は理由と却下案ごと残す**: なぜそう考えたか・他の選択肢・
+   メリデメを設計書の「判断の記録」に書く。結論だけの文書は次に触る人に
+   同じ検討をやり直させる
+6. **環境・行動・知覚のループ**: エージェントは会話の記憶ではなく環境
    （リポジトリ・バックログ・コマンド結果）を正として動く。行動は必ず Tool を通す
-5. **行動できないなら道具を作る**: 実行したい行動を遂行するツールが無ければ、
+7. **行動できないなら道具を作る**: 実行したい行動を遂行するツールが無ければ、
    場当たりの回避ではなくツールを新設する（`tool-authoring`）
-6. **決定論的な操作を増やす**: LLM に考えさせるプロセスを最小化する。
+8. **決定論的な操作を増やす**: LLM に考えさせるプロセスを最小化する。
    判断はチェックリスト・テンプレート・機械検証に置き換えていく
-7. **コンテキストエンジニアリング**: 重い読み込み・長いログはサブエージェントが
+9. **コンテキストエンジニアリング**: 重い読み込み・長いログはサブエージェントが
    引き受け、親には要約だけを返す。状態は会話ではなく `docs/backlog.md` に置く
-8. **記録して改善する**: 反復の振り返りを残し、`/improve-process` で
+10. **記録して改善する**: 反復の振り返りを残し、`/improve-process` で
    プロセス自体を改善する
 
 ## 成熟度（このテンプレートの背骨）
@@ -31,12 +37,38 @@
 
 | レベル | 一言 | テスト | 許されること |
 |---|---|---|---|
-| `L1 動く` | 使える | E2E 1 本 + 芯のユニット | 仮実装・ハードコード・1 ファイル集約・層の逆流（記録必須） |
-| `L2 固い` | 壊れない | 仕様ごとに 1 本以上 | 構造の不揃い・文書の未整備 |
+| `L1 動く` | 使える | E2E 1 本 + 芯のユニット | 仮実装・ハードコード（記録必須） |
+| `L2 固い` | 壊れない | 仕様ごとに 1 本以上 | 構造の不揃い・記述の粗さ |
 | `L3 整った` | 渡せる | 全緑 + 回帰 | なし（他人に渡すときだけ到達する） |
 
 検証・レビュー・文書同期はすべて **「現在 → 目標」の 1 段だけ** で判定します。
 上のレベルの条件で不合格にしないのが、このテンプレートの最重要ルールです。
+
+**どのレベルでも成果物の種類は 7 点で固定** （正: `skills/agile-process/
+deliverables.md`）。レベルで変わるのは各成果物の深さだけで、
+「L1 だからマニュアルは書かない」のような省略はどのレベルでも認められません。
+
+## 成果物 7 点セット（スライス 1 本が生むもの）
+
+| # | 成果物 | 置き場所 | 担当エージェント |
+|---|---|---|---|
+| 1 | 要求仕様書 | `docs/usdm/src/S##-*.html`（＋トレース表） | `requirement-writer` |
+| 2 | 設計書 | `docs/design/S##-*.md`（図＋判断の記録） | `designer` |
+| 3 | 単体テスト | テストルート（Red 確認まで） | `unit-tester` |
+| 4 | 実装 | ソースルート（Green まで） | `coder` |
+| 5 | 統合テスト | 統合テストルート | `integration-tester` |
+| 6 | テスト結果まとめ | `docs/test-reports/S##-*.md` | `test-summarizer` |
+| 7 | マニュアル | `docs/manual.md`（共通 3 節＋`## S##`） | `manual-writer` |
+
+そろっているかは目視で数えず、終了コードで判定します:
+
+```
+<ツール実行コマンド> .claude/tools/check_deliverables.py   # 7 点の存在と形
+<ツール実行コマンド> .claude/tools/build_usdm.py           # 仕様ごとの線（トレース）
+```
+
+**1 つでも次の反復へ送ったら、その 1 つは二度と書かれない** ——
+このプロセスで最も重い失敗です。
 
 ## 2 つのレーン
 
@@ -79,7 +111,8 @@
 | ゴール・完走の定義・非目標 | `docs/concept.md` |
 | 進捗・優先順位・負債 | `docs/backlog.md` |
 | 実行環境（コンテナ・許可する外部通信） | `.devcontainer/`（`allowed-domains.txt` ほか） |
-| ディレクトリ構造のスナップショット | `.claude/skills/repository-structure/template.md` |
+| ディレクトリ構成（生成物） | `docs/structure.md`（`build_structure.py` が生成） |
+| ディレクトリの説明（人が書く） | `.claude/structure-notes.txt`（`パス <TAB> 説明`） |
 | 「core 無変更」の検査対象（L3 到達分のみ） | `.claude/core_files.txt` |
 | 変異テストの仕様 | `.claude/mutations/S##-<対象>.json` |
 | 許可コマンド（共有 / 個人）・フックの配線 | `.claude/settings.json` / `.claude/settings.local.json` |
@@ -104,26 +137,44 @@
 |---|---|---|
 | ゴール定義 | `docs/concept.md`（一行 + 完走の定義） | concept-definition |
 | バックログ | `docs/backlog.md`（スライス 3〜8 本） | agile-process |
-| 骨組み | E2E 1 本 + 通る実装 + `docs/usdm/src/S01-*.html` + `docs/slices/S01-*.md` | walking-skeleton / integration-tester |
-| 反復（薄く決める） | `docs/usdm/src/S##-*.html`（要求）+ `docs/slices/S##-*.md`（設計） | slice-definition |
-| 反復（実装） | ソース・テスト・マイクロコミット | tdd-implementer |
-| 反復（通す） | E2E テスト・実物の出力 | integration-tester |
-| 反復（検証） | 目標レベルの合否 | implementation-validator / security-checker |
-| 反復（記録） | 成熟度・負債表の更新 | doc-syncer（チェックリスト A） |
+| 骨組み | 7 点セット（S01）＋ 4 層と契約 1 本 | walking-skeleton |
+| 反復 段1 | `docs/usdm/src/S##-*.html`（要求・理由・仕様） | usdm / requirement-writer |
+| 反復 段2 | `docs/design/S##-*.md`（図・層・契約・判断の記録） | functional-design / designer |
+| 反復 段3 | 単体テスト（Red 確認まで） | development-guidelines / unit-tester |
+| 反復 段4 | 実装（Green まで）・マイクロコミット | layered-architecture / coder |
+| 反復 段5 | E2E テスト・実物の出力 | integration-tester |
+| 反復 段6 | `docs/test-reports/S##-*.md` | test-reporting / test-summarizer |
+| 反復 段7 | `docs/manual.md` の `## S##` 節 | writing-conventions / manual-writer |
+| 反復 段8 | 目標レベルの合否・記録の同期 | implementation-validator / doc-syncer |
 | リファクタリング | `整理:` コミット群・負債の `済` | refactoring / refactorer |
-| L3 へ（渡すとき） | `docs/design.md`・マニュアル | architecture-design / doc-syncer（B） |
-| 厚い経路（例外） | 要求仕様書 + 設計書 + tasklist | requirements-definition / functional-design |
+| L3 へ（渡すとき） | `docs/design.md` へ統合・マニュアルの深化 | architecture-design / doc-syncer（B） |
+| 厚い経路（例外） | 網羅した要求仕様書 + 設計書 + tasklist | requirements-definition / functional-design |
 | 振り返り | プロセス改善提案 | steering（振り返りモード） |
 
 **前工程を飛ばさないのは最初の 3 つだけ。** 骨組みが通った後は、
 反復とリファクタリングを行き来します。
 
-トレーサビリティの背骨は **要求 →（理由）→ 仕様 → E2E テスト** の 1 本。
+トレーサビリティの背骨は
+**要求 →（理由）→ 仕様 → 設計 / 実装 / 単体テスト / 統合テスト / マニュアル** 。
 要求は USDM を HTML の表（Excel の USDM テンプレート相当）で書き、
-理由の欠落と番号の不整合は `build_usdm.py` が終了コードで落とす
-（LLM の判断に頼らない）。同じツールが全スライスを束ねた
-**要求一覧 1 枚**（`docs/usdm/index.html`）を生成する。
-`/check-docs` はこの線の欠落と、バックログと実物の食い違いを検出します。
+その下の **トレース表** が仕様 1 条から 5 つの成果物へ線を引く。
+
+```
+REQ2「列を指定して絞り込みたい」
+  └ 理由「実データが 5 万行あり、全件出ると目で探すことになる」
+      └ 仕様 2-1 ☑
+          ├ 設計       docs/design/S02-filter.md#構成
+          ├ 実装       src/tool/application/filter.py::filter_rows
+          ├ 単体テスト test/application/test_filter.py::test_完全一致で絞り込む
+          ├ 統合テスト test/e2e/test_cli.py::test_列指定で件数が出る
+          └ マニュアル docs/manual.md#S02
+```
+
+理由の欠落・番号の不整合・ **検証済み（`☑`）の仕様の線の切れ** は
+`build_usdm.py` が終了コードで落とす（LLM の判断に頼らない）。
+同じツールが全スライスを束ねた **要求一覧 1 枚**（`docs/usdm/index.html`）を
+生成する。`check_deliverables.py` はスライス単位で 7 点の存在を、
+`/check-docs` はバックログと実物の食い違いを検出します。
 
 ## 構成
 
@@ -133,7 +184,8 @@
 |---|---|---|
 | `/backlog [init\|status\|次]` | 反復開発 | ゴールとスライス一覧・現在地・次の一手 |
 | `/skeleton` | 反復開発 | 骨組みを作り切る（1 回だけ） |
-| `/iterate [S##]` | 反復開発 | **既定の入口** 。成熟度を 1 段上げる |
+| `/iterate [S##]` | 反復開発 | **既定の入口** 。7 点セットをそろえ成熟度を 1 段上げる |
+| `/status` | 反復開発 | **現在地を 1 画面に** （ゴール・充足・負債・直近の作業） |
 | `/refactor [D##]` | 反復開発 | 負債を返す（振る舞い不変） |
 | `/add-feature [S##]` | 反復開発 | 厚い経路（不可逆・公開・安全・データ形式のみ） |
 | `/tool <説明>` | 工房 | 思いついた小さなツールを 1 本作りきる |
@@ -153,13 +205,19 @@
 | 種別 | エージェント |
 |---|---|
 | 指揮 | `orchestrator`（バックログから次の一手を 1 つ決める） |
+| **7 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
 | 調査 | `impact-analyzer`・`file-finder`・`dependency-checker`・`log-analyzer` |
-| 実装 | `tdd-implementer` |
 | 整理 | `refactorer`（振る舞い不変で負債を返す） |
 | 実行 | `test-runner`・`build-executor` |
-| 検証 | `implementation-validator`・`integration-tester`・`code-reviewer`・`security-checker`・`test-analyzer` |
+| 検証 | `implementation-validator`・`code-reviewer`・`security-checker`・`test-analyzer` |
 | 文書 | `doc-syncer`・`doc-reviewer` |
 | **工房** | `tool-smith`（ツールを 1 本作りきる）・`note-keeper`（工房の棚卸し） |
+
+**成果物 1 つにつき担当は 1 体だけ。責務を重ねない。**
+特に `unit-tester`（テストを書いて Red まで）と `coder`（Red を消す）を
+分けているのは、同じ役が両方を書くと「通しやすいテスト」になるためです。
+役割間の受け渡しは `.steering/<反復>/reports/` を通します
+（順序と読むべきレポートは `report-protocol.md` の 0.1 節が正）。
 
 **サブエージェントを起動するときは、プロンプトに目標成熟度
 （例: 「現在 L1、目標 L2」）を必ず書く。** 書き忘れると最上位の基準で
@@ -173,16 +231,18 @@
 
 | スキル | レーン | 用途 |
 |---|---|---|
-| **`agile-process`** | 反復開発 | **プロセスの正** （成熟度・DoD・反復の型・厚く書く判定） |
-| `walking-skeleton` | 反復開発 | 骨組みを作り切る手順（E2E 先行） |
-| **`usdm`** | 反復開発 | **要求記述の正**（HTML の表・要求は「〜したい」・理由は必須・仕様は番号で導出・機能要求と品質要求） |
-| `slice-definition` | 反復開発 | 要求 1 枚（USDM の表）+ スライス 1 枚（設計 5 行・実績・手抜き） |
+| **`agile-process`** | 反復開発 | **プロセスの正** （7 点セット・成熟度・DoD・反復の型・厚く書く判定） |
+| `walking-skeleton` | 反復開発 | 骨組みを作り切る手順（E2E 先行・4 層と契約の骨格） |
+| **`usdm`** | 反復開発 | **要求記述の正**（HTML の表・理由は必須・仕様は番号で導出・ **成果物へのトレース表** ） |
+| **`functional-design`** | 反復開発 | **設計書の正**（薄い版 = 毎スライス / 厚い版 = 例外。図と判断の記録） |
+| **`test-reporting`** | 反復開発 | **テスト結果まとめの正**（実測のみ・仕様とテストの対応） |
+| `slice-definition` | 反復開発 | ハブ 1 枚（7 点への索引・実績・残した手抜き） |
 | `refactoring` | 反復開発 | 負債の返し方（緑を保ち 1 手 1 コミット） |
-| `layered-architecture` | 反復開発 | 層の正（逆流禁止の 1 ルール・育て方） |
+| **`layered-architecture`** | 反復開発 | **構造の正**（クリーンアーキテクチャ。内向きの依存と契約） |
+| **`visual-debugging`** | 反復開発 | 構造化トレース・グラフ化・失敗が残す証拠 |
 | `concept-definition` | 反復開発 | ゴールと完走の定義 |
-| `steering` | 反復開発 | 反復のタスク管理・レポート交換・振り返り |
-| `requirements-definition` | 厚い経路 | 要求仕様書（既定ではない） |
-| `functional-design` | 厚い経路 | 実装前設計書（既定ではない） |
+| **`steering`** | 反復開発 | **役割間の受け渡し** ・タスク管理・節目報告・振り返り |
+| `requirements-definition` | 厚い経路 | 網羅した要求仕様書（既定ではない） |
 | `architecture-design` | L3 のみ | 現状設計（`docs/design.md` 1 枚） |
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
 | `repository-structure` | 共通 | ファイル・文書の置き場所 |
@@ -212,6 +272,9 @@
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
 | `build_usdm.py` | 手書きの要求 HTML（`docs/usdm/src/`）を検証し、束ねた要求一覧（自己完結 HTML）を生成する。見た目と操作（折りたたみ・絞り込み・検索）は手書きと共有の `skills/usdm/usdm.css` / `usdm.js`。`--check` で古さを検出 | Python プロジェクト |
+| `check_deliverables.py` | スライスごとに **7 点セットがそろっているか** を検査（設計書の図と判断の記録・テスト結果の実測・マニュアルの共通 3 節と `S##` 節・雛形の残りまで見る） | Python プロジェクト |
+| `build_structure.py` | 実物のツリーから `docs/structure.md` を生成（`--check` で古さを検出。説明は `.claude/structure-notes.txt`） | Python プロジェクト |
+| `build_status.py` | 現在地を 1 画面（`docs/status.html`）にまとめる。ゴール・成熟度の帯・充足マトリクス・負債・直近の作業 | Python プロジェクト |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |
