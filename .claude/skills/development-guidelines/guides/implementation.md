@@ -93,7 +93,7 @@ def test_spinner_disabled_writes_nothing():
 | 対象 | 1 関数・1 クラスの振る舞い | 入口を叩いて出口を見る |
 | 内部構造への依存 | あってよい | **無いこと**（構造は成熟度で変わる） |
 | フェイク | 依存はすべてフェイク可 | 外部境界のみフェイク |
-| 担当 | tdd-implementer | integration-tester |
+| 担当 | unit-tester・coder | integration-tester |
 
 E2E が内部構造（クラス名・シグネチャ）に依存していると、
 リファクタリングのたびに壊れて負債を返せなくなる。 **入口と出口だけを見る。**

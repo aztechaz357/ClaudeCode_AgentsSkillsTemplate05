@@ -24,7 +24,7 @@ export ANTHROPIC_AUTH_TOKEN="local"
 export ANTHROPIC_MODEL="gemma4:26b"
 
 # エージェント定義の frontmatter（model: haiku|sonnet|opus）の解決先。
-export ANTHROPIC_DEFAULT_OPUS_MODEL="gemma4:26b"    # orchestrator / tdd-implementer / integration-tester
+export ANTHROPIC_DEFAULT_OPUS_MODEL="gemma4:26b"    # orchestrator / unit-tester / coder / integration-tester
 export ANTHROPIC_DEFAULT_SONNET_MODEL="gemma4:26b"  # レビュー・検証・文書系
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemma4:e4b"   # file-finder / test-runner / build-executor と背景処理
 

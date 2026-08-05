@@ -28,7 +28,7 @@ $env:ANTHROPIC_AUTH_TOKEN = "local"
 $env:ANTHROPIC_MODEL = "gemma4:26b"
 
 # Resolution targets for the agent frontmatter (model: haiku|sonnet|opus).
-# opus   -> orchestrator / tdd-implementer / integration-tester
+# opus   -> orchestrator / unit-tester / coder / integration-tester
 # sonnet -> review, validation and documentation agents
 # haiku  -> file-finder / test-runner / build-executor and background work
 $env:ANTHROPIC_DEFAULT_OPUS_MODEL = "gemma4:26b"
