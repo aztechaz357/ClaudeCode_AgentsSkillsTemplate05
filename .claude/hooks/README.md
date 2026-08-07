@@ -75,6 +75,10 @@
 | `stop-uncommitted.ps1` | Stop | — | 未コミットの変更が残っていたらユーザーに知らせる |
 | `session-start-context.ps1` | SessionStart | — | ブランチ・未コミット数・HEAD・プロファイル未整備の警告・最新 steering を文脈へ注入 |
 
+`lib-hook.ps1` はフックではなく共有の部品（`Read-HookPayload` /
+`Set-HookOutputUtf8`）。各フックが `param()` の直後に
+`. (Join-Path $PSScriptRoot "lib-hook.ps1")` で読み込む。
+
 ### プロジェクト固有の設定ファイル
 
 | ファイル | 内容 |
@@ -119,17 +123,37 @@
 3. **出力は `[Console]::Out.WriteLine`** で書く。PowerShell 5.1 の
    `Write-Output` はリダイレクト時にコンソール幅で折り返し、
    **JSON の文字列中に改行が入って壊れる**（実測で踏んだ）
-4. **UTF-8 を明示する**: `[Console]::OutputEncoding` を UTF-8 にしないと、
-   git などの子プロセス出力が cp932 として解釈されて文字化けする
-5. **`.ps1` は ASCII のみ** で書く（PS5.1 が BOM 無し UTF-8 を ANSI と
+4. **標準入力は `Read-HookPayload` で読む**（`[Console]::In.ReadToEnd()` は
+   使わない）。`[Console]::In` は **コンソールの入力コードページ**
+   （日本語環境では cp932）で復号するため、UTF-8 の payload が壊れる。
+   cp932 はバイトを 2 つずつ食うので、日本語が奇数バイト続いた直後の
+   `\` が先行バイトに吸われ、`"C:\\Users"` が `"C:\Users"` になって
+   `ConvertFrom-Json` が「認識できないエスケープ シーケンス」で落ちる。
+   **日本語の本文と Windows パスが同居する payload で日常的に起きる**
+   （実測: PreToolUse / PostToolUse のフックが約 99% の実行で失敗し、
+   保護が無効なまま 1 編集あたり約 1 秒だけを払っていた）
+5. **UTF-8 を明示する**: `Set-HookOutputUtf8` を呼ぶ。
+   `[Console]::OutputEncoding` が UTF-8 でないと、git などの子プロセス出力と
+   自分が出す JSON 中の日本語が cp932 として解釈されて文字化けする
+6. **`.ps1` は ASCII のみ** で書く（PS5.1 が BOM 無し UTF-8 を ANSI と
    解釈して次行を壊す）。日本語の説明はこの README とスクリプト外に書く
-6. **プロジェクト固有の値を埋め込まない**: パス一覧・コマンドは
+7. **プロジェクト固有の値を埋め込まない**: パス一覧・コマンドは
    設定ファイルか settings.json の引数として外に出す
 
 ### 検証のしかた（必須）
 
 フックは「動かなくても静かに何も起きない」ため、 **作ったら必ず
-標準入力を模擬して確かめる** 。
+標準入力を模擬して確かめる** 。同梱フックには回帰テストがある。
+
+```
+<ツール実行コマンド> -m unittest discover -s .claude/hooks -p "test_*.py" -v
+```
+
+`test_hooks.py` は各フックを実プロセスとして起動し、 **拒否できること** と
+**日本語 + Windows パスの payload で落ちないこと** の両方を見る。
+後者を持たないと、フックが全滅していても緑のままになる。
+
+手で確かめるときは次のようにする。
 
 ```bash
 # PreToolUse（拒否されるはず）

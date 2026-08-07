@@ -26,9 +26,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Child processes emit UTF-8; PowerShell 5.1 would otherwise decode them with
-# the console code page and mangle non-ASCII findings.
-try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+. (Join-Path $PSScriptRoot "lib-hook.ps1")
+Set-HookOutputUtf8
 
 function Invoke-Checker([string]$tool, [string]$target) {
     if (-not (Test-Path -LiteralPath $tool)) { return $null }
@@ -38,10 +37,9 @@ function Invoke-Checker([string]$tool, [string]$target) {
 }
 
 try {
-    $raw = [Console]::In.ReadToEnd()
-    if (-not $raw) { exit 0 }
+    $input_json = Read-HookPayload
+    if (-not $input_json) { exit 0 }
 
-    $input_json = $raw | ConvertFrom-Json
     $file = [string]$input_json.tool_response.filePath
     if (-not $file) { $file = [string]$input_json.tool_input.file_path }
     if (-not $file) { exit 0 }

@@ -21,13 +21,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib-hook.ps1")
+Set-HookOutputUtf8
+
 try {
-    $raw = [Console]::In.ReadToEnd()
+    $input_json = Read-HookPayload
     $message = ""
-    if ($raw) {
-        $input_json = $raw | ConvertFrom-Json
-        $message = [string]$input_json.message
-    }
+    if ($input_json) { $message = [string]$input_json.message }
 
     try { [Console]::Beep($Frequency, $Duration) } catch { }
 

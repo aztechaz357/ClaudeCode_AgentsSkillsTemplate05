@@ -26,6 +26,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib-hook.ps1")
+Set-HookOutputUtf8
+
 function Read-Patterns([string]$path) {
     if (-not (Test-Path -LiteralPath $path)) { return @() }
     $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
@@ -59,10 +62,9 @@ function Deny([string]$reason) {
 }
 
 try {
-    $raw = [Console]::In.ReadToEnd()
-    if (-not $raw) { exit 0 }
+    $input_json = Read-HookPayload
+    if (-not $input_json) { exit 0 }
 
-    $input_json = $raw | ConvertFrom-Json
     $tool = [string]$input_json.tool_name
     $root = [string]$input_json.cwd
     if (-not $root) { $root = (Get-Location).Path }
