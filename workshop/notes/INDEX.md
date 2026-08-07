@@ -4,6 +4,7 @@
 
 | 日付 | タイトル | タグ | 状態 |
 |---|---|---|---|
+| 2026-08-07 | [フックが約 99% 失敗していた原因（stdin のコードページ）と直し方の判断](2026-08-07-hook-stdin-encoding.md) | hooks, powershell, encoding, decision | note |
 | 2026-08-06 | [7 点セット・役割分割・クリーンアーキテクチャへ切り替えた判断](2026-08-06-seven-deliverables-decision.md) | process, architecture, decision, agents | note |
 | 2026-07-30 | [雛形の末尾に混入した閉じタグが py で初めて露見した件](2026-07-30-scaffold-trailing-tag-incident.md) | template, incident, workshop | note |
 | 2026-07-30 | [Grep ツール（ripgrep）の glob と正規表現の落とし穴](2026-07-30-ripgrep-glob-tips.md) | search, ripgrep | howto |
