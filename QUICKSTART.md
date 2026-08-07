@@ -339,6 +339,7 @@ workshop/tools/csv-diff/
 
 | 知りたいこと | 読むもの |
 |---|---|
+| **使い方の早見表（コマンド・8 段・困ったとき）** | `.claude/skills/agile-process/usage.md` |
 | 全体の方針と構成 | `README.md` |
 | **毎スライスで何を作るか（7 点セット）** | `.claude/skills/agile-process/deliverables.md` |
 | 完了条件（何をもって L1・L2・L3 か） | `.claude/skills/agile-process/maturity.md` |

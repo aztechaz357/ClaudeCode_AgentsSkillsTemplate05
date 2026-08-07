@@ -258,6 +258,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 
 | やること | 読むもの |
 |---|---|
+| **使い方を手早く知る（コマンド・8 段・困ったとき）** | `.claude/skills/agile-process/usage.md` |
 | **プロセス全体・次に何をやるか・完了と言えるか** | `.claude/skills/agile-process/` |
 | **毎スライスで何を作るか（7 点セット）** | `.claude/skills/agile-process/deliverables.md` |
 | 骨組みを作る（まず完走） | `.claude/skills/walking-skeleton/` |
