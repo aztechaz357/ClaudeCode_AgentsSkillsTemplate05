@@ -76,6 +76,12 @@
             "command": "powershell -NoProfile -File .claude/hooks/post-edit-markdown.ps1",
             "timeout": 90,
             "statusMessage": "Markdown の番号を検証中"
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -File .claude/hooks/post-edit-python.ps1",
+            "timeout": 60,
+            "statusMessage": "Python の識別子を検証中"
           }
         ]
       }

@@ -29,13 +29,6 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib-hook.ps1")
 Set-HookOutputUtf8
 
-function Invoke-Checker([string]$tool, [string]$target) {
-    if (-not (Test-Path -LiteralPath $tool)) { return $null }
-    $output = & powershell -NoProfile -File $tool -Path $target 2>&1
-    if ($LASTEXITCODE -eq 0) { return $null }
-    return (($output | Out-String).Trim())
-}
-
 try {
     $input_json = Read-HookPayload
     if (-not $input_json) { exit 0 }
@@ -51,11 +44,11 @@ try {
 
     $findings = @()
 
-    $numbering = Invoke-Checker (Join-Path $root $NumberingTool) $file
+    $numbering = Invoke-HookChecker (Join-Path $root $NumberingTool) $file
     if ($numbering) { $findings += "check_numbering NG:`n" + $numbering }
 
     if ($Diagrams) {
-        $diagram = Invoke-Checker (Join-Path $root $DiagramTool) $file
+        $diagram = Invoke-HookChecker (Join-Path $root $DiagramTool) $file
         if ($diagram) { $findings += "check_diagrams NG:`n" + $diagram }
     }
 

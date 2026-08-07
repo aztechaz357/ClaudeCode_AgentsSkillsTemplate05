@@ -131,7 +131,8 @@ def _run(root: Path, *args: str) -> tuple[int, str]:
 class OkTest(unittest.TestCase):
     """一式がそろっていれば通ること。"""
 
-    def test_7点そろっていれば終了コード0(self) -> None:
+    def test_complete_set_exits_0(self) -> None:
+        """7点そろっていれば終了コード0。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -139,7 +140,8 @@ class OkTest(unittest.TestCase):
             self.assertEqual(code, 0, out)
             self.assertIn("S01", out)
 
-    def test_L0のスライスは検査対象にしない(self) -> None:
+    def test_skips_l0_slices(self) -> None:
+        """L0のスライスは検査対象にしない。"""
         # S02 は L0 未着手。成果物が 1 つも無いが、それが正常。
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -153,7 +155,8 @@ class OkTest(unittest.TestCase):
 class MissingTest(unittest.TestCase):
     """欠けを検出できること（ここが落ちると検査しないツールになる）。"""
 
-    def test_設計書が無ければ落ちる(self) -> None:
+    def test_fails_without_design(self) -> None:
+        """設計書が無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root, **{"docs/design/S01-count.md": None})
@@ -161,7 +164,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("設計書", out)
 
-    def test_テスト結果まとめが無ければ落ちる(self) -> None:
+    def test_fails_without_test_report(self) -> None:
+        """テスト結果まとめが無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root, **{"docs/test-reports/S01-count.md": None})
@@ -169,7 +173,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("テスト結果", out)
 
-    def test_マニュアルに当該スライスの節が無ければ落ちる(self) -> None:
+    def test_fails_without_manual_section(self) -> None:
+        """マニュアルに当該スライスの節が無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root, **{"docs/manual.md": MANUAL.replace("## S01 行数を数える", "")})
@@ -177,7 +182,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("マニュアル", out)
 
-    def test_マニュアルの共通3節が欠けたら落ちる(self) -> None:
+    def test_fails_without_manual_common_sections(self) -> None:
+        """マニュアルの共通3節が欠けたら落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root, **{"docs/manual.md": MANUAL.replace("## 1. 環境構築", "## はじめに")})
@@ -185,7 +191,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("環境構築", out)
 
-    def test_設計書に図が無ければ落ちる(self) -> None:
+    def test_fails_when_design_has_no_diagram(self) -> None:
+        """設計書に図が無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             body = DESIGN.replace("```mermaid", "```text")
@@ -194,7 +201,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("図", out)
 
-    def test_設計書に判断の記録が無ければ落ちる(self) -> None:
+    def test_fails_when_design_has_no_decision_record(self) -> None:
+        """設計書に判断の記録が無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             body = DESIGN.split("## 判断の記録")[0]
@@ -203,7 +211,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("判断の記録", out)
 
-    def test_テスト結果まとめに実測の出力が無ければ落ちる(self) -> None:
+    def test_fails_when_report_has_no_measured_output(self) -> None:
+        """テスト結果まとめに実測の出力が無ければ落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             body = "# S01 テスト結果\n\n全部緑でした。\n"
@@ -212,7 +221,8 @@ class MissingTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("実測", out)
 
-    def test_雛形のプレースホルダが残っていれば落ちる(self) -> None:
+    def test_fails_on_leftover_placeholder(self) -> None:
+        """雛形のプレースホルダが残っていれば落ちる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             body = DESIGN.replace("先に土台が要るため", "{そう考えた理由}")
@@ -225,13 +235,15 @@ class MissingTest(unittest.TestCase):
 class ArgumentTest(unittest.TestCase):
     """引数と前提の扱い。"""
 
-    def test_バックログが無ければ終了コード2(self) -> None:
+    def test_missing_backlog_exits_2(self) -> None:
+        """バックログが無ければ終了コード2。"""
         with tempfile.TemporaryDirectory() as tmp:
             code, out = _run(Path(tmp))
             self.assertEqual(code, 2)
             self.assertIn("backlog", out)
 
-    def test_スライスを指定すると1本だけ見る(self) -> None:
+    def test_slice_option_checks_one_slice(self) -> None:
+        """スライスを指定すると1本だけ見る。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root, **{"docs/design/S01-count.md": None})

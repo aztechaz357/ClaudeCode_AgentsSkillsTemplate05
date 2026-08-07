@@ -262,6 +262,65 @@ class TestPostEditMarkdown(unittest.TestCase):
         self.assertEqual(out.strip(), "")
 
 
+class TestPostEditPython(unittest.TestCase):
+    """PostToolUse: 編集された Python に識別子の検査を掛ける。"""
+
+    def test_reports_japanese_function_name(self):
+        """日本語の関数名を Claude に差し戻す。"""
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "sample.py"
+            target.write_text("def 集計する(rows):\n    return rows\n", encoding="utf-8")
+            code, out, err = run_hook(
+                "post-edit-python.ps1",
+                {
+                    "cwd": str(REPO),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": str(target)},
+                },
+            )
+        self.assertEqual(err, "")
+        self.assertEqual(code, 0)
+        context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("集計する", context)
+
+    def test_silent_on_ascii_names(self):
+        """ASCII の関数名だけなら何も出力しない。"""
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "sample.py"
+            target.write_text(
+                'def count(rows):\n    """行を数える。"""\n    return len(rows)\n',
+                encoding="utf-8",
+            )
+            code, out, err = run_hook(
+                "post-edit-python.ps1",
+                {
+                    "cwd": str(REPO),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": str(target)},
+                },
+            )
+        self.assertEqual(err, "")
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "")
+
+    def test_skips_non_python(self):
+        """Python 以外のファイルには何もしない。"""
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "sample.md"
+            target.write_text("# 見出し\n", encoding="utf-8")
+            code, out, err = run_hook(
+                "post-edit-python.ps1",
+                {
+                    "cwd": str(REPO),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": str(target), "content": TRAP},
+                },
+            )
+        self.assertEqual(err, "")
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "")
+
+
 class TestOtherHooks(unittest.TestCase):
     """stdin を読む残りのフックも同じ payload で壊れないこと。"""
 

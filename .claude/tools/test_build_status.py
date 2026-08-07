@@ -72,7 +72,8 @@ def _page(root: Path) -> str:
 class RenderTest(unittest.TestCase):
     """1 画面に必要なものが載ること。"""
 
-    def test_ゴールと現在地を載せる(self) -> None:
+    def test_renders_goal_and_current_position(self) -> None:
+        """ゴールと現在地を載せる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -82,7 +83,8 @@ class RenderTest(unittest.TestCase):
             self.assertIn("CSV を素早く検分できる道具", page)
             self.assertIn("S02 段4 実装中", page)
 
-    def test_スライスごとの成熟度と充足を載せる(self) -> None:
+    def test_renders_maturity_and_completeness_per_slice(self) -> None:
+        """スライスごとの成熟度と充足を載せる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -92,7 +94,8 @@ class RenderTest(unittest.TestCase):
                 self.assertIn(ident, page)
             self.assertIn("設計書", page)
 
-    def test_負債の件数と痛み高を数える(self) -> None:
+    def test_counts_debts_and_high_pain(self) -> None:
+        """負債の件数と痛み高を数える。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -102,7 +105,8 @@ class RenderTest(unittest.TestCase):
             self.assertIn("未返却 2 件", page)
             self.assertIn("痛み 高 1 件", page)
 
-    def test_外部への参照を持たない(self) -> None:
+    def test_has_no_external_references(self) -> None:
+        """外部への参照を持たない。"""
         # 自己完結（file:// で開ける）。CDN・リモート画像・通信を含めない。
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -112,7 +116,8 @@ class RenderTest(unittest.TestCase):
             for bad in ("http://", "https://", "<script src", "<link rel=\"stylesheet\" href"):
                 self.assertNotIn(bad, page)
 
-    def test_gitが無くても落ちない(self) -> None:
+    def test_survives_without_git(self) -> None:
+        """gitが無くても落ちない。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -123,7 +128,8 @@ class RenderTest(unittest.TestCase):
 class ArgumentTest(unittest.TestCase):
     """前提が欠けたときの振る舞い。"""
 
-    def test_バックログが無ければ終了コード2(self) -> None:
+    def test_missing_backlog_exits_2(self) -> None:
+        """バックログが無ければ終了コード2。"""
         with tempfile.TemporaryDirectory() as tmp:
             code, out = _run(Path(tmp))
             self.assertEqual(code, 2)

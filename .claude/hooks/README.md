@@ -70,13 +70,14 @@
 |---|---|---|---|
 | `pre-tool-guard.ps1` | PreToolUse | `Write` `Edit` `NotebookEdit` `Bash` `PowerShell` | `protected_paths.txt` に一致する編集と、`denied_commands.txt` に一致するコマンドを **deny** する |
 | `post-edit-markdown.ps1` | PostToolUse | `Write` `Edit` | 編集された `.md` に番号検証（`-Diagrams` で図検証も）を掛け、NG を Claude に差し戻す |
+| `post-edit-python.ps1` | PostToolUse | `Write` `Edit` | 編集された `.py` の識別子に非 ASCII が無いか検査し、NG を Claude に差し戻す |
 | `post-edit-lint.ps1` | PostToolUse | `Write` `Edit` | `-Command` で渡した整形・lint を編集ファイルに掛ける（ **未配線** ・下記参照） |
 | `notify.ps1` | Notification | — | ビープ音を鳴らす（`-LogPath` で記録も可） |
 | `stop-uncommitted.ps1` | Stop | — | 未コミットの変更が残っていたらユーザーに知らせる |
 | `session-start-context.ps1` | SessionStart | — | ブランチ・未コミット数・HEAD・プロファイル未整備の警告・最新 steering を文脈へ注入 |
 
 `lib-hook.ps1` はフックではなく共有の部品（`Read-HookPayload` /
-`Set-HookOutputUtf8`）。各フックが `param()` の直後に
+`Set-HookOutputUtf8` / `Invoke-HookChecker`）。各フックが `param()` の直後に
 `. (Join-Path $PSScriptRoot "lib-hook.ps1")` で読み込む。
 
 ### プロジェクト固有の設定ファイル

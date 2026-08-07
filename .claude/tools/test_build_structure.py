@@ -54,7 +54,8 @@ def _run(root: Path, *args: str) -> tuple[int, str]:
 class RenderTest(unittest.TestCase):
     """実物のツリーを文書にできること。"""
 
-    def test_ツリーを生成して書き出す(self) -> None:
+    def test_writes_generated_tree(self) -> None:
+        """ツリーを生成して書き出す。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -65,7 +66,8 @@ class RenderTest(unittest.TestCase):
             self.assertIn("domain", body)
             self.assertIn("test", body)
 
-    def test_探索除外のディレクトリは出さない(self) -> None:
+    def test_excludes_ignored_directories(self) -> None:
+        """探索除外のディレクトリは出さない。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -74,7 +76,8 @@ class RenderTest(unittest.TestCase):
             for name in (".venv", "__pycache__", "node_modules", ".git"):
                 self.assertNotIn(name, body)
 
-    def test_日時を埋め込まない(self) -> None:
+    def test_embeds_no_timestamp(self) -> None:
+        """日時を埋め込まない。"""
         # 日時を入れると --check が常に古いと言い出す（build_usdm.py と同じ轍）。
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -85,7 +88,8 @@ class RenderTest(unittest.TestCase):
             second = (root / "docs" / "structure.md").read_text(encoding="utf-8")
             self.assertEqual(first, second)
 
-    def test_深さで打ち切る(self) -> None:
+    def test_truncates_at_max_depth(self) -> None:
+        """深さで打ち切る。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -94,7 +98,8 @@ class RenderTest(unittest.TestCase):
             self.assertIn("src", body)
             self.assertNotIn("cli.py", body)
 
-    def test_説明を付けられる(self) -> None:
+    def test_annotates_entries(self) -> None:
+        """説明を付けられる。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -112,7 +117,8 @@ class RenderTest(unittest.TestCase):
 class CheckTest(unittest.TestCase):
     """--check が古さを終了コードで落とすこと。"""
 
-    def test_最新なら0(self) -> None:
+    def test_check_exits_0_when_current(self) -> None:
+        """最新なら0。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -120,7 +126,8 @@ class CheckTest(unittest.TestCase):
             code, out = _run(root, "--check")
             self.assertEqual(code, 0, out)
 
-    def test_構成が変わっていたら1(self) -> None:
+    def test_check_exits_1_when_stale(self) -> None:
+        """構成が変わっていたら1。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -131,7 +138,8 @@ class CheckTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("STALE", out)
 
-    def test_未生成なら1(self) -> None:
+    def test_check_exits_1_when_missing(self) -> None:
+        """未生成なら1。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)

@@ -27,6 +27,17 @@ function Read-HookPayload {
     return ($raw | ConvertFrom-Json)
 }
 
+function Invoke-HookChecker([string]$tool, [string]$target) {
+    # Run a .ps1 checker from .claude/tools/ against one file.
+    # Returns the checker's output when it reports a problem (non-zero exit),
+    # and $null when it is happy - or when the checker is not installed, so a
+    # project that removed a tool does not get a failing hook.
+    if (-not (Test-Path -LiteralPath $tool)) { return $null }
+    $output = & powershell -NoProfile -File $tool -Path $target 2>&1
+    if ($LASTEXITCODE -eq 0) { return $null }
+    return (($output | Out-String).Trim())
+}
+
 function Set-HookOutputUtf8 {
     # Claude Code reads hook stdout as UTF-8, and child processes emit UTF-8
     # too. Without this, non-ASCII in what we print (paths, findings, commit

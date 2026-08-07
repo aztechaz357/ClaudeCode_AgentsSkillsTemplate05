@@ -269,6 +269,7 @@ REQ2「列を指定して絞り込みたい」
 | `check_diagrams.ps1` | Mermaid / PlantUML / Graphviz の図を構文検証 | PowerShell・各作図ツールチェーン |
 | `check_numbering.ps1` | 数式・図・表の番号（DUP / GAP / UNREF / DANGL）を検証 | PowerShell |
 | `check_mermaid.ps1` | Mermaid 専用の旧ツール（互換のため残置） | PowerShell |
+| `check_py_names.ps1` | Python の関数名に非 ASCII が無いか検証（PostToolUse フックが編集のたびに実行） | PowerShell |
 | `check_doc_examples.py` | マニュアルの Python 例を実行して出力を照合 | Python プロジェクト |
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
