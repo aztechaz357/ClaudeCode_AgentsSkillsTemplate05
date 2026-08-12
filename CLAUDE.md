@@ -223,6 +223,22 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 - コミット接頭辞: `骨組み:` `実装:` `テスト:` `整理:` `docs:` `要求:` `設計:` `プロセス:`
 - push / PR: {例: ユーザーの明示的な指示があるときのみ}
 
+### Issue 追跡（GitHub Issues）
+
+> **`- 使用:` の行がこの設定の唯一の正** （値は `on` / `off` のどちらか）。
+> 手で書き換えず `/issue on` `/issue off` を使う（節の形が壊れると
+> 全エージェントがモードを読めなくなる）。既定は `off` ——
+> GitHub を使わないプロジェクトでは何も設定しなくてよい。
+> 規約は `.claude/skills/issue-tracking/SKILL.md` が正。
+
+- 使用: off
+- リポジトリ: なし
+- ラベル: `slice` / `debt` / `L1` `L2` `L3`
+
+**`off` のあいだ、全エージェントは `gh issue` を 1 回も呼ばない。**
+`on` にしても **進捗の正は `docs/backlog.md` のまま** で、Issue はその写し
+（窓）。Issue に進捗を書いてバックログを更新しないことは規約違反。
+
 ## 絶対ルール
 
 すべてのエージェント（親・サブエージェント）が、両レーンで従う。
@@ -280,6 +296,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | 現状設計を更新する（L3 のみ） | `.claude/skills/architecture-design/` |
 | 用語集を更新する | `.claude/skills/glossary-creation/` |
 | 厚く書く（不可逆・公開・安全・データ形式） | `requirements-definition` → `functional-design` |
+| **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
 | 開発プロセスの道具を新設する | `.claude/skills/tool-authoring/` |
 | フックを追加・修正する | `.claude/hooks/README.md` |
 | 全体の設計思想・フロー・構成を知る | `.claude/README.md` |
@@ -293,6 +310,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 /status        … 現在地を 1 画面にまとめて出す（いつでも実行してよい）
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）
+/issue         … GitHub Issue を使う / やめる / 同期する（既定は使わない）
 ```
 
 **前工程を飛ばさないのは「ゴール定義 → バックログ → 骨組み」の 3 つだけ。**

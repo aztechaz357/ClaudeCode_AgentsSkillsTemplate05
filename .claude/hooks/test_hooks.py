@@ -370,5 +370,49 @@ class TestOtherHooks(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+class TestSessionStartIssueMode(unittest.TestCase):
+    """Issue 追跡が on のときだけ文脈へ注入すること。
+
+    モードは全エージェントの `gh` の扱いを変えるので、on を見落とすのも
+    off を on と報告するのも事故になる。両方向を検証する。
+    """
+
+    PROFILE = (
+        "# CLAUDE.md\n\n### Issue "
+        + "追跡"
+        + "（GitHub Issues）\n\n- 使用: {mode}\n- リポジトリ: owner/repo\n"
+    )
+
+    def _run_in(self, mode: str) -> str:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "CLAUDE.md").write_text(
+                self.PROFILE.format(mode=mode), encoding="utf-8"
+            )
+            proc = subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-File",
+                    str(HOOKS / "session-start-context.ps1"),
+                ],
+                input=json.dumps({"hook_event_name": "SessionStart"}).encode("utf-8"),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(root),
+            )
+        self.assertEqual(proc.stderr.decode("utf-8", errors="replace"), "")
+        self.assertEqual(proc.returncode, 0)
+        return proc.stdout.decode("utf-8", errors="replace")
+
+    def test_reports_when_on(self):
+        """`使用: on` のとき ISSUE TRACKING IS ON を注入する。"""
+        self.assertIn("ISSUE TRACKING IS ON", self._run_in("on"))
+
+    def test_silent_when_off(self):
+        """`使用: off` のときは何も言わない（既定を邪魔しない）。"""
+        self.assertNotIn("ISSUE TRACKING", self._run_in("off"))
+
+
 if __name__ == "__main__":
     unittest.main()

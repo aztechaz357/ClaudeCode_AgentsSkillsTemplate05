@@ -29,6 +29,13 @@ try {
 
     $lines = @()
 
+    # git writes to stderr outside a repository ("fatal: not a git repository").
+    # Under ErrorActionPreference=Stop, PowerShell 5.1 turns that stderr into a
+    # terminating NativeCommandError, which would make this hook fail on every
+    # session of a project that is not (yet) a git repository. Isolate the
+    # native calls and restore Stop afterwards.
+    $ErrorActionPreference = "Continue"
+
     $branch = & git rev-parse --abbrev-ref HEAD 2>$null
     if ($LASTEXITCODE -eq 0 -and $branch) {
         $lines += "branch: " + $branch.Trim()
@@ -44,10 +51,24 @@ try {
         if ($head) { $lines += "HEAD: " + ($head | Select-Object -First 1) }
     }
 
+    $ErrorActionPreference = "Stop"
+
     if (Test-Path -LiteralPath "CLAUDE.md") {
         $claude = [System.IO.File]::ReadAllText("CLAUDE.md", [System.Text.Encoding]::UTF8)
         if ($claude.Contains("{")) {
             $lines += "WARNING: CLAUDE.md still contains {} placeholders - the project profile is not filled in. Run /setup-project before development."
+        }
+
+        # Issue tracking (GitHub Issues) changes what every agent may do with gh,
+        # so it must be read from the environment, not remembered.
+        # The profile line is "- <use>: on|off"; <use> is U+4F7F U+7528 and the
+        # colon may be U+FF1A. This file stays ASCII, so build the pattern from
+        # code points. The source of truth is .claude/tools/issue_mode.py.
+        $useWord = [string][char]0x4F7F + [string][char]0x7528
+        $colon = "[:" + [string][char]0xFF1A + "]"
+        $issue = [regex]::Match($claude, '(?m)^\s*-\s*' + $useWord + '\s*' + $colon + '\s*(on|off)\s*$')
+        if ($issue.Success -and $issue.Groups[1].Value -eq "on") {
+            $lines += "ISSUE TRACKING IS ON: mirror docs/backlog.md into GitHub Issues (skill: issue-tracking). docs/backlog.md stays the source of truth. Sync with /issue sync; never send without approval."
         }
     } else {
         $lines += "WARNING: CLAUDE.md not found - agents have no project profile to read."
