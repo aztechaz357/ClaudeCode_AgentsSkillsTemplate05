@@ -70,6 +70,12 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path docs
 このツールは Mermaid / PlantUML / Graphviz の 3 言語すべてを
 それぞれのツールチェーンで検証する。NG が出たまま作業を完了としない。
 
+ただし **1 ファイル約 5 秒かかるので、毎編集には掛からない** 。
+そこで、ノード id の壊れ方（雛形の穴・非 ASCII・括弧の閉じ忘れ）だけを見る
+軽い検査を、 **Markdown を編集するたびに PostToolUse フックが自動で走らせる**
+（`check_mermaid_ids.ps1`。ツールチェーン不要で数ミリ秒）。
+上の full 検証は、設計書を書いたときと L3 に上げるときに自分で走らせる。
+
 > `check_mermaid.ps1` は Mermaid 専用の旧ツール。新規の検証は
 > `check_diagrams.ps1` を使う。
 
@@ -104,7 +110,10 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path docs
    区切りは `.`）、`[...]` の中は人が読む日本語にする。
    この規約があるおかげで、実装から起こした図と **機械的に比較できる**
    （`architecture-drift` スキル・`diff_arch.py`）。
-   id に日本語や `A` `P` のような略号を使うと比較できず、乖離の検出が死ぬ
+   id に日本語や `A` `P` のような略号を使うと比較できず、乖離の検出が死ぬ。
+   **雛形の `{}` は `"…"`（表示名）の中だけに書く** —— id に書くと
+   mermaid が `{` を別の図形の開始と解釈して構文エラーになる
+   （実際に雛形が壊れたまま出荷された事故がある）
 
 3. **依存の向きを上から下に固定する** —— `flowchart TD` を使い、
    矢印は必ず下向き。逆流があると図が上を向くので、 **図が違反を可視化する**
