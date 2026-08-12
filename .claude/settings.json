@@ -21,6 +21,8 @@
       "Skill(note-taking)",
       "Skill(issue-tracking)",
       "Skill(catchup)",
+      "Skill(option-first)",
+      "Skill(test-design)",
       "Bash(git rev-list:*)",
       "PowerShell(git rev-list:*)",
       "Bash(gh auth status:*)",

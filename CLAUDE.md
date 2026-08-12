@@ -311,6 +311,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | 厚く書く（不可逆・公開・安全・データ形式） | `requirements-definition` → `functional-design` |
 | **決まったことに追いつく（読む順を決める）** | `.claude/skills/catchup/` |
 | **判断点で選択肢を出す（人が選ぶ・人が学ぶ）** | `.claude/skills/option-first/` |
+| **テストの観点を選ぶ（書く前に守るものを決める）** | `.claude/skills/test-design/` |
 | **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
 | 開発プロセスの道具を新設する | `.claude/skills/tool-authoring/` |
 | フックを追加・修正する | `.claude/hooks/README.md` |

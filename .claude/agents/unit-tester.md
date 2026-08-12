@@ -19,9 +19,12 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 
 最初に `.claude/agents/report-protocol.md` と `CLAUDE.md` を読むこと。要点:
 
-1. 渡された `.steering/` の `reports/01-requirement-writer.md` と
-   `reports/02-designer.md`、 **要求**（`docs/usdm/src/S##-*.html`）と
-   **設計書**（`docs/design/S##-*.md`）を読んでから始める
+1. 渡された `.steering/` の `reports/01-requirement-writer.md`・
+   `reports/02-designer.md`・ **`reports/03a-test-designer.md`（あれば）** 、
+   **要求**（`docs/usdm/src/S##-*.html`）と
+   **設計書**（`docs/design/S##-*.md`）を読んでから始める。
+   `03a` があるなら **そこで合意した観点だけを書く** ——
+   観点を足したくなったら、書かずに報告する（合意の外に出ない）
 2. 結果は `reports/03-unit-tester.md` に書き出す
 3. `.steering/<反復>/INDEX.md` に 1 行追記する（Red の件数を書く）
 4. 親への応答はレポートパスと 5 行以内の要約のみ

@@ -208,7 +208,7 @@ REQ2「列を指定して絞り込みたい」
 | 種別 | エージェント |
 |---|---|
 | 指揮 | `orchestrator`（バックログから次の一手を 1 つ決める） |
-| **7 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
+| **7 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → （`test-designer`）→ `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
 | 調査 | `impact-analyzer`・`file-finder`・`dependency-checker`・`log-analyzer` |
 | 整理 | `refactorer`（振る舞い不変で負債を返す） |
 | 実行 | `test-runner`・`build-executor` |
@@ -249,6 +249,8 @@ REQ2「列を指定して絞り込みたい」
 | `requirements-definition` | 厚い経路 | 網羅した要求仕様書（既定ではない） |
 | `architecture-design` | L3 のみ | 現状設計（`docs/design.md` 1 枚） |
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
+| `option-first` | 共通 | 判断点でだけ選択肢を出す（3〜4 択・推奨を先頭・選ばないとどうなるか） |
+| `test-design` | 反復開発 | テスト観点のカタログと選び方（採らない観点は非目標として記録） |
 | `catchup` | 共通 | 追いつき方（何を「決まったこと」とみなすか・後戻りコストの判定・読む順・既読地点） |
 | `issue-tracking` | 共通 | GitHub Issue の使い方（on / off の切り替え・単位・対応付け・二重管理の禁止） |
 | `repository-structure` | 共通 | ファイル・文書の置き場所 |
