@@ -11,30 +11,35 @@
 
 ```mermaid
 flowchart TD
-  P["{入口の名前}（CLI・画面）"] --> A["{ユースケース名}"]
-  A --> D["{業務ロジックの名前}"]
-  A -.->|契約| PORT[["{Port 名}（契約）"]]
-  INF["{実装名}"] -.->|実装| PORT
+  presentation.{入口}["{入口の名前}（CLI・画面）"] --> application.{ユースケース}["{ユースケース名}"]
+  application.{ユースケース} --> domain.{業務}["{業務ロジックの名前}"]
+  application.{ユースケース} -.->|契約| application.ports[["{Port 名}（契約）"]]
+  infrastructure.{実装}["{実装名}"] -.->|実装| application.ports
   classDef presentation fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   classDef application fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
   classDef domain fill:#fff8e1,stroke:#f9a825,color:#e65100
   classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c
   classDef port fill:#ffffff,stroke:#455a64,stroke-dasharray:4 3,color:#263238
-  class P presentation
-  class A application
-  class D domain
-  class INF infrastructure
-  class PORT port
+  class presentation.{入口} presentation
+  class application.{ユースケース} application
+  class domain.{業務} domain
+  class infrastructure.{実装} infrastructure
+  class application.ports port
 ```
 
 図 1: {このスライスの構成}（実線 = 直接の依存、破線 = 契約経由）
 
 <!--
+  ノード id は「層.モジュール名」（ソースルート相対のモジュールパス。
+  拡張子なし）。表示名は日本語。この id 規約があるので、実装から起こした
+  図と機械比較できる（diff_arch.py）。略号（A・P）を使うと比較が死ぬ。
+
   外部 I/O が無いスライスでは Port を消してよい（契約を切らない判断も
   「判断の記録」に書く）。図の色と向きの規約は
   `.claude/skills/writing-conventions/guides/diagrams.md` が正。
-  書いたら図検証ツールを通す:
+  書いたら図検証ツールと乖離の検査を通す:
     powershell -File .claude/tools/check_diagrams.ps1 -Path <このファイル>
+    <ツール実行コマンド> .claude/tools/diff_arch.py <ソースルート>
 -->
 
 ## 構成の詳細（10 行以内）
