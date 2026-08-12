@@ -85,7 +85,7 @@
 - [ ] Red を確保できなかったタスクの変異テストで KILLED を確認
       （`<ツール実行コマンド> .claude/tools/mutate.py ...`）
 - [ ] （L2 以降）外部 I/O が契約経由かをアーキテクチャテストで確認
-- [ ] （家風に core 無変更があり、対象が `core_files.txt` に載っている場合のみ）
+- [ ] （設計の型に core 無変更があり、対象が `core_files.txt` に載っている場合のみ）
       `check_unchanged.py --since <開始コミット>`
 
 ## 記録

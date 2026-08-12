@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: コード変更（ブランチ差分・特定ファイル）を規約・家風・設計の観点でレビューするサブエージェント。親のコンテキストを消費せずに多数のファイルを読み込んでレビューし、結果を steering のレポートに書き出す。
+description: コード変更（ブランチ差分・特定ファイル）を規約・設計の型・アーキテクチャの観点でレビューするサブエージェント。親のコンテキストを消費せずに多数のファイルを読み込んでレビューし、結果を steering のレポートに書き出す。
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
@@ -64,7 +64,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 - 逆流ゼロ（`layered-architecture` の 1 ルール。import 文を実際に確認する）
 - 重複した処理が統合されているか・命名が統一されているか
 - 全関数・クラスの docstring（役割・引数・戻り値）
-- 家風パターン（プロファイルの「家風パターン」節を正とする）:
+- 設計の型（プロファイルの「設計の型」節を正とする）:
   core 無変更（`.claude/core_files.txt` の対象のみ）／フェイルソフト／
   フェイルクローズ／表示の分離（装飾・ANSI がデータ・ログに混入しない）
 - 厚い経路のスライスなら、設計書（`docs/design/proposals/S##-*.md`）と
