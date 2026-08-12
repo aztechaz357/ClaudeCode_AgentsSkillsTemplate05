@@ -212,6 +212,52 @@ class TestPostEditMarkdown(unittest.TestCase):
         context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
         self.assertIn("DANGL", context)
 
+    def test_reports_broken_mermaid_id(self):
+        """mermaid のノード id に雛形の穴を書いたら、その場で知らせる。
+
+        実際に起きた事故（雛形が `presentation.{入口}["…"]` のまま出荷され、
+        人が開くまで壊れていた）の再発防止。full の構文検証は重くて毎編集に
+        は掛けられないので、この軽い検査をフックに常時配線している。
+        """
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "design.md"
+            target.write_text(
+                '# 設計\n\n```mermaid\nflowchart TD\n  presentation.{入口}["CLI"] --> a.b["x"]\n```\n',
+                encoding="utf-8",
+            )
+            code, out, err = run_hook(
+                "post-edit-markdown.ps1",
+                {
+                    "cwd": str(REPO),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": str(target)},
+                },
+            )
+        self.assertEqual(err, "")
+        self.assertEqual(code, 0)
+        context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("check_mermaid_ids", context)
+
+    def test_silent_on_valid_mermaid(self):
+        """正しい図（雛形の穴はラベルの中）では黙る。"""
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "design.md"
+            target.write_text(
+                '# 設計\n\n```mermaid\nflowchart TD\n  presentation.cli["{入口の名前}"] --> a.b["x"]\n```\n',
+                encoding="utf-8",
+            )
+            code, out, err = run_hook(
+                "post-edit-markdown.ps1",
+                {
+                    "cwd": str(REPO),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": str(target)},
+                },
+            )
+        self.assertEqual(err, "")
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "")
+
     def test_silent_on_clean_markdown(self):
         """正しい Markdown では何も出力しない。"""
         with tempfile.TemporaryDirectory() as d:

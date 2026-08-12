@@ -279,6 +279,7 @@ REQ2「列を指定して絞り込みたい」
 | `check_numbering.ps1` | 数式・図・表の番号（DUP / GAP / UNREF / DANGL）を検証 | PowerShell |
 | `check_mermaid.ps1` | Mermaid 専用の旧ツール（互換のため残置） | PowerShell |
 | `check_py_names.ps1` | Python の関数名に非 ASCII が無いか検証（PostToolUse フックが編集のたびに実行） | PowerShell |
+| `check_mermaid_ids.ps1` | mermaid のノード id の壊れ方（雛形の `{}`・非 ASCII・括弧不一致）を高速に検査（フックが毎編集で実行） | PowerShell |
 | `check_doc_examples.py` | マニュアルの Python 例を実行して出力を照合 | Python プロジェクト |
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
@@ -329,7 +330,7 @@ SessionStart フックが毎回報告する（会話ではなく環境に状態�
 | フック | イベント | 役割 |
 |---|---|---|
 | `pre-tool-guard.ps1` | PreToolUse | 保護パスの編集・破壊的コマンドを拒否 |
-| `post-edit-markdown.ps1` | PostToolUse | 編集した Markdown の番号（+図）を検証 |
+| `post-edit-markdown.ps1` | PostToolUse | 編集した Markdown の番号と **mermaid のノード id** を検証（`-Diagrams` で full の図検証も） |
 | `post-edit-lint.ps1` | PostToolUse | 編集したソースに整形・lint を掛ける（未配線） |
 | `notify.ps1` | Notification | 入力待ちを音で知らせる |
 | `stop-uncommitted.ps1` | Stop | 未コミットのまま終わったら知らせる |

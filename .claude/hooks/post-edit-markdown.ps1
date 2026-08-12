@@ -21,7 +21,8 @@ param(
     [switch]$Diagrams,
     [switch]$Blocking,
     [string]$NumberingTool = ".claude/tools/check_numbering.ps1",
-    [string]$DiagramTool = ".claude/tools/check_diagrams.ps1"
+    [string]$DiagramTool = ".claude/tools/check_diagrams.ps1",
+    [string]$MermaidIdTool = ".claude/tools/check_mermaid_ids.ps1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,6 +47,13 @@ try {
 
     $numbering = Invoke-HookChecker (Join-Path $root $NumberingTool) $file
     if ($numbering) { $findings += "check_numbering NG:`n" + $numbering }
+
+    # Always on: milliseconds, no toolchain. Catches the breakage that shipped
+    # a template with `{placeholder}` inside a mermaid node id, which the full
+    # checker below would have caught but nobody ran it (it costs ~5s/file, so
+    # it is not wired by default). See .claude/tools/check_mermaid_ids.ps1.
+    $mermaidIds = Invoke-HookChecker (Join-Path $root $MermaidIdTool) $file
+    if ($mermaidIds) { $findings += "check_mermaid_ids NG:`n" + $mermaidIds }
 
     if ($Diagrams) {
         $diagram = Invoke-HookChecker (Join-Path $root $DiagramTool) $file
