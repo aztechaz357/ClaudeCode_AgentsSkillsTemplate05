@@ -16,7 +16,8 @@
 |---|---|---|---|---|
 | 1 | `requirement-writer` | 要求仕様書 | backlog・concept | `01-requirement-writer.md` |
 | 2 | `designer` | 設計書 | 01・要求 HTML | `02-designer.md` |
-| 3 | `unit-tester` | 単体テスト（Red まで） | 01・02 | `03-unit-tester.md` |
+| 3 前半 | `test-designer` | テスト観点の合意（コードは書かない） | 01・02 | `03a-test-designer.md` |
+| 3 | `unit-tester` | 単体テスト（Red まで） | 01・02・03a | `03-unit-tester.md` |
 | 4 | `coder` | 実装（Green まで） | 02・03 | `04-coder.md` |
 | 5 | `integration-tester` | 統合テスト | 01・04 | `05-integration-tester.md` |
 | 6 | `test-summarizer` | テスト結果まとめ | 03・04・05 | `06-test-summarizer.md` |
