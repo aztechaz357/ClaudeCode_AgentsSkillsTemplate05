@@ -14,4 +14,5 @@ docs/design	設計書（図と判断の記録。1 スライス 1 枚）
 docs/test-reports	テスト結果まとめ（実測のみ）
 docs/slices	ハブ（7 点への索引・実績・残した手抜き）
 docs/decisions	ADR（スライスを越える判断）
+docs/journal	思考の記録（学習用。外した仮説と節目の操作コマンド。7 点セットの外）
 .claude	開発プロセスの定義（エージェント・スキル・ツール）

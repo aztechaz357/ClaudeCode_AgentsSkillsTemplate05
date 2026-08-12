@@ -171,6 +171,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | **⑦ マニュアル** | `docs/manual.md`（共通 3 節 + `## S##`） | **骨組みで作り、各スライスで追記** |
 | ハブ（7 点への索引・実績・手抜き） | `docs/slices/S##-*.md` | 各スライスに着手するとき |
 | 判断の記録（スライスを越えるもの） | `docs/decisions/ADR-###-*.md` | 2 つ以上のスライスが従う判断をしたとき |
+| **思考の記録（学習用。7 点セットの外・任意）** | `docs/journal/YYYYMMDD-*.md` ／ `docs/journal/commands.md` | 判断点で選択肢を出した・詰まって抜けた・節目の操作をしたとき |
 | 要求一覧（**生成物**。gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成。手で編集しない |
 | ディレクトリ構成（**生成物**） | `docs/structure.md` | `build_structure.py` が生成。手で編集しない |
 | 現在地の 1 画面（**生成物**。gitignore） | `docs/status.html` | `build_status.py` が生成。`/status` で再生成 |
@@ -312,6 +313,8 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | 厚く書く（不可逆・公開・安全・データ形式） | `requirements-definition` → `functional-design` |
 | **決まったことに追いつく（読む順を決める）** | `.claude/skills/catchup/` |
 | **判断点で選択肢を出す（人が選ぶ・人が学ぶ）** | `.claude/skills/option-first/` |
+| **思考の過程を残す（文章＋UML。人が問題解決を学ぶ）** | `.claude/skills/design-journal/` |
+| **PR・マージ・ブランチ整理のコマンドを引く** | `.claude/skills/design-journal/git-commands.md` |
 | **テストの観点を選ぶ（書く前に守るものを決める）** | `.claude/skills/test-design/` |
 | **設計と実装の乖離を見る（図で比較する）** | `.claude/skills/architecture-drift/` |
 | **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
@@ -327,6 +330,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 /iterate       … スライス 1 本の 7 点セットをそろえ、成熟度を 1 段上げる ★既定の入口
 /status        … 現在地を 1 画面にまとめて出す（いつでも実行してよい）
 /catchup       … 席を外した間に決まったことへ追いつく（読む順つき）
+/journal       … 設計・問題解決の思考を文章と UML で残す（学習用。任意）
 /arch          … 実装から図を起こし、設計書の図との乖離を色分けして出す
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）

@@ -31,6 +31,8 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 - `.claude/skills/writing-conventions/guides/diagrams.md` —— 図の記法と見た目
 - `Skill('visual-debugging')` —— トレースをどこに出すか（契約の典型例）
 - `Skill('option-first')` —— **判断点では自分で決めず選択肢を出す**
+- `Skill('design-journal')` —— 分かれ道を通ったとき、思考の過程を
+  人が学べる形で残す（任意。設計書の「判断の記録」とは読者も目的も別）
 
 ## 判断点に当たったら選択肢を出す（自分で決めない）
 

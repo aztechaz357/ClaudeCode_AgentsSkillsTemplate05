@@ -23,6 +23,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 | スライスの薄い設計・実績 | `docs/slices/`（`slice-definition`） |
 | 進捗・優先順位・負債 | `docs/backlog.md`（`agile-process`） |
 | 反復中の判断・ブロッカー・振り返り | `.steering/`（`steering`） |
+| **考えた道筋・外した仮説・節目の操作コマンド** | `docs/journal/`（`design-journal`） |
 | ツールの使い方 | そのツールの `README.md`（`quick-tool`） |
 | 用語の定義 | `docs/glossary.md`（`glossary-creation`） |
 | 恒久的な規約になったもの | `CLAUDE.md` またはスキル |
@@ -30,6 +31,11 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 **反復中の判断は `.steering/` へ、残した手抜きは `docs/backlog.md` の
 負債表へ** 。工房のノートは、スライスに紐づかない、いつでも読み返す
 知識を置く場所。
+
+**ノートとジャーナル（`design-journal`）の違いは、結論か過程か。**
+ノートは「次に引くための結論」を短く置く場所で、過程は要らない。
+ジャーナルは「どうやってその結論に至ったか」を残す学習資料で、
+**外した仮説を消さない** 。同じ話でも目的が違うので、両方に書いてよい。
 
 ## status の選び方
 

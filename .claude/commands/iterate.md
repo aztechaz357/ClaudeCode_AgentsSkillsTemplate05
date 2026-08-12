@@ -93,6 +93,9 @@ description: スライス1本の成熟度を1段上げる反復を回す（7点�
 - 検証: `powershell -File .claude/tools/check_diagrams.ps1 -Path <設計書>` が 0
 - トレース表の「設計」列を埋める
 - **節目報告②**: 層と契約の要点 1 行 ＋ **却下した案 1 行** を出す
+- **選択肢を出したなら `/journal` を案内する**（`Skill('design-journal')`）。
+  分かれ道を通った回は、思考の過程を残す価値がある回。
+  書くかどうかはユーザーが決める（任意。反復の完了条件にはしない）
 
 ## 段3: 単体テスト（前半 `test-designer` → 後半 `unit-tester`）
 
