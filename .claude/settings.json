@@ -24,6 +24,7 @@
       "Skill(option-first)",
       "Skill(test-design)",
       "Skill(architecture-drift)",
+      "Skill(design-journal)",
       "Bash(git rev-list:*)",
       "PowerShell(git rev-list:*)",
       "Bash(gh auth status:*)",

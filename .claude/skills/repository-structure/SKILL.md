@@ -44,6 +44,7 @@ allowed-tools: Read, Write
 | ⑦ マニュアル | `docs/manual.md` | **骨組みで作り、各スライスで追記** |
 | ハブ（7 点への索引・実績・手抜き） | `docs/slices/S##-<name>.md` | 各スライスに着手するとき |
 | 判断の記録（スライスを越えるもの） | `docs/decisions/ADR-###-<name>.md` | 2 つ以上のスライスが従う判断をしたとき |
+| 思考の記録（学習用・任意） | `docs/journal/YYYYMMDD-<slug>.md` ／ `docs/journal/commands.md` | 判断点・詰まり・節目の操作があったとき（`design-journal`） |
 | 要求一覧（生成物・gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成 |
 | ディレクトリ構成（生成物） | `docs/structure.md` | `build_structure.py` が生成 |
 | 現在地の 1 画面（生成物・gitignore） | `docs/status.html` | `build_status.py` が生成 |
