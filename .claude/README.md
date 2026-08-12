@@ -187,6 +187,7 @@ REQ2「列を指定して絞り込みたい」
 | `/skeleton` | 反復開発 | 骨組みを作り切る（1 回だけ） |
 | `/iterate [S##]` | 反復開発 | **既定の入口** 。7 点セットをそろえ成熟度を 1 段上げる |
 | `/status` | 反復開発 | **現在地を 1 画面に** （ゴール・充足・負債・直近の作業） |
+| `/arch [diff\|actual]` | 反復開発 | **設計と実装の乖離を図で見る**（未実装 = 灰 / 設計に無い = 黄 / 逆流 = 赤） |
 | `/catchup [ref]` | 共通 | **決まったことに追いつく** （後戻りコストの高い順＋読む順。既読地点は `.steering/last-reviewed`） |
 | `/refactor [D##]` | 反復開発 | 負債を返す（振る舞い不変） |
 | `/add-feature [S##]` | 反復開発 | 厚い経路（不可逆・公開・安全・データ形式のみ） |
@@ -249,6 +250,7 @@ REQ2「列を指定して絞り込みたい」
 | `requirements-definition` | 厚い経路 | 網羅した要求仕様書（既定ではない） |
 | `architecture-design` | L3 のみ | 現状設計（`docs/design.md` 1 枚） |
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
+| `architecture-drift` | 反復開発 | 設計図と実装の乖離（3 種）の意味・図の id 規約・成熟度ごとの許容 |
 | `option-first` | 共通 | 判断点でだけ選択肢を出す（3〜4 択・推奨を先頭・選ばないとどうなるか） |
 | `test-design` | 反復開発 | テスト観点のカタログと選び方（採らない観点は非目標として記録） |
 | `catchup` | 共通 | 追いつき方（何を「決まったこと」とみなすか・後戻りコストの判定・読む順・既読地点） |
@@ -284,6 +286,8 @@ REQ2「列を指定して絞り込みたい」
 | `check_deliverables.py` | スライスごとに **7 点セットがそろっているか** を検査（設計書の図と判断の記録・テスト結果の実測・マニュアルの共通 3 節と `S##` 節・雛形の残りまで見る） | Python プロジェクト |
 | `build_structure.py` | 実物のツリーから `docs/structure.md` を生成（`--check` で古さを検出。説明は `.claude/structure-notes.txt`） | Python プロジェクト |
 | `build_status.py` | 現在地を 1 画面（`docs/status.html`）にまとめる。ゴール・成熟度の帯・充足マトリクス・負債・直近の作業 | Python プロジェクト |
+| `build_arch.py` | 実装の import から実際の依存図（Mermaid）を生成し、逆流を検出 | Python プロジェクト |
+| `diff_arch.py` | 設計書の図と実物を集合比較し、3 種の差を色分けした 1 枚にする | Python・設計書に図があること |
 | `build_digest.py` | 既読地点からの変更を「決まったこと」に絞り、後戻りコストの高い順に並べる（`/catchup`） | git リポジトリ |
 | `issue_mode.py` | Issue 追跡を使うかどうか（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが 0 = on / 1 = off / 2 = 判定不能 | Python プロジェクト |
 | `sync_issues.py` | バックログと GitHub Issue の差分を計算する（既定は dry-run。`--apply` で反映） | Python・`gh`・`使用: on` |

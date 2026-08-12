@@ -312,6 +312,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | **決まったことに追いつく（読む順を決める）** | `.claude/skills/catchup/` |
 | **判断点で選択肢を出す（人が選ぶ・人が学ぶ）** | `.claude/skills/option-first/` |
 | **テストの観点を選ぶ（書く前に守るものを決める）** | `.claude/skills/test-design/` |
+| **設計と実装の乖離を見る（図で比較する）** | `.claude/skills/architecture-drift/` |
 | **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
 | 開発プロセスの道具を新設する | `.claude/skills/tool-authoring/` |
 | フックを追加・修正する | `.claude/hooks/README.md` |
@@ -325,6 +326,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 /iterate       … スライス 1 本の 7 点セットをそろえ、成熟度を 1 段上げる ★既定の入口
 /status        … 現在地を 1 画面にまとめて出す（いつでも実行してよい）
 /catchup       … 席を外した間に決まったことへ追いつく（読む順つき）
+/arch          … 実装から図を起こし、設計書の図との乖離を色分けして出す
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）
 /issue         … GitHub Issue を使う / やめる / 同期する（既定は使わない）

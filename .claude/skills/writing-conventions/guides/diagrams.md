@@ -76,36 +76,43 @@ powershell -File .claude/tools/check_diagrams.ps1 -Path docs
 ## 見た目の規約（読みやすさは装飾ではなく仕様）
 
 図は「あれば良い」ものではなく、 **構造を一目で伝えられて初めて価値がある** 。
-次の 5 つを守る。
+次の 6 つを守る。
 
 1. **層で色を分ける** —— クリーンアーキテクチャの 4 層は常に同じ色にする。
    プロジェクト内で色の意味を揺らさない（色が意味を持つ）
 
    ```mermaid
    flowchart TD
-     P["CLI（入口）"] --> A["カウントのユースケース"]
-     A --> D["行数の数え方（純粋）"]
-     A -.->|契約| PORT[["CsvReader（契約）"]]
-     INF["ファイル読み（実装）"] -.->|実装| PORT
+     presentation.cli["CLI（入口）"] --> application.count["カウントのユースケース"]
+     application.count --> domain.rows["行数の数え方（純粋）"]
+     application.count -.->|契約| application.ports[["CsvReader（契約）"]]
+     infrastructure.csv_reader["ファイル読み（実装）"] -.->|実装| application.ports
      classDef presentation fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
      classDef application fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
      classDef domain fill:#fff8e1,stroke:#f9a825,color:#e65100
      classDef infrastructure fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c
      classDef port fill:#ffffff,stroke:#455a64,stroke-dasharray:4 3,color:#263238
-     class P presentation
-     class A application
-     class D domain
-     class INF infrastructure
-     class PORT port
+     class presentation.cli presentation
+     class application.count application
+     class domain.rows domain
+     class infrastructure.csv_reader infrastructure
+     class application.ports port
    ```
 
-2. **依存の向きを上から下に固定する** —— `flowchart TD` を使い、
+2. **ノード id はモジュールパス、表示名は日本語** ——
+   id は **ソースルート相対のモジュールパス**（`application.count`。拡張子なし・
+   区切りは `.`）、`[...]` の中は人が読む日本語にする。
+   この規約があるおかげで、実装から起こした図と **機械的に比較できる**
+   （`architecture-drift` スキル・`diff_arch.py`）。
+   id に日本語や `A` `P` のような略号を使うと比較できず、乖離の検出が死ぬ
+
+3. **依存の向きを上から下に固定する** —— `flowchart TD` を使い、
    矢印は必ず下向き。逆流があると図が上を向くので、 **図が違反を可視化する**
-3. **契約（Port）は破線と角丸で描く** —— 実装と契約が一目で区別できること
-   （上の例の `PORT`）。「どこで疎結合にしたか」が図の主題
-4. **凡例を付ける** —— 色・線種の意味を図の直後に 1 行で書く。
+4. **契約（Port）は破線と角丸で描く** —— 実装と契約が一目で区別できること
+   （上の例の `application.ports`）。「どこで疎結合にしたか」が図の主題
+5. **凡例を付ける** —— 色・線種の意味を図の直後に 1 行で書く。
    凡例の無い色分けは読者に推測を強いる
-5. **1 枚 1 主題** —— 「層」「主経路」「状態」を 1 枚に詰めない。
+6. **1 枚 1 主題** —— 「層」「主経路」「状態」を 1 枚に詰めない。
    詰めたくなったら、それは 2 枚に分ける合図
 
 ## 設計書に最低限入れる図（成熟度別・省略禁止）
