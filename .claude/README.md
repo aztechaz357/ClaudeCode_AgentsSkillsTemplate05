@@ -193,6 +193,7 @@ REQ2「列を指定して絞り込みたい」
 | `/note <内容>` | 工房 | 調べたこと・罠・決定・思いつきをノートに残す |
 | `/workshop [list\|search\|tidy]` | 工房 | 工房の一覧・検索・棚卸し |
 | `/promote <tool> S##` | 橋渡し | 育った工房ツールを反復開発レーンへ昇格 |
+| `/issue [status\|on\|off\|sync\|new\|pull\|close]` | 反復開発 | GitHub Issue を **使う / やめる** ・バックログと同期（既定は `off`） |
 | `/setup-project` | 共通 | プロジェクトプロファイルの確定と骨組みの作成 |
 | `/check-docs` | 共通 | 7 点セット・バックログ・実物の整合の点検（機械検証つき） |
 | `/review-docs <path>` | 共通 | 個別文書の詳細レビュー |
@@ -213,6 +214,7 @@ REQ2「列を指定して絞り込みたい」
 | 検証 | `implementation-validator`・`code-reviewer`・`security-checker`・`test-analyzer` |
 | 文書 | `doc-syncer`・`doc-reviewer` |
 | **工房** | `tool-smith`（ツールを 1 本作りきる）・`note-keeper`（工房の棚卸し） |
+| 外部連携 | `issue-manager`（GitHub Issue とバックログの同期。`off` なら即終了） |
 
 **成果物 1 つにつき担当は 1 体だけ。責務を重ねない。**
 特に `unit-tester`（テストを書いて Red まで）と `coder`（Red を消す）を
@@ -246,6 +248,7 @@ REQ2「列を指定して絞り込みたい」
 | `requirements-definition` | 厚い経路 | 網羅した要求仕様書（既定ではない） |
 | `architecture-design` | L3 のみ | 現状設計（`docs/design.md` 1 枚） |
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
+| `issue-tracking` | 共通 | GitHub Issue の使い方（on / off の切り替え・単位・対応付け・二重管理の禁止） |
 | `repository-structure` | 共通 | ファイル・文書の置き場所 |
 | `development-guidelines` | 共通 | コーディング・テスト・コミットの規約（成熟度別） |
 | `writing-conventions` | 共通 | 文書の記法（Markdown・数式と図表の番号・作図言語・マニュアル） |
@@ -277,6 +280,8 @@ REQ2「列を指定して絞り込みたい」
 | `check_deliverables.py` | スライスごとに **7 点セットがそろっているか** を検査（設計書の図と判断の記録・テスト結果の実測・マニュアルの共通 3 節と `S##` 節・雛形の残りまで見る） | Python プロジェクト |
 | `build_structure.py` | 実物のツリーから `docs/structure.md` を生成（`--check` で古さを検出。説明は `.claude/structure-notes.txt`） | Python プロジェクト |
 | `build_status.py` | 現在地を 1 画面（`docs/status.html`）にまとめる。ゴール・成熟度の帯・充足マトリクス・負債・直近の作業 | Python プロジェクト |
+| `issue_mode.py` | Issue 追跡を使うかどうか（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが 0 = on / 1 = off / 2 = 判定不能 | Python プロジェクト |
+| `sync_issues.py` | バックログと GitHub Issue の差分を計算する（既定は dry-run。`--apply` で反映） | Python・`gh`・`使用: on` |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |
@@ -319,7 +324,7 @@ SessionStart フックが毎回報告する（会話ではなく環境に状態�
 | `post-edit-lint.ps1` | PostToolUse | 編集したソースに整形・lint を掛ける（未配線） |
 | `notify.ps1` | Notification | 入力待ちを音で知らせる |
 | `stop-uncommitted.ps1` | Stop | 未コミットのまま終わったら知らせる |
-| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備を文脈へ注入 |
+| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備・ **Issue 追跡が on か** を文脈へ注入 |
 
 ## 育て方
 
