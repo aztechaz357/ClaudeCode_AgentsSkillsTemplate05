@@ -25,7 +25,7 @@ allowed-tools: Read, Write, Edit, Bash
 
 ## 前提（書き始める前に読む）
 
-1. `CLAUDE.md`（プロファイル）—— 層構成・命名規則・家風パターン
+1. `CLAUDE.md`（プロファイル）—— 層構成・命名規則・設計の型
 2. **対象の要求**（`docs/usdm/src/S##-*.html`。厚い経路では
    `docs/requirements/S##-*.md`）—— 設計の入力
 3. `.claude/skills/layered-architecture/SKILL.md` —— 層と契約の正

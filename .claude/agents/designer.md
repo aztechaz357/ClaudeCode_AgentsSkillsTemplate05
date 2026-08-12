@@ -26,7 +26,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 
 ## 規約の正
 
-- `Skill('functional-design')` —— 設計書の型・薄い版と厚い版
+- `Skill('functional-design')` —— 設計書の書き方・薄い版と厚い版
 - `Skill('layered-architecture')` —— 層と契約（Port）の正
 - `.claude/skills/writing-conventions/guides/diagrams.md` —— 図の記法と見た目
 - `Skill('visual-debugging')` —— トレースをどこに出すか（契約の典型例）
@@ -39,7 +39,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 却下理由）で AskUserQuestion に出し、選ばれた案を採用する。
 
 1. 後戻りコストが高い（データ形式・永続化の構造・契約の切り方）
-2. 家風に影響する（以後の全スライスが従う型）
+2. 設計の型に影響する（以後の全スライスが従う決めごと）
 3. 名前が外に出る（公開 API・CLI の引数名・設定キー）
 
 **回数の上限: L1 は 1 回、L2 は 2 回、L3 は 0 回。**
