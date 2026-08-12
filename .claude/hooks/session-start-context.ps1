@@ -49,6 +49,21 @@ try {
 
         $head = & git log -1 --oneline 2>$null
         if ($head) { $lines += "HEAD: " + ($head | Select-Object -First 1) }
+
+        # Unread work since the user last ran /catchup. Generated deliverables
+        # outrun human reading speed, so the count is stated up front instead of
+        # being discovered after the fact. Marker: .steering/last-reviewed
+        # (one commit hash). The source of truth is .claude/tools/build_digest.py.
+        $reviewed = Join-Path $SteeringDir "last-reviewed"
+        if (Test-Path -LiteralPath $reviewed) {
+            $mark = ([System.IO.File]::ReadAllText($reviewed, [System.Text.Encoding]::UTF8)).Trim()
+            if ($mark) {
+                $unread = & git rev-list --count "$mark..HEAD" 2>$null
+                if ($LASTEXITCODE -eq 0 -and $unread -and [int]$unread -gt 0) {
+                    $lines += "UNREAD: " + $unread + " commits since the last /catchup (" + $mark + "). Run /catchup to see what was decided, highest-rollback-cost first."
+                }
+            }
+        }
     }
 
     $ErrorActionPreference = "Stop"

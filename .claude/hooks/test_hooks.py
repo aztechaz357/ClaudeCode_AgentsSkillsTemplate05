@@ -414,5 +414,68 @@ class TestSessionStartIssueMode(unittest.TestCase):
         self.assertNotIn("ISSUE TRACKING", self._run_in("off"))
 
 
+class TestSessionStartUnread(unittest.TestCase):
+    """既読地点からの未読コミット数を知らせること。
+
+    生成が読解より速いので「気づいたら追いつけない」が起きる。
+    マーカーがあるときだけ数え、無いときは黙る（既定を邪魔しない）。
+    """
+
+    def _run_in(self, marker: str | None) -> str:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for args in (
+                ["init", "-q"],
+                ["config", "user.email", "t@example.com"],
+                ["config", "user.name", "t"],
+            ):
+                subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+            (root / "a.txt").write_text("1", encoding="utf-8")
+            subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "commit", "-q", "-m", "最初"], cwd=root, check=True, capture_output=True
+            )
+            first = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            (root / "a.txt").write_text("2", encoding="utf-8")
+            subprocess.run(["git", "commit", "-qam", "次"], cwd=root, check=True, capture_output=True)
+
+            if marker is not None:
+                steering = root / ".steering"
+                steering.mkdir()
+                (steering / "last-reviewed").write_text(
+                    (first if marker == "first" else marker) + "\n", encoding="utf-8"
+                )
+
+            proc = subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-File",
+                    str(HOOKS / "session-start-context.ps1"),
+                ],
+                input=json.dumps({"hook_event_name": "SessionStart"}).encode("utf-8"),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(root),
+            )
+        self.assertEqual(proc.stderr.decode("utf-8", errors="replace"), "")
+        self.assertEqual(proc.returncode, 0)
+        return proc.stdout.decode("utf-8", errors="replace")
+
+    def test_reports_unread_count(self):
+        """1 コミット前を既読地点にすると UNREAD: 1 が出る。"""
+        self.assertIn("UNREAD: 1 commits", self._run_in("first"))
+
+    def test_silent_without_marker(self):
+        """マーカーが無ければ黙る（まだ一度も /catchup していない）。"""
+        self.assertNotIn("UNREAD", self._run_in(None))
+
+
 if __name__ == "__main__":
     unittest.main()

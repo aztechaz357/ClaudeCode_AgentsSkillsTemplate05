@@ -296,6 +296,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | 現状設計を更新する（L3 のみ） | `.claude/skills/architecture-design/` |
 | 用語集を更新する | `.claude/skills/glossary-creation/` |
 | 厚く書く（不可逆・公開・安全・データ形式） | `requirements-definition` → `functional-design` |
+| **決まったことに追いつく（読む順を決める）** | `.claude/skills/catchup/` |
 | **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
 | 開発プロセスの道具を新設する | `.claude/skills/tool-authoring/` |
 | フックを追加・修正する | `.claude/hooks/README.md` |
@@ -308,6 +309,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 /skeleton      … 骨組みを作り切る（1 回だけ。ここまでは他のことをしない）
 /iterate       … スライス 1 本の 7 点セットをそろえ、成熟度を 1 段上げる ★既定の入口
 /status        … 現在地を 1 画面にまとめて出す（いつでも実行してよい）
+/catchup       … 席を外した間に決まったことへ追いつく（読む順つき）
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）
 /issue         … GitHub Issue を使う / やめる / 同期する（既定は使わない）
