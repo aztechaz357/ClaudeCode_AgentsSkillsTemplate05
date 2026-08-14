@@ -30,7 +30,7 @@
 | 記録が実物とずれている気がする | `/check-docs` |
 | 同じ失敗を繰り返している | `/improve-process` |
 | 思いつきの小さな道具が欲しい | `/tool <説明>`（工房レーン。7 点セットは不要） |
-| チケットの置き場所を変えたい | `/issue github`（既定）/ `/issue local`（GitHub を使わない）/ `/issue off` |
+| チケットの置き場所を変えたい | `/issue github`（既定）/ `/issue gitlab` / `/issue local`（リモートを使わない）/ `/issue off` |
 
 **`/iterate` が既定の入口。** 他は必要になったときだけ。
 

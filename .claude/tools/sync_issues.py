@@ -6,11 +6,16 @@
 
 置き場所はプロファイルの「チケット追跡」の `- 使用:` で決まる:
 
-    github … GitHub Issue。対応付けは **タイトルの接頭辞（`S##:` / `D##:`）だけ**
+    github … GitHub Issue（`gh`）。対応付けは **タイトルの接頭辞（`S##:` / `D##:`）だけ**
+    gitlab … GitLab Issue（`glab`）。対応付けの規則は github と同じ
     local  … ハブ（docs/slices/S##-*.md）の「## チケット」節。
              負債（D##）は対象外 —— 負債表の行そのものがチケット
 
-どちらのモードでも既定は **dry-run** （差分を出すだけで書き込まない）。
+**`github` と `gitlab` で違うのは CLI の呼び方だけ** で、差分の計算
+（`plan`）は 1 つを共有する。サービスごとに差分の規則を分けると、
+片方だけ壊れて片方だけ直る事故が起きるため（差異は `Forge` に閉じ込める）。
+
+どのモードでも既定は **dry-run** （差分を出すだけで書き込まない）。
 `--apply` を付けたときだけ書き込む。外部への書き込みは取り消しにくいので、
 エージェントは差分を提示して承認を得てから `--apply` する（絶対ルール 4）。
 
@@ -19,6 +24,7 @@
     <ツール実行コマンド> .claude/tools/sync_issues.py
     <ツール実行コマンド> .claude/tools/sync_issues.py --apply
     <ツール実行コマンド> .claude/tools/sync_issues.py --include-done
+    <ツール実行コマンド> .claude/tools/sync_issues.py --print-commands  # 実行せず見る
     <ツール実行コマンド> .claude/tools/sync_issues.py --issues-json <path>   # 検証用
 
 終了コード:
@@ -31,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -58,6 +65,16 @@ SEVEN = (
 )
 
 NOTE = "進捗の正は `docs/backlog.md`。この Issue はその写し（窓）です。"
+
+# このツールが張り替えてよいラベル。ここに無いラベル（`bug` や
+# `priority::high` のように人が付けたもの）は **読まないし消さない** 。
+# 消すと、外から付けた情報が同期のたびに黙って失われる
+MANAGED_LABELS = frozenset({"slice", "debt", "L0", "L1", "L2", "L3"})
+
+# GitHub は OPEN / CLOSED、GitLab は opened / closed / reopened を返す。
+# 大文字化して突き合わせると "OPENED" != "OPEN" で全件が「閉じている」に
+# 倒れるので、開いている状態の語をここに列挙して正規化する
+_OPEN_STATES = frozenset({"open", "opened", "reopened"})
 
 
 @dataclass
@@ -95,13 +112,25 @@ class Row:
 
 @dataclass
 class Change:
-    """既存 Issue に対する変更（更新・クローズ・再オープン）。"""
+    """既存 Issue に対する変更（更新・クローズ・再オープン）。
+
+    Attributes:
+        number: Issue 番号（GitLab では iid）。
+        key: `S03` / `D01`。
+        title: あるべきタイトル。
+        labels: 付けるべきラベル。
+        reason: 人に見せる変更理由。
+        remove: 外すべきラベル。 **`MANAGED_LABELS` のものだけ** 入る。
+            これが無いと `L0` を残したまま `L1` を足すことになり、
+            同期が冪等でなくなる（毎回「ラベルが違う」と言い続ける）。
+    """
 
     number: int
     key: str
     title: str
     labels: list[str]
     reason: str
+    remove: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -496,19 +525,72 @@ def _print_local(changes: list[LocalChange]) -> None:
 
 
 def _label_names(issue: dict) -> list[str]:
-    """gh の JSON からラベル名の一覧を取り出す（文字列と辞書の両方を許す）。"""
+    """CLI の JSON からラベル名の一覧を取り出す。
+
+    `gh` は `[{"name": "slice"}]`、`glab` は `["slice"]` の形で返すので、
+    どちらも読めるようにする（読めない形は空扱いにせず、素直に文字列化する）。
+    """
     names = []
     for label in issue.get("labels", []) or []:
         names.append(label.get("name", "") if isinstance(label, dict) else str(label))
     return [name for name in names if name]
 
 
+def normalize_issues(raw) -> list[dict]:
+    """CLI ごとに違う Issue の JSON を、1 つの形に揃える。
+
+    Args:
+        raw: `gh issue list --json …` または `glab issue list --output json` の
+            パース結果。配列でも、`{"issues": [...]}` のような包みでも受ける。
+
+    Returns:
+        `{"number", "title", "state", "labels"}` だけを持つ辞書の一覧。
+        `state` は `OPEN` / `CLOSED` のどちらかに畳む。
+
+    Note:
+        番号は GitHub が `number`、GitLab が `iid`（プロジェクト内の番号）。
+        GitLab の `id` は **インスタンス全体の通し番号** で、Issue の URL や
+        `glab issue close` に渡す番号ではない。取り違えると別の Issue を
+        閉じるので、`iid` を優先し `id` は使わない。
+    """
+    if isinstance(raw, dict):
+        for key in ("issues", "items", "data"):
+            if isinstance(raw.get(key), list):
+                raw = raw[key]
+                break
+        else:
+            raw = []
+
+    found: list[dict] = []
+    for item in raw or []:
+        if not isinstance(item, dict):
+            continue
+        number = item.get("number")
+        if number is None:
+            number = item.get("iid")
+        if number is None:
+            continue
+        state = str(item.get("state", "")).strip().lower()
+        found.append(
+            {
+                "number": int(number),
+                "title": str(item.get("title", "")),
+                "state": "OPEN" if state in _OPEN_STATES else "CLOSED",
+                "labels": _label_names(item),
+            }
+        )
+    return found
+
+
 def plan(backlog_text: str, issues: list[dict], include_done: bool = False) -> Plan:
     """バックログと Issue 一覧から、送信すべき差分を計算する。
 
+    **GitHub と GitLab で共通** 。サービスの違いは `normalize_issues` が
+    吸収済みなので、ここには分岐を持ち込まない。
+
     Args:
         backlog_text: `docs/backlog.md` の全文。
-        issues: `gh issue list --json number,title,state,labels` の結果。
+        issues: Issue 一覧（`normalize_issues` が受け取れる形）。
         include_done: L3 到達・返済済みの行も Issue にするか。
 
     Returns:
@@ -516,7 +598,7 @@ def plan(backlog_text: str, issues: list[dict], include_done: bool = False) -> P
     """
     result = Plan()
     by_key: dict[str, dict] = {}
-    for issue in issues:
+    for issue in normalize_issues(issues):
         found = _PREFIX.match(issue.get("title", ""))
         if found:
             by_key.setdefault(found.group(1).upper(), issue)
@@ -547,72 +629,211 @@ def plan(backlog_text: str, issues: list[dict], include_done: bool = False) -> P
         reasons = []
         if issue.get("title", "").strip() != row.title:
             reasons.append("タイトル")
-        if sorted(_label_names(issue)) != sorted(row.labels):
+        # 比較も削除も「このツールが張り替えてよいラベル」に限る。
+        # 人が付けた `bug` を差分として数えると、外すか毎回更新するかの
+        # どちらかになり、どちらも人の意図を壊す
+        current = set(_label_names(issue)) & MANAGED_LABELS
+        remove = sorted(current - set(row.labels))
+        if sorted(current) != sorted(row.labels):
             reasons.append("ラベル")
         if reasons:
             result.update.append(
-                Change(number, row.key, row.title, row.labels, " / ".join(reasons))
+                Change(
+                    number, row.key, row.title, row.labels, " / ".join(reasons), remove
+                )
             )
     return result
 
 
-def _run_gh(args: list[str]) -> tuple[int, str]:
-    """gh を実行して (終了コード, 出力) を返す。"""
+# ─────────────────────────────────────────────────────────────────────────
+# リモートのサービス（github / gitlab）の差異
+#
+# 差分の計算（plan）は 1 つを共有し、 **CLI の呼び方の違いだけ** をここに
+# 閉じ込める。サービスごとに同期の規則を分けると、片方だけ壊れて片方だけ
+# 直る事故が起きる（規約の正は issue-tracking スキル）。
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class Forge:
+    """チケットを置くリモートのサービス 1 つ分の呼び方。
+
+    Attributes:
+        mode: プロファイルの `- 使用:` の値（`github` / `gitlab`）。
+        cli: 実行ファイル名（`gh` / `glab`）。
+        name: 人に見せる名前。
+        body_flag: 本文を渡すフラグ。
+        edit_verb: 既存 Issue を直す副コマンド。
+        set_label_flag: 作成時にラベルを付けるフラグ。
+        add_label_flag: 既存 Issue にラベルを足すフラグ
+            （gh は作成が `--label` で更新が `--add-label` と **別物** 。
+            同じにすると作成が引数エラーで落ちる）。
+        drop_label_flag: ラベルを外すフラグ。
+        comma_labels: ラベルをカンマ区切り 1 引数で渡すか（False なら反復）。
+        list_args: 一覧を JSON で取るための追加引数。
+        create_extra: 作成時の追加引数（対話の抑止など）。
+        host_env: 自前ホストを渡す環境変数名（無ければ空）。
+    """
+
+    mode: str
+    cli: str
+    name: str
+    body_flag: str
+    edit_verb: str
+    set_label_flag: str
+    add_label_flag: str
+    drop_label_flag: str
+    comma_labels: bool
+    list_args: tuple[str, ...]
+    create_extra: tuple[str, ...] = ()
+    host_env: str = ""
+
+    def _labels(self, labels: list[str], flag: str) -> list[str]:
+        if not labels:
+            return []
+        if self.comma_labels:
+            return [flag, ",".join(labels)]
+        args: list[str] = []
+        for label in labels:
+            args += [flag, label]
+        return args
+
+    def list_command(self, repo: str) -> list[str]:
+        return [self.cli, "issue", "list", "--repo", repo, *self.list_args]
+
+    def create_command(self, repo: str, row: Row) -> list[str]:
+        return [
+            self.cli, "issue", "create", "--repo", repo,
+            "--title", row.title,
+            self.body_flag, build_body(row),
+            *self._labels(row.labels, self.set_label_flag),
+            *self.create_extra,
+        ]
+
+    def edit_command(self, repo: str, change: Change) -> list[str]:
+        return [
+            self.cli, "issue", self.edit_verb, str(change.number), "--repo", repo,
+            "--title", change.title,
+            *self._labels(change.labels, self.add_label_flag),
+            *self._labels(change.remove, self.drop_label_flag),
+        ]
+
+    def state_command(self, repo: str, change: Change, verb: str) -> list[str]:
+        return [self.cli, "issue", verb, str(change.number), "--repo", repo]
+
+    def env(self, host: str | None) -> dict[str, str] | None:
+        """自前ホストを渡すための環境。既定のホストなら None。"""
+        if not host or not self.host_env:
+            return None
+        return {**os.environ, self.host_env: host}
+
+
+GITHUB = Forge(
+    mode="github",
+    cli="gh",
+    name="GitHub",
+    body_flag="--body",
+    edit_verb="edit",
+    set_label_flag="--label",
+    add_label_flag="--add-label",
+    drop_label_flag="--remove-label",
+    comma_labels=False,
+    list_args=("--state", "all", "--limit", "200", "--json", "number,title,state,labels"),
+)
+
+# glab のフラグは gh と同じではない（本文は --description、更新は update、
+# ラベルはカンマ区切り、外すのは --unlabel）。
+#
+# **この定義はまだ実物の glab で通していない** 。テンプレート側に glab が
+# 無いため、検証できたのは「plan が JSON の形の違いを吸収すること」までで、
+# フラグ名は glab の CLI に依存する。誤っていた場合は glab が非 0 で落ち、
+# このツールは NG を出して終了コード 1 を返す —— **黙って別の内容を書き込む
+# ことはない** 。初回だけ `--print-commands` で目視し、必要なら
+# `glab issue create --help` に合わせてここ 1 か所を直す。
+GITLAB = Forge(
+    mode="gitlab",
+    cli="glab",
+    name="GitLab",
+    body_flag="--description",
+    edit_verb="update",
+    set_label_flag="--label",
+    add_label_flag="--label",
+    drop_label_flag="--unlabel",
+    comma_labels=True,
+    list_args=("--all", "--per-page", "200", "--output", "json"),
+    create_extra=("--yes",),
+    host_env="GITLAB_HOST",
+)
+
+FORGES = {GITHUB.mode: GITHUB, GITLAB.mode: GITLAB}
+
+
+def _run_cli(argv: list[str], env: dict[str, str] | None = None) -> tuple[int, str]:
+    """CLI（gh / glab）を実行して (終了コード, 出力) を返す。"""
     done = subprocess.run(
-        ["gh", *args], capture_output=True, text=True, encoding="utf-8", errors="replace"
+        argv, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env
     )
     return done.returncode, (done.stdout + done.stderr).strip()
 
 
 # テストから差し替えられるように、実行関数を 1 か所に集める
-RUNNER = _run_gh
+RUNNER = _run_cli
 
 
-def _label_args(labels: list[str], flag: str = "--label") -> list[str]:
-    args: list[str] = []
-    for label in labels:
-        args += [flag, label]
-    return args
+def _quote(value: str) -> str:
+    """人に見せるための引用（実行には使わない）。"""
+    first = value.splitlines()[0] if value.splitlines() else ""
+    if len(value.splitlines()) > 1:
+        first += " …"
+    return f'"{first}"' if (" " in first or not first) else first
 
 
-def apply_plan(target: Plan, repo: str) -> bool:
-    """計画を GitHub へ反映する。1 つでも失敗したら False を返す。
+def print_commands(target: Plan, repo: str, forge: Forge) -> None:
+    """実行するはずの CLI コマンドを、実行せずに出す。
+
+    本文は 1 行目だけに縮めて出す（実行に使う値ではないので、
+    そのまま貼れると誤解されるより読める方がよい）。
+    """
+    for row in target.create:
+        print("$ " + " ".join(_quote(a) for a in forge.create_command(repo, row)))
+    for change in target.update:
+        print("$ " + " ".join(_quote(a) for a in forge.edit_command(repo, change)))
+    for change in target.close:
+        print("$ " + " ".join(forge.state_command(repo, change, "close")))
+    for change in target.reopen:
+        print("$ " + " ".join(forge.state_command(repo, change, "reopen")))
+
+
+def apply_plan(
+    target: Plan, repo: str, forge: Forge = GITHUB, host: str | None = None
+) -> bool:
+    """計画をリモートへ反映する。1 つでも失敗したら False を返す。
 
     Args:
         target: `plan()` の結果。
-        repo: `owner/repo`。
+        repo: `owner/repo`（GitLab では `group/project`）。
+        forge: 呼び方（`GITHUB` / `GITLAB`）。
+        host: 自前ホストの GitLab のホスト名。
 
     Returns:
-        すべての gh 呼び出しが成功したか。
+        すべての CLI 呼び出しが成功したか。
     """
     ok = True
+    env = forge.env(host)
     for row in target.create:
-        code, out = RUNNER(
-            [
-                "issue", "create", "--repo", repo,
-                "--title", row.title,
-                "--body", build_body(row),
-                *_label_args(row.labels),
-            ]
-        )
+        code, out = RUNNER(forge.create_command(repo, row), env)
         print(f"{'OK' if code == 0 else 'NG'}: create {row.key} {out}")
         ok = ok and code == 0
     for change in target.update:
-        code, out = RUNNER(
-            [
-                "issue", "edit", str(change.number), "--repo", repo,
-                "--title", change.title,
-                *_label_args(change.labels, "--add-label"),
-            ]
-        )
+        code, out = RUNNER(forge.edit_command(repo, change), env)
         print(f"{'OK' if code == 0 else 'NG'}: update #{change.number} {change.key} {out}")
         ok = ok and code == 0
     for change in target.close:
-        code, out = RUNNER(["issue", "close", str(change.number), "--repo", repo])
+        code, out = RUNNER(forge.state_command(repo, change, "close"), env)
         print(f"{'OK' if code == 0 else 'NG'}: close #{change.number} {change.key} {out}")
         ok = ok and code == 0
     for change in target.reopen:
-        code, out = RUNNER(["issue", "reopen", str(change.number), "--repo", repo])
+        code, out = RUNNER(forge.state_command(repo, change, "reopen"), env)
         print(f"{'OK' if code == 0 else 'NG'}: reopen #{change.number} {change.key} {out}")
         ok = ok and code == 0
     return ok
@@ -628,7 +849,8 @@ def _print_plan(target: Plan) -> None:
     for row in target.create:
         print(f"  作成      {row.title}  [{', '.join(row.labels)}]")
     for change in target.update:
-        print(f"  更新      #{change.number} {change.title}（{change.reason}）")
+        dropped = f" 外す: {', '.join(change.remove)}" if change.remove else ""
+        print(f"  更新      #{change.number} {change.title}（{change.reason}）{dropped}")
     for change in target.close:
         print(f"  閉じる    #{change.number} {change.title}")
     for change in target.reopen:
@@ -645,12 +867,18 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     parser = argparse.ArgumentParser(
-        description="バックログと GitHub Issue の差分を出す（既定は送信しない）"
+        description="バックログとチケットの差分を出す（既定は送信しない）"
     )
     parser.add_argument("root", nargs="?", default=".", help="リポジトリルート")
-    parser.add_argument("--apply", action="store_true", help="差分を GitHub へ反映する")
+    parser.add_argument("--apply", action="store_true", help="差分をリモートへ反映する")
     parser.add_argument("--include-done", action="store_true", help="L3・返済済みも作る")
     parser.add_argument("--repo", default="", help="owner/repo（省略時はプロファイル）")
+    parser.add_argument("--host", default="", help="自前ホストの GitLab（省略時はプロファイル）")
+    parser.add_argument(
+        "--print-commands",
+        action="store_true",
+        help="実行するはずの CLI コマンドを、実行せずに出す",
+    )
     parser.add_argument("--issues-json", default="", help="Issue 一覧の JSON（検証用）")
     args = parser.parse_args(argv)
 
@@ -661,10 +889,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     setting = issue_mode.read_mode(claude.read_text(encoding="utf-8"))
-    if setting.mode not in ("github", "local"):
+    if setting.mode not in ("github", "gitlab", "local"):
         print(
             f"REFUSED: チケット追跡は {setting.mode or '未設定'}。"
-            "`/issue github` または `/issue local` で有効化する"
+            "`/issue github` `/issue gitlab` `/issue local` で有効化する"
         )
         return 2
 
@@ -693,6 +921,8 @@ def main(argv: list[str] | None = None) -> int:
         print("RESULT: 反映に失敗した項目がある")
         return 1
 
+    forge = FORGES[setting.mode]
+    host = args.host or setting.host or None
     repo = args.repo or setting.repo or ""
     if not repo:
         print("NG: リポジトリが未設定（プロファイルの `- リポジトリ:` か --repo）")
@@ -701,31 +931,30 @@ def main(argv: list[str] | None = None) -> int:
     if args.issues_json:
         issues = json.loads(Path(args.issues_json).read_text(encoding="utf-8"))
     else:
-        code, out = RUNNER(
-            [
-                "issue", "list", "--repo", repo, "--state", "all", "--limit", "200",
-                "--json", "number,title,state,labels",
-            ]
-        )
+        code, out = RUNNER(forge.list_command(repo), forge.env(host))
         if code != 0:
-            print(f"NG: gh issue list に失敗した: {out}")
+            print(f"NG: {forge.cli} issue list に失敗した: {out}")
             return 2
         issues = json.loads(out or "[]")
 
     target = plan(backlog.read_text(encoding="utf-8"), issues, args.include_done)
     _print_plan(target)
+    if args.print_commands:
+        print_commands(target, repo, forge)
 
     if not args.apply:
         if target.is_empty:
             print("RESULT: 同期済み（送信するものは無い）")
             return 0
-        print("RESULT: 差分あり（未送信）。承認を得てから --apply する")
+        print(
+            f"RESULT: 差分あり（未送信・{forge.name}）。承認を得てから --apply する"
+        )
         return 1
 
     if target.is_empty:
         print("RESULT: 同期済み（--apply でも送信するものは無い）")
         return 0
-    if apply_plan(target, repo):
+    if apply_plan(target, repo, forge, host):
         print("RESULT: 反映した")
         return 0
     print("RESULT: 反映に失敗した項目がある")

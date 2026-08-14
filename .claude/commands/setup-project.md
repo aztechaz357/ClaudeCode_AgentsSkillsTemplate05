@@ -70,15 +70,21 @@ description: 新規プロジェクトにこのエージェント・スキル一�
 - **チケットをどこに置くか** —— **既定は `github`（Issue 駆動）** 。
   推測で決めず、次の順に **実際に確かめてから** 書く:
 
-  1. `gh auth status` と `gh repo view --json nameWithOwner` を実行する
-  2. 両方通る → `使用: github` とリポジトリ（`owner/repo`）を書く
-  3. どちらか失敗 → **`使用: local` を提案する**（ハブの `## チケット` 節に
-     起票して進める。GitHub は要らない）。ユーザーが後で GitHub を
-     使うつもりなら、`gh auth login` を案内して `github` のまま保留にする
-  4. スライスもバックログも育てない短命なリポジトリのときだけ `off`
+  1. `git remote -v` で **リモートがどのサービスか** を見る
+     （ホスト名が `gitlab` 系なら GitLab のプロジェクト）
+  2. GitHub なら `gh auth status` と `gh repo view --json nameWithOwner`、
+     GitLab なら `glab auth status` を実行する
+  3. 通る → `使用: github` / `使用: gitlab` とリポジトリを書く
+     （GitLab は `group/project`。自前ホストなら `ホスト:` も埋める）
+  4. 失敗 / CLI が無い → **`使用: local` を提案する**（ハブの `## チケット`
+     節に起票して進める。リモートは要らない）。あとで使うつもりなら
+     `gh auth login` / `glab auth login` を案内して保留にする
+  5. スライスもバックログも育てない短命なリポジトリのときだけ `off`
 
-  あとから `/issue github` `/issue local` `/issue off` でいつでも
-  切り替えられることを伝える（履歴は移行しても消えない）
+  **リモートのホストとモードを食い違わせない** —— GitLab のリポジトリに
+  `使用: github` を書くと、起票が別のサービスへ出る。
+  あとから `/issue github` `/issue gitlab` `/issue local` `/issue off` で
+  いつでも切り替えられることを伝える（履歴は移行しても消えない）
 
 ## ステップ3: CLAUDE.md のプレースホルダーを埋める
 
