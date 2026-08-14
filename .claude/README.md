@@ -217,7 +217,7 @@ REQ2「列を指定して絞り込みたい」
 | 検証 | `implementation-validator`・`code-reviewer`・`security-checker`・`test-analyzer` |
 | 文書 | `doc-syncer`・`doc-reviewer` |
 | **工房** | `tool-smith`（ツールを 1 本作りきる）・`note-keeper`（工房の棚卸し） |
-| 外部連携 | `issue-manager`（GitHub Issue とバックログの同期。`off` なら即終了） |
+| 外部連携 | `issue-manager`（チケットとバックログの同期。`github` / `local` の両方。`off` なら即終了） |
 
 **成果物 1 つにつき担当は 1 体だけ。責務を重ねない。**
 特に `unit-tester`（テストを書いて Red まで）と `coder`（Red を消す）を
@@ -294,8 +294,8 @@ REQ2「列を指定して絞り込みたい」
 | `build_arch.py` | 実装の import から実際の依存図（Mermaid）を生成し、逆流を検出 | Python プロジェクト |
 | `diff_arch.py` | 設計書の図と実物を集合比較し、3 種の差を色分けした 1 枚にする | Python・設計書に図があること |
 | `build_digest.py` | 既読地点からの変更を「決まったこと」に絞り、後戻りコストの高い順に並べる（`/catchup`） | git リポジトリ |
-| `issue_mode.py` | Issue 追跡を使うかどうか（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが 0 = on / 1 = off / 2 = 判定不能 | Python プロジェクト |
-| `sync_issues.py` | バックログと GitHub Issue の差分を計算する（既定は dry-run。`--apply` で反映） | Python・`gh`・`使用: on` |
+| `issue_mode.py` | チケット追跡の置き場所（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが **0 = github / 1 = off / 2 = 判定不能 / 3 = local** | Python プロジェクト |
+| `sync_issues.py` | バックログとチケットの差分を計算する（既定は dry-run。`--apply` で反映）。`github` では Issue へ、`local` ではハブの `## チケット` 節へ | Python・`使用: github` なら `gh` も |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |
@@ -338,7 +338,7 @@ SessionStart フックが毎回報告する（会話ではなく環境に状態�
 | `post-edit-lint.ps1` | PostToolUse | 編集したソースに整形・lint を掛ける（未配線） |
 | `notify.ps1` | Notification | 入力待ちを音で知らせる |
 | `stop-uncommitted.ps1` | Stop | 未コミットのまま終わったら知らせる |
-| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備・ **未読コミット数** ・ **Issue 追跡が on か** を文脈へ注入 |
+| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備・ **未読コミット数** ・ **チケット追跡のモード（github / local）** を文脈へ注入 |
 
 ## 育て方
 

@@ -265,21 +265,33 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | {例: 出力フォーマット} | {例: CSV の区切り・数値の丸め方} | `designer`（段2） |
 | {例: テスト観点} | {例: 境界値をどこまで採るか} | `test-designer`（段3） |
 
-### Issue 追跡（GitHub Issues）
+### チケット追跡
 
-> **`- 使用:` の行がこの設定の唯一の正** （値は `on` / `off` のどちらか）。
-> 手で書き換えず `/issue on` `/issue off` を使う（節の形が壊れると
-> 全エージェントがモードを読めなくなる）。既定は `off` ——
-> GitHub を使わないプロジェクトでは何も設定しなくてよい。
+> **`- 使用:` の行がこの設定の唯一の正** （`github` / `local` / `off`）。
+> 手で書き換えず `/issue github` `/issue local` `/issue off` を使う
+> （節の形が壊れると全エージェントがモードを読めなくなる）。
 > 規約は `.claude/skills/issue-tracking/SKILL.md` が正。
 
-- 使用: off
-- リポジトリ: なし
+- 使用: github
+- リポジトリ: {例: owner/repo。local / off なら「なし」}
 - ラベル: `slice` / `debt` / `L1` `L2` `L3`
 
+**このプロジェクトはチケット駆動が既定。** 違うのは置き場所だけ。
+
+| 値 | チケットの置き場所 | いつ選ぶか |
+|---|---|---|
+| `github` | GitHub Issue（1 Issue = バックログ 1 行） | **既定** 。リモートがあり `gh` が認証済み |
+| `local` | ハブ（`docs/slices/S##-*.md`）の `## チケット` 節 | GitHub を使わない・リモートがまだ無い |
+| `off` | 作らない | 工房レーンだけの短命なリポジトリ |
+
+**`github` なのにリモートが無い / `gh` が未認証なら、そこで止まって報告する**
+（推測で `local` に落として進まない。絶対ルール 1・3）。
+`local` では負債（`D##`）のチケットを作らない —— **負債表の行そのものが
+チケット** であり、写しを作ると二重管理になる。
+
 **`off` のあいだ、全エージェントは `gh issue` を 1 回も呼ばない。**
-`on` にしても **進捗の正は `docs/backlog.md` のまま** で、Issue はその写し
-（窓）。Issue に進捗を書いてバックログを更新しないことは規約違反。
+どのモードでも **進捗の正は `docs/backlog.md` のまま** で、チケットはその写し
+（窓）。チケットに進捗を書いてバックログを更新しないことは規約違反。
 
 ## 絶対ルール
 
@@ -348,7 +360,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | **PR・マージ・ブランチ整理のコマンドを引く** | `.claude/skills/design-journal/git-commands.md` |
 | **テストの観点を選ぶ（書く前に守るものを決める）** | `.claude/skills/test-design/` |
 | **設計と実装の乖離を見る（図で比較する）** | `.claude/skills/architecture-drift/` |
-| **GitHub Issue を使う・やめる・同期する** | `.claude/skills/issue-tracking/` |
+| **チケットで進捗を管理する（GitHub / ローカル）** | `.claude/skills/issue-tracking/` |
 | 開発プロセスの道具を新設する | `.claude/skills/tool-authoring/` |
 | フックを追加・修正する | `.claude/hooks/README.md` |
 | 全体の設計思想・フロー・構成を知る | `.claude/README.md` |
@@ -366,7 +378,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 /arch          … 実装から図を起こし、設計書の図との乖離を色分けして出す
 /refactor      … 負債を返す（緑を保ったまま。振る舞いは変えない）
 /add-feature   … 厚い経路（例外の 1 本だけ）
-/issue         … GitHub Issue を使う / やめる / 同期する（既定は使わない）
+/issue         … チケット追跡の切り替えと同期（既定は GitHub Issue 駆動）
 ```
 
 **前工程を飛ばさないのは「ゴール定義 → バックログ → 骨組み」の 3 つだけ。**

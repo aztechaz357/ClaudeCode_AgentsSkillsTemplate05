@@ -1,14 +1,17 @@
-"""バックログと GitHub Issue の差分を計算し、承認のうえで反映する。
+"""バックログとチケットの差分を計算し、承認のうえで反映する。
 
 規約の正は `.claude/skills/issue-tracking/SKILL.md`。
-**進捗の正は `docs/backlog.md`** で、Issue はその写し。したがって同期は
-バックログ → Issue の一方向で、逆流（Issue から成熟度を書き戻す）はしない。
+**進捗の正は `docs/backlog.md`** で、チケットはその写し。したがって同期は
+バックログ → チケットの一方向で、逆流（チケットから成熟度を書き戻す）はしない。
 
-対応付けは **Issue タイトルの接頭辞（`S##:` / `D##:`）だけ** で行う。
-対応表のファイルを別に持たないので、実物とずれる余地が無い。
+置き場所はプロファイルの「チケット追跡」の `- 使用:` で決まる:
 
-既定は **dry-run** （差分を出すだけで GitHub に触らない）。
-`--apply` を付けたときだけ `gh` を呼ぶ。外部への書き込みは取り消しにくいので、
+    github … GitHub Issue。対応付けは **タイトルの接頭辞（`S##:` / `D##:`）だけ**
+    local  … ハブ（docs/slices/S##-*.md）の「## チケット」節。
+             負債（D##）は対象外 —— 負債表の行そのものがチケット
+
+どちらのモードでも既定は **dry-run** （差分を出すだけで書き込まない）。
+`--apply` を付けたときだけ書き込む。外部への書き込みは取り消しにくいので、
 エージェントは差分を提示して承認を得てから `--apply` する（絶対ルール 4）。
 
 使い方（前置コマンドはプロファイルの
@@ -20,8 +23,8 @@
 
 終了コード:
     0 = 差分なし（または --apply がすべて成功した）
-    1 = 差分あり（未送信）、または --apply の途中で gh が失敗した
-    2 = 使用: off、CLAUDE.md / バックログが無い、リポジトリ未設定、引数のエラー
+    1 = 差分あり（未反映）、または --apply の途中で失敗した
+    2 = 使用: off / 未設定、CLAUDE.md / バックログが無い、リポジトリ未設定、引数のエラー
 """
 
 from __future__ import annotations
@@ -194,6 +197,304 @@ def build_body(row: Row) -> str:
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# ローカルチケット（使用: local）
+#
+# 置き場所はハブ（docs/slices/S##-*.md）の「## チケット」節。
+# 新しいファイルを作らないのは、ハブが既に 7 点セットの索引であり、
+# 別ファイルを立てると同じ内容が 2 か所に並んで必ずずれるため。
+# GitHub Issue がハブに足しているのは 状態・目標・履歴 の 3 つだけなので、
+# その 3 つを節として足す。
+# ─────────────────────────────────────────────────────────────────────────
+
+TICKET_HEADING = "## チケット"
+HISTORY_HEADING = "### 履歴（追記だけ。書き換えない）"
+
+_TICKET_AT = re.compile(r"^##\s+チケット\s*$")
+_NEXT_H2 = re.compile(r"^##\s+")
+_STATE = re.compile(r"^(\s*-\s*状態\s*[:：]\s*)(.*)$")
+_GOAL = re.compile(r"^(\s*-\s*目標\s*[:：]\s*)(.*)$")
+
+LOCAL_NOTE = "進捗の正は `docs/backlog.md`。このチケットはその写し（窓）です。"
+
+
+def _today() -> str:
+    """今日の日付（`YYYY-MM-DD`）。テストから差し替えられるよう関数にする。"""
+    from datetime import date
+
+    return date.today().isoformat()
+
+
+TODAY = _today
+
+
+def ticket_state(row: Row) -> str:
+    """バックログの 1 行から、チケットの状態を決める。
+
+    Args:
+        row: バックログの 1 行。
+
+    Returns:
+        `未着手` / `進行中` / `完了` のいずれか。
+    """
+    if row.done:
+        return "完了"
+    if row.kind == "slice" and row.maturity <= 0:
+        return "未着手"
+    return "進行中"
+
+
+def ticket_goal(row: Row) -> str:
+    """チケットの目標欄（GitHub の成熟度ラベルに当たるもの）。"""
+    if row.kind == "debt":
+        return "負債の返済"
+    if row.done:
+        return "L3（到達済み）"
+    return f"L{row.maturity} → L{min(row.maturity + 1, 3)}"
+
+
+def hub_path(root: Path, key: str) -> Path | None:
+    """`docs/slices/S##-*.md` のハブを 1 つ探す。無ければ None。"""
+    found = sorted((root / "docs" / "slices").glob(f"{key}-*.md"))
+    return found[0] if found else None
+
+
+def read_ticket(text: str) -> dict[str, str] | None:
+    """ハブの「## チケット」節から状態と目標を読み取る。
+
+    Args:
+        text: ハブ（`docs/slices/S##-*.md`）の全文。
+
+    Returns:
+        `{"状態": ..., "目標": ...}`。節が無ければ None
+        （None は「未起票」を意味し、空の辞書と区別する必要がある）。
+    """
+    lines = text.splitlines()
+    start = -1
+    for index, line in enumerate(lines):
+        if _TICKET_AT.match(line):
+            start = index + 1
+            break
+    if start < 0:
+        return None
+
+    found = {"状態": "", "目標": ""}
+    for line in lines[start:]:
+        if _NEXT_H2.match(line):
+            break
+        state = _STATE.match(line)
+        if state:
+            found["状態"] = state.group(2).strip()
+            continue
+        goal = _GOAL.match(line)
+        if goal:
+            found["目標"] = goal.group(2).strip()
+    return found
+
+
+def build_ticket_section(row: Row, today: str) -> str:
+    """起票時に書き込む「## チケット」節の全文を組み立てる。"""
+    return (
+        f"{TICKET_HEADING}\n\n"
+        f"- 状態: {ticket_state(row)}\n"
+        f"- 目標: {ticket_goal(row)}\n"
+        f"- 参照: `refs {row.key}`（コミットメッセージの末尾に書く）\n\n"
+        f"{HISTORY_HEADING}\n\n"
+        f"- {today} 起票 —— {ticket_goal(row)}\n\n"
+        f"> {LOCAL_NOTE}\n"
+    )
+
+
+def _insert_ticket(text: str, section: str) -> str:
+    """ハブの H1 の直後に「## チケット」節を差し込む。
+
+    Args:
+        text: ハブの全文（「## チケット」節はまだ無い）。
+        section: `build_ticket_section` の結果。
+
+    Returns:
+        差し込んだ全文。H1 が無ければ先頭に置く。
+
+    Note:
+        先頭行の BOM（`﻿`）を無視して H1 を探す。Windows のエディタや
+        PowerShell の `Out-File -Encoding utf8` は BOM を付けるので、
+        これが無いと 1 行目だけ H1 と認識できず、節が題名より上に入る。
+    """
+    lines = text.splitlines(keepends=True)
+    at = 0
+    for index, line in enumerate(lines):
+        if line.lstrip("﻿").startswith("# "):
+            at = index + 1
+            break
+    while at < len(lines) and lines[at].strip() == "":
+        at += 1
+    return "".join(lines[:at]) + "\n" + section + "\n" + "".join(lines[at:])
+
+
+def update_ticket(text: str, row: Row, today: str, reason: str) -> str:
+    """既存の「## チケット」節の状態と目標を直し、履歴を 1 行足す。
+
+    Args:
+        text: ハブの全文（「## チケット」節がある）。
+        row: バックログの 1 行（こちらが正）。
+        today: `YYYY-MM-DD`。
+        reason: 履歴に残す変更理由。
+
+    Returns:
+        書き換えた全文。 **履歴は消さずに追記する** （経緯が消えると
+        チケットがただの現在値になり、プロセス管理の役に立たない）。
+    """
+    lines = text.splitlines(keepends=True)
+    plain = text.splitlines()
+    start = -1
+    for index, line in enumerate(plain):
+        if _TICKET_AT.match(line):
+            start = index + 1
+            break
+    if start < 0:
+        return _insert_ticket(text, build_ticket_section(row, today))
+
+    end = len(plain)
+    history_at = -1
+    for index in range(start, len(plain)):
+        if _NEXT_H2.match(plain[index]):
+            end = index
+            break
+        if plain[index].startswith("### 履歴"):
+            history_at = index
+
+    newline = "\r\n" if text.find("\r\n") >= 0 else "\n"
+    for index in range(start, end):
+        state = _STATE.match(plain[index])
+        if state:
+            lines[index] = state.group(1) + ticket_state(row) + newline
+            continue
+        goal = _GOAL.match(plain[index])
+        if goal:
+            lines[index] = goal.group(1) + ticket_goal(row) + newline
+
+    entry = f"- {today} {reason} —— 状態 {ticket_state(row)} / {ticket_goal(row)}{newline}"
+    if history_at < 0:
+        lines.insert(end, f"{newline}{HISTORY_HEADING}{newline}{newline}{entry}")
+        return "".join(lines)
+
+    # 最後の履歴項目の直後に足す。節の末尾に足すと、注記（`> …`）の下に
+    # 箇条書きが 1 行だけ落ちてリストが割れる
+    at = history_at + 1
+    for index in range(history_at + 1, end):
+        if plain[index].lstrip().startswith("- "):
+            at = index + 1
+    lines.insert(at, entry)
+    return "".join(lines)
+
+
+@dataclass
+class LocalChange:
+    """ローカルチケット 1 件に対する変更。
+
+    Attributes:
+        key: `S03`。
+        path: 書き込む先のハブ。ハブが無ければ None（起票できない）。
+        action: `起票` / `更新` / `完了` / `再開`。
+        detail: 人に見せる 1 行。
+        row: 反映元のバックログの行。
+    """
+
+    key: str
+    path: Path | None
+    action: str
+    detail: str
+    row: Row
+
+
+def plan_local(backlog_text: str, root: Path, include_done: bool = False) -> list[LocalChange]:
+    """バックログとハブのチケット節を突き合わせ、書き込むべき差分を出す。
+
+    負債（`D##`）はハブを持たないので対象にしない —— 負債表の行そのものが
+    チケットであり、写しを作ると二重管理になる。
+
+    Args:
+        backlog_text: `docs/backlog.md` の全文。
+        root: リポジトリルート。
+        include_done: L3 到達済みのスライスも起票するか。
+
+    Returns:
+        書き込むべき変更の一覧（空なら同期済み）。
+    """
+    changes: list[LocalChange] = []
+    for row in parse_backlog(backlog_text):
+        if row.kind != "slice":
+            continue
+        path = hub_path(root, row.key)
+        if path is None:
+            if not row.done or include_done:
+                changes.append(
+                    LocalChange(row.key, None, "起票", "ハブが無い（先に作る）", row)
+                )
+            continue
+
+        current = read_ticket(path.read_text(encoding="utf-8"))
+        if current is None:
+            if not row.done or include_done:
+                changes.append(
+                    LocalChange(row.key, path, "起票", ticket_goal(row), row)
+                )
+            continue
+
+        state = ticket_state(row)
+        if current.get("状態") == state and current.get("目標") == ticket_goal(row):
+            continue
+        if state == "完了":
+            action = "完了"
+        elif current.get("状態") == "完了":
+            action = "再開"
+        else:
+            action = "更新"
+        changes.append(
+            LocalChange(
+                row.key,
+                path,
+                action,
+                f"{current.get('状態') or '—'} → {state} / {ticket_goal(row)}",
+                row,
+            )
+        )
+    return changes
+
+
+def apply_local(changes: list[LocalChange]) -> bool:
+    """差分をハブへ書き込む。1 件でも失敗したら False。"""
+    ok = True
+    today = TODAY()
+    for change in changes:
+        if change.path is None:
+            print(f"NG: {change.key} のハブが無い（`docs/slices/{change.key}-*.md`）")
+            ok = False
+            continue
+        text = change.path.read_text(encoding="utf-8")
+        if change.action == "起票":
+            written = _insert_ticket(text, build_ticket_section(change.row, today))
+        else:
+            written = update_ticket(text, change.row, today, change.action)
+        change.path.write_text(written, encoding="utf-8")
+        print(f"OK: {change.action} {change.key} {change.path}")
+    return ok
+
+
+def _print_local(changes: list[LocalChange]) -> None:
+    """ローカルチケットの差分を人が読める形で出す。"""
+    counts = {"起票": 0, "更新": 0, "完了": 0, "再開": 0}
+    for change in changes:
+        counts[change.action] = counts.get(change.action, 0) + 1
+    print(
+        f"差分: 起票 {counts['起票']} / 更新 {counts['更新']} / "
+        f"完了 {counts['完了']} / 再開 {counts['再開']}"
+    )
+    for change in changes:
+        where = change.path.as_posix() if change.path else "ハブ未作成"
+        print(f"  {change.action}  {change.key}  {change.detail}  [{where}]")
+
+
 def _label_names(issue: dict) -> list[str]:
     """gh の JSON からラベル名の一覧を取り出す（文字列と辞書の両方を許す）。"""
     names = []
@@ -360,18 +661,41 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     setting = issue_mode.read_mode(claude.read_text(encoding="utf-8"))
-    if setting.mode != "on":
-        print(f"REFUSED: Issue 追跡は {setting.mode or '未設定'}。`/issue on` で有効化する")
-        return 2
-
-    repo = args.repo or setting.repo or ""
-    if not repo:
-        print("NG: リポジトリが未設定（プロファイルの `- リポジトリ:` か --repo）")
+    if setting.mode not in ("github", "local"):
+        print(
+            f"REFUSED: チケット追跡は {setting.mode or '未設定'}。"
+            "`/issue github` または `/issue local` で有効化する"
+        )
         return 2
 
     backlog = root / "docs" / "backlog.md"
     if not backlog.is_file():
         print(f"NG: docs/backlog.md がない（{backlog}）")
+        return 2
+
+    if setting.mode == "local":
+        changes = plan_local(
+            backlog.read_text(encoding="utf-8"), root, args.include_done
+        )
+        _print_local(changes)
+        if not args.apply:
+            if not changes:
+                print("RESULT: 同期済み（書き込むものは無い）")
+                return 0
+            print("RESULT: 差分あり（未反映）。承認を得てから --apply する")
+            return 1
+        if not changes:
+            print("RESULT: 同期済み（--apply でも書き込むものは無い）")
+            return 0
+        if apply_local(changes):
+            print("RESULT: 反映した")
+            return 0
+        print("RESULT: 反映に失敗した項目がある")
+        return 1
+
+    repo = args.repo or setting.repo or ""
+    if not repo:
+        print("NG: リポジトリが未設定（プロファイルの `- リポジトリ:` か --repo）")
         return 2
 
     if args.issues_json:
