@@ -33,6 +33,11 @@ codeload.github.com
 objects.githubusercontent.com
 raw.githubusercontent.com
 
+# --- チケット追跡が gitlab のときに足す（既定では開けない） ---
+# glab が話す先。自前ホストなら gitlab.com ではなくそのホスト名を書く。
+# 使わないプロジェクトで開けておく理由が無いので、既定はコメントのまま。
+# gitlab.com
+
 # --- このプロジェクト固有の宛先をここに足す ---
 # 例: 社内パッケージレジストリ・API のホスト
 #

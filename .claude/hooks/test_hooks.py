@@ -419,8 +419,10 @@ class TestOtherHooks(unittest.TestCase):
 class TestSessionStartIssueMode(unittest.TestCase):
     """チケット追跡のモードを文脈へ注入すること。
 
-    モードは全エージェントの `gh` の扱いを変えるので、github を見落とすのも
-    local を github と報告するのも事故になる。3 つとも検証する。
+    モードは全エージェントが呼ぶ CLI を変えるので、github を見落とすのも、
+    local を github と報告するのも、gitlab を github と報告するのも事故になる
+    （最後のものは **別のサービスへ起票する** ので取り消しが一番高くつく）。
+    4 つとも検証する。
     """
 
     PROFILE = "# CLAUDE.md\n\n### " + "チケット追跡" + "\n\n- 使用: {mode}\n- リポジトリ: owner/repo\n"
@@ -459,6 +461,17 @@ class TestSessionStartIssueMode(unittest.TestCase):
         """
         out = self._run_in("local")
         self.assertIn("TICKET TRACKING IS LOCAL", out)
+        self.assertNotIn("TICKET TRACKING IS GITHUB", out)
+        self.assertIn("Never call gh", out)
+
+    def test_reports_gitlab_without_gh(self):
+        """`使用: gitlab` のときは glab を使い gh を呼ばないことまで伝える。
+
+        ここを github と同じ文面にすると、GitLab のリポジトリで
+        エージェントが GitHub へ起票する（別サービスへの誤送信）。
+        """
+        out = self._run_in("gitlab")
+        self.assertIn("TICKET TRACKING IS GITLAB", out)
         self.assertNotIn("TICKET TRACKING IS GITHUB", out)
         self.assertIn("Never call gh", out)
 

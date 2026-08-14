@@ -8,18 +8,21 @@
 
     - 使用: github
     - リポジトリ: owner/repo
+    - ホスト: なし
     - ラベル: slice / debt / L1 / L2 / L3
 
-**チケット駆動が既定** 。置き場所が GitHub かローカルかだけが違う:
+**チケット駆動が既定** 。置き場所がどこかだけが違う:
 
     github … GitHub Issue（既定。リモートがあり gh が認証済みのとき）
+    gitlab … GitLab Issue（glab が認証済みのとき。自前ホストは `ホスト:` に書く）
     local  … ハブ（docs/slices/S##-*.md）の「## チケット」節
     off    … チケットを使わない（工房レーンだけの短命なリポジトリ向け）
 
 このツールがあるのは、モードを **エージェントの記憶や自然言語の解釈ではなく
 終了コードで判定させる** ため。`github` のつもりで `local` のプロジェクトに
 書き込む事故、`off` のプロジェクトから外部へ出す事故は取り消せないので、
-判定を LLM に任せない。
+判定を LLM に任せない。 **`github` と `gitlab` を取り違える事故も同じ** ——
+別のサービスへ起票すると消して回ることになる。
 
 判定不能（節が無い・値が不正）は **`github` ではなく 2** を返す。
 「読めなかったから外部へ出してよい」という解釈を構造的に禁じる。
@@ -27,10 +30,16 @@
 `on` は `github` の別名として読む（この節が 2 値だった頃の設定を壊さないため）。
 書き込むときは常に正式な値（`github`）に正規化する。
 
+`ホスト:` は **`gitlab` のときだけ意味を持つ** （自前ホストの GitLab）。
+`なし` なら gitlab.com。他のモードへ移すときは「なし」に戻す
+（使われない値が残っていると、次に読んだ人が現状と誤解する）。
+
 使い方（前置コマンドはプロファイルの
 「.claude/tools/ の Python ツール実行」。例: uv run python）:
     <ツール実行コマンド> .claude/tools/issue_mode.py
     <ツール実行コマンド> .claude/tools/issue_mode.py --set github --repo owner/repo
+    <ツール実行コマンド> .claude/tools/issue_mode.py --set gitlab --repo group/project
+    <ツール実行コマンド> .claude/tools/issue_mode.py --set gitlab --repo g/p --host gitlab.example.com
     <ツール実行コマンド> .claude/tools/issue_mode.py --set local
     <ツール実行コマンド> .claude/tools/issue_mode.py --set off
     <ツール実行コマンド> .claude/tools/issue_mode.py <リポジトリルート>
@@ -40,6 +49,7 @@
     1 = 使用: off
     2 = 判定不能（CLAUDE.md が無い・節が無い・値が不正・引数のエラー）
     3 = 使用: local
+    4 = 使用: gitlab
 """
 
 from __future__ import annotations
@@ -57,17 +67,23 @@ _HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 # 機械が読む 2 行。値だけを差し替えられるよう、前置きを捕獲する
 _USE = re.compile(r"^(\s*-\s*使用\s*[:：]\s*)(.*)$")
 _REPO = re.compile(r"^(\s*-\s*リポジトリ\s*[:：]\s*)(.*)$")
+_HOST = re.compile(r"^(\s*-\s*ホスト\s*[:：]\s*)(.*)$")
 
-MODES = ("github", "local", "off")
+MODES = ("github", "gitlab", "local", "off")
+# リモートのサービスへ書き込むモード（`リポジトリ:` が要る）
+REMOTE_MODES = ("github", "gitlab")
 # 旧設定（2 値だった頃）の値。読むときだけ許し、書くときは正式名に直す
 ALIASES = {"on": "github"}
 # 「未設定」を意味する値（雛形の `{…}` は `_is_placeholder` で別に見る）
 _UNSET = ("なし", "none", "-", "")
 
 UNSET_REPO = "なし"
+UNSET_HOST = "なし"
 
-# モードごとの終了コード。`github` を 0 に据え、判定不能は 2 のまま据え置く
-EXIT_CODES = {"github": 0, "off": 1, "local": 3}
+# モードごとの終了コード。`github` を 0 に据え、判定不能は 2 のまま据え置く。
+# `gitlab` を後から 4 に足したのは、既存のプロジェクトで 0〜3 の意味を
+# 変えないため（1 を「off」以外の意味にすると、古い分岐が黙って壊れる）
+EXIT_CODES = {"github": 0, "off": 1, "local": 3, "gitlab": 4}
 
 
 class ProfileError(Exception):
@@ -79,15 +95,17 @@ class Setting:
     """プロファイルから読み取った Issue 追跡の設定。
 
     Attributes:
-        mode: `github` / `local` / `off`。判定不能なら None
+        mode: `github` / `gitlab` / `local` / `off`。判定不能なら None
             （読めなかったときに `github` へ倒さない —— 外部書き込みは戻せない）。
-        repo: `owner/repo`。未設定・雛形のままなら None。
+        repo: `owner/repo`（GitLab では `group/project`）。未設定なら None。
         line: `使用:` の行番号（1 始まり）。見つからなければ 0。
+        host: 自前ホストの GitLab のホスト名。gitlab.com なら None。
     """
 
     mode: str | None
     repo: str | None
     line: int = 0
+    host: str | None = None
 
 
 def _is_placeholder(value: str) -> bool:
@@ -139,6 +157,7 @@ def read_mode(text: str) -> Setting:
 
     mode: str | None = None
     repo: str | None = None
+    host: str | None = None
     line_number = 0
     for offset in range(start, end):
         line = lines[offset]
@@ -154,29 +173,38 @@ def read_mode(text: str) -> Setting:
             value = found.group(2).strip()
             if value.lower() not in _UNSET and not _is_placeholder(value):
                 repo = value
-    return Setting(mode, repo, line_number)
+            continue
+        named = _HOST.match(line)
+        if named and host is None:
+            value = named.group(2).strip()
+            if value.lower() not in _UNSET and not _is_placeholder(value):
+                host = value
+    return Setting(mode, repo, line_number, host)
 
 
-def set_mode(text: str, mode: str, repo: str | None = None) -> str:
-    """`使用:` の行（必要なら `リポジトリ:` の行）だけを書き換えた全文を返す。
+def set_mode(
+    text: str, mode: str, repo: str | None = None, host: str | None = None
+) -> str:
+    """`使用:` の行（必要なら `リポジトリ:` `ホスト:` の行）だけを書き換える。
 
     Args:
         text: `CLAUDE.md` の全文。
-        mode: `github` / `local` / `off`（`on` は `github` の別名）。
-        repo: `owner/repo`。None なら既存の値を保つ
-            （`github` 以外では「なし」に戻す —— リモートを持たないモードで
-            リポジトリ名が残っていると、次に読んだ人が誤解する）。
+        mode: `github` / `gitlab` / `local` / `off`（`on` は `github` の別名）。
+        repo: `owner/repo`（GitLab では `group/project`）。None なら既存の値を保つ
+            （リモートを使わないモードでは「なし」に戻す —— 使われない値が
+            残っていると、次に読んだ人が現状と誤解する）。
+        host: 自前ホストの GitLab のホスト名。`gitlab` 以外では「なし」に戻す。
 
     Returns:
         書き換えた全文（他の行は 1 文字も変えない）。
 
     Raises:
-        ValueError: `mode` が `github` / `local` / `off` でない。
+        ValueError: `mode` が `github` / `gitlab` / `local` / `off` でない。
         ProfileError: チケット追跡の節、または `使用:` の行が無い。
     """
     mode = ALIASES.get(mode, mode)
     if mode not in MODES:
-        raise ValueError(f"モードは github / local / off のいずれか: {mode}")
+        raise ValueError(f"モードは {' / '.join(MODES)} のいずれか: {mode}")
 
     lines = text.splitlines(keepends=True)
     plain = text.splitlines()
@@ -188,34 +216,61 @@ def set_mode(text: str, mode: str, repo: str | None = None) -> str:
 
     use_at = -1
     repo_at = -1
+    host_at = -1
     for offset in range(start, end):
         if use_at < 0 and _USE.match(plain[offset]):
             use_at = offset
         elif repo_at < 0 and _REPO.match(plain[offset]):
             repo_at = offset
+        elif host_at < 0 and _HOST.match(plain[offset]):
+            host_at = offset
     if use_at < 0:
         raise ProfileError("「チケット追跡」の節に `- 使用:` の行が無い")
 
     newline = "\n" if not lines[use_at].endswith("\r\n") else "\r\n"
     lines[use_at] = _USE.match(plain[use_at]).group(1) + mode + newline
 
-    wanted = repo if mode == "github" else UNSET_REPO
+    # 既にある行は置き換え、無い行は「足りない分だけ」まとめて差し込む。
+    # 差し込みを最後に 1 回だけにするのは、先に差し込むと後続の行番号が
+    # ずれて別の行を書き換えてしまうため
+    added: list[str] = []
+
+    wanted = repo if mode in REMOTE_MODES else UNSET_REPO
     if wanted is not None:
         if repo_at >= 0:
             lines[repo_at] = _REPO.match(plain[repo_at]).group(1) + wanted + newline
         else:
-            lines.insert(use_at + 1, f"- リポジトリ: {wanted}{newline}")
+            added.append(f"- リポジトリ: {wanted}{newline}")
+
+    # ホストは gitlab 専用。行が無いモードでわざわざ作らない
+    # （プロファイルに意味の無い行が増えると、読む側が値を探す手間だけ増える）
+    # `repo` と同じく None は「既存の値を保つ」。gitlab.com を使うなら
+    # `--host` を渡さなければよく、既に書いてある自前ホストが消えない
+    named = host if mode == "gitlab" else UNSET_HOST
+    if named is not None:
+        if host_at >= 0:
+            lines[host_at] = _HOST.match(plain[host_at]).group(1) + named + newline
+        elif mode == "gitlab":
+            added.append(f"- ホスト: {named}{newline}")
+    elif host_at < 0:
+        added.append(f"- ホスト: {UNSET_HOST}{newline}")
+
+    if added:
+        at = (repo_at if repo_at >= 0 else use_at) + 1
+        lines[at:at] = added
     return "".join(lines)
 
 
 def _report(setting: Setting, path: Path) -> None:
-    """読み取った設定を 3 行で出力する。"""
+    """読み取った設定を出力する（`gitlab` のときだけホストの行が増える）。"""
     if setting.mode is None:
         print(f"UNKNOWN: {path} にチケット追跡の設定が無い（節または `- 使用:` の行）")
         print("HINT: `### チケット追跡` の節を作り `- 使用: github` を置く")
         return
     print(f"チケット追跡: {setting.mode}")
     print(f"リポジトリ: {setting.repo or UNSET_REPO}")
+    if setting.mode == "gitlab":
+        print(f"ホスト: {setting.host or 'gitlab.com'}")
     print(f"設定: {path}:{setting.line}")
 
 
@@ -227,13 +282,18 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     parser = argparse.ArgumentParser(
-        description="チケット追跡（github / local / off）の設定を読む / 書き換える"
+        description="チケット追跡（github / gitlab / local / off）の設定を読む / 書き換える"
     )
     parser.add_argument("root", nargs="?", default=".", help="リポジトリルート")
     parser.add_argument(
-        "--set", dest="target", default="", help="github / local / off"
+        "--set", dest="target", default="", help="github / gitlab / local / off"
     )
-    parser.add_argument("--repo", default="", help="owner/repo（--set github のとき）")
+    parser.add_argument(
+        "--repo", default="", help="owner/repo（gitlab では group/project）"
+    )
+    parser.add_argument(
+        "--host", default="", help="自前ホストの GitLab のホスト名（--set gitlab のとき）"
+    )
     args = parser.parse_args(argv)
 
     path = Path(args.root) / "CLAUDE.md"
@@ -244,7 +304,12 @@ def main(argv: list[str] | None = None) -> int:
     text = path.read_text(encoding="utf-8")
     if args.target:
         try:
-            changed = set_mode(text, args.target.strip().lower(), args.repo or None)
+            changed = set_mode(
+                text,
+                args.target.strip().lower(),
+                args.repo or None,
+                args.host.strip() or None,
+            )
         except (ValueError, ProfileError) as error:
             print(f"NG: {error}")
             return 2

@@ -74,22 +74,26 @@ try {
             $lines += "WARNING: CLAUDE.md still contains {} placeholders - the project profile is not filled in. Run /setup-project before development."
         }
 
-        # Ticket tracking decides whether agents may call gh at all, so it must
-        # be read from the environment, not remembered.
-        # The profile line is "- <use>: github|local|off"; <use> is U+4F7F U+7528
-        # and the colon may be U+FF1A. This file stays ASCII, so build the pattern
-        # from code points. The source of truth is .claude/tools/issue_mode.py,
-        # which also accepts the legacy value "on" as an alias for "github".
+        # Ticket tracking decides which CLI agents may call at all, so it must
+        # be read from the environment, not remembered. Naming the service is
+        # what keeps an agent from filing GitLab work into GitHub.
+        # The profile line is "- <use>: github|gitlab|local|off"; <use> is
+        # U+4F7F U+7528 and the colon may be U+FF1A. This file stays ASCII, so
+        # build the pattern from code points. The source of truth is
+        # .claude/tools/issue_mode.py, which also accepts the legacy value "on"
+        # as an alias for "github".
         $useWord = [string][char]0x4F7F + [string][char]0x7528
         $colon = "[:" + [string][char]0xFF1A + "]"
-        $issue = [regex]::Match($claude, '(?m)^\s*-\s*' + $useWord + '\s*' + $colon + '\s*(github|local|on|off)\s*$')
+        $issue = [regex]::Match($claude, '(?m)^\s*-\s*' + $useWord + '\s*' + $colon + '\s*(github|gitlab|local|on|off)\s*$')
         if ($issue.Success) {
             $mode = $issue.Groups[1].Value
             if ($mode -eq "on") { $mode = "github" }
             if ($mode -eq "github") {
-                $lines += "TICKET TRACKING IS GITHUB: mirror docs/backlog.md into GitHub Issues (skill: issue-tracking). docs/backlog.md stays the source of truth. Sync with /issue sync; never send without approval."
+                $lines += "TICKET TRACKING IS GITHUB: mirror docs/backlog.md into GitHub Issues with gh (skill: issue-tracking). Never call glab. docs/backlog.md stays the source of truth. Sync with /issue sync; never send without approval."
+            } elseif ($mode -eq "gitlab") {
+                $lines += "TICKET TRACKING IS GITLAB: mirror docs/backlog.md into GitLab Issues with glab (skill: issue-tracking). Never call gh. docs/backlog.md stays the source of truth. Sync with /issue sync; never send without approval."
             } elseif ($mode -eq "local") {
-                $lines += "TICKET TRACKING IS LOCAL: tickets live in the '## ticket' section of docs/slices/S##-*.md hubs (skill: issue-tracking). Never call gh. docs/backlog.md stays the source of truth. Sync with /issue sync; never write without approval."
+                $lines += "TICKET TRACKING IS LOCAL: tickets live in the '## ticket' section of docs/slices/S##-*.md hubs (skill: issue-tracking). Never call gh or glab. docs/backlog.md stays the source of truth. Sync with /issue sync; never write without approval."
             }
         }
     } else {

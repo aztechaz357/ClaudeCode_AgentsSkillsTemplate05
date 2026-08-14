@@ -217,7 +217,7 @@ REQ2「列を指定して絞り込みたい」
 | 検証 | `implementation-validator`・`code-reviewer`・`security-checker`・`test-analyzer` |
 | 文書 | `doc-syncer`・`doc-reviewer` |
 | **工房** | `tool-smith`（ツールを 1 本作りきる）・`note-keeper`（工房の棚卸し） |
-| 外部連携 | `issue-manager`（チケットとバックログの同期。`github` / `local` の両方。`off` なら即終了） |
+| 外部連携 | `issue-manager`（チケットとバックログの同期。`github` / `gitlab` / `local` のいずれでも。`off` なら即終了） |
 
 **成果物 1 つにつき担当は 1 体だけ。責務を重ねない。**
 特に `unit-tester`（テストを書いて Red まで）と `coder`（Red を消す）を
@@ -294,8 +294,8 @@ REQ2「列を指定して絞り込みたい」
 | `build_arch.py` | 実装の import から実際の依存図（Mermaid）を生成し、逆流を検出 | Python プロジェクト |
 | `diff_arch.py` | 設計書の図と実物を集合比較し、3 種の差を色分けした 1 枚にする | Python・設計書に図があること |
 | `build_digest.py` | 既読地点からの変更を「決まったこと」に絞り、後戻りコストの高い順に並べる（`/catchup`） | git リポジトリ |
-| `issue_mode.py` | チケット追跡の置き場所（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが **0 = github / 1 = off / 2 = 判定不能 / 3 = local** | Python プロジェクト |
-| `sync_issues.py` | バックログとチケットの差分を計算する（既定は dry-run。`--apply` で反映）。`github` では Issue へ、`local` ではハブの `## チケット` 節へ | Python・`使用: github` なら `gh` も |
+| `issue_mode.py` | チケット追跡の置き場所（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが **0 = github / 1 = off / 2 = 判定不能 / 3 = local / 4 = gitlab** | Python プロジェクト |
+| `sync_issues.py` | バックログとチケットの差分を計算する（既定は dry-run。`--apply` で反映）。`github` / `gitlab` では Issue へ、`local` ではハブの `## チケット` 節へ。 **差分の計算は共通で、CLI の呼び方だけが `Forge` で変わる** | Python・リモートなら `gh` / `glab` も |
 | `build_claims.py` | 設計書の契約式（主張）を集めて台帳と差分を出す。`--diff` で **弱まった保証（`⊢` → `⊬`）と消えた保証** を見せる（散文の差分では気づけない後退）。`--mark` で既読 | Python プロジェクト |
 | `build_uml.py` | 実装の AST からクラス図・シーケンス図を逆生成する（設計書の図との突き合わせ用）。 **状態遷移図は復元できないので拒否する** | Python プロジェクト |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
@@ -340,7 +340,7 @@ SessionStart フックが毎回報告する（会話ではなく環境に状態�
 | `post-edit-lint.ps1` | PostToolUse | 編集したソースに整形・lint を掛ける（未配線） |
 | `notify.ps1` | Notification | 入力待ちを音で知らせる |
 | `stop-uncommitted.ps1` | Stop | 未コミットのまま終わったら知らせる |
-| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備・ **未読コミット数** ・ **チケット追跡のモード（github / local）** を文脈へ注入 |
+| `session-start-context.ps1` | SessionStart | ブランチ・未コミット・プロファイル未整備・ **未読コミット数** ・ **チケット追跡のモード（github / gitlab / local）** を文脈へ注入 |
 
 ## 育て方
 
