@@ -296,6 +296,8 @@ REQ2「列を指定して絞り込みたい」
 | `build_digest.py` | 既読地点からの変更を「決まったこと」に絞り、後戻りコストの高い順に並べる（`/catchup`） | git リポジトリ |
 | `issue_mode.py` | チケット追跡の置き場所（プロファイルの `- 使用:` の行）を読む / 書き換える。終了コードが **0 = github / 1 = off / 2 = 判定不能 / 3 = local** | Python プロジェクト |
 | `sync_issues.py` | バックログとチケットの差分を計算する（既定は dry-run。`--apply` で反映）。`github` では Issue へ、`local` ではハブの `## チケット` 節へ | Python・`使用: github` なら `gh` も |
+| `build_claims.py` | 設計書の契約式（主張）を集めて台帳と差分を出す。`--diff` で **弱まった保証（`⊢` → `⊬`）と消えた保証** を見せる（散文の差分では気づけない後退）。`--mark` で既読 | Python プロジェクト |
+| `build_uml.py` | 実装の AST からクラス図・シーケンス図を逆生成する（設計書の図との突き合わせ用）。 **状態遷移図は復元できないので拒否する** | Python プロジェクト |
 | `check_llm_endpoint.py` | ローカル LLM のエンドポイントが Claude Code を駆動できるか検査 | 変換プロキシ（Anthropic 形式） |
 | `new_tool.ps1` | 工房ツールの雛形を生成（README・実装・テストの 3 点） | PowerShell・`.claude/templates/workshop/` |
 | `new_note.ps1` | 工房ノートの雛形を生成（日付 + slug） | PowerShell・同上 |

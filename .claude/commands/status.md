@@ -17,11 +17,13 @@ description: 開発の現在地を 1 画面にまとめて出す（ゴール・�
    <ツール実行コマンド> .claude/tools/build_usdm.py
    <ツール実行コマンド> .claude/tools/check_deliverables.py
    <ツール実行コマンド> .claude/tools/build_structure.py
+   <ツール実行コマンド> .claude/tools/build_claims.py
    <ツール実行コマンド> .claude/tools/build_status.py
    ```
 
-   `check_deliverables.py` が 1 を返しても **止まらない** （欠けている
-   ことこそ見せたい情報なので、そのまま 1 枚に載る）。
+   `check_deliverables.py` と `build_claims.py` が 1 を返しても
+   **止まらない** （欠けていること・未証明が残っていることこそ
+   見せたい情報なので、そのまま 1 枚に載る）。
    前置コマンドはプロファイルの「`.claude/tools/` の Python ツール実行」。
 
 2. 生成された `docs/status.html` のパスをユーザーに伝える
@@ -33,9 +35,14 @@ description: 開発の現在地を 1 画面にまとめて出す（ゴール・�
    ゴール: {docs/concept.md の一行}
    到達:   L3 {n}本 / L2 {n}本 / L1 {n}本 / L0 {n}本（全 {N} 本）
    一式:   {n}/{n} 本がそろっている（欠けは S##: {何が}）
+   主張:   ⊢ {n} / ⊬ {n}（未証明は S##: {どれ}）
    負債:   {n} 件（痛み高 {n} 件）
    次の一手: {1 つだけ}
    ```
+
+   **主張の行が「正しさ」の唯一の要約** 。`⊬` は「主張しているが
+   未証明」であり、そのまま負債（規約: `Skill('verifiable-claims')`）。
+   台帳を文書として保存しない —— 正は各設計書の「## 主張（契約式）」。
 
 ## 読み方（ユーザー向けの案内）
 
