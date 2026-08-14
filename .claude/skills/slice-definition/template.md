@@ -9,6 +9,14 @@
 > 成熟度の完了条件は `.claude/skills/agile-process/maturity.md` を正とする。
 > 進捗はバックログが正。この文書には進捗を書かない（成熟度の 1 行だけ）。
 
+<!--
+チケット追跡が `local` のときは、この位置（H1 の直後）に `## チケット` 節が
+入る。 **手で書かない** —— `sync_issues.py --apply` が起票し、状態・目標・
+履歴を保つ（規約: .claude/skills/issue-tracking/SKILL.md）。
+`github` のときは GitHub Issue 側にあるので、この節は作らない。
+既にある履歴は、モードを切り替えても消さない。
+-->
+
 ## 成果物（7 点セット）
 
 | # | 成果物 | 場所 | 状態 |

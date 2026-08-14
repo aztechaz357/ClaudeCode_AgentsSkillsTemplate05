@@ -417,17 +417,13 @@ class TestOtherHooks(unittest.TestCase):
 
 
 class TestSessionStartIssueMode(unittest.TestCase):
-    """Issue 追跡が on のときだけ文脈へ注入すること。
+    """チケット追跡のモードを文脈へ注入すること。
 
-    モードは全エージェントの `gh` の扱いを変えるので、on を見落とすのも
-    off を on と報告するのも事故になる。両方向を検証する。
+    モードは全エージェントの `gh` の扱いを変えるので、github を見落とすのも
+    local を github と報告するのも事故になる。3 つとも検証する。
     """
 
-    PROFILE = (
-        "# CLAUDE.md\n\n### Issue "
-        + "追跡"
-        + "（GitHub Issues）\n\n- 使用: {mode}\n- リポジトリ: owner/repo\n"
-    )
+    PROFILE = "# CLAUDE.md\n\n### " + "チケット追跡" + "\n\n- 使用: {mode}\n- リポジトリ: owner/repo\n"
 
     def _run_in(self, mode: str) -> str:
         with tempfile.TemporaryDirectory() as tmp:
@@ -451,13 +447,28 @@ class TestSessionStartIssueMode(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         return proc.stdout.decode("utf-8", errors="replace")
 
-    def test_reports_when_on(self):
-        """`使用: on` のとき ISSUE TRACKING IS ON を注入する。"""
-        self.assertIn("ISSUE TRACKING IS ON", self._run_in("on"))
+    def test_reports_github(self):
+        """`使用: github` のとき GitHub モードを注入する。"""
+        self.assertIn("TICKET TRACKING IS GITHUB", self._run_in("github"))
+
+    def test_reports_local_without_gh(self):
+        """`使用: local` のときは gh を呼ばないことまで伝える。
+
+        ここを github と同じ文面にすると、ローカル運用のリポジトリで
+        エージェントが `gh` を叩き始める。
+        """
+        out = self._run_in("local")
+        self.assertIn("TICKET TRACKING IS LOCAL", out)
+        self.assertNotIn("TICKET TRACKING IS GITHUB", out)
+        self.assertIn("Never call gh", out)
+
+    def test_legacy_on_reads_as_github(self):
+        """旧設定の `使用: on` は github として扱う（既存リポジトリを壊さない）。"""
+        self.assertIn("TICKET TRACKING IS GITHUB", self._run_in("on"))
 
     def test_silent_when_off(self):
         """`使用: off` のときは何も言わない（既定を邪魔しない）。"""
-        self.assertNotIn("ISSUE TRACKING", self._run_in("off"))
+        self.assertNotIn("TICKET TRACKING", self._run_in("off"))
 
 
 class TestSessionStartUnread(unittest.TestCase):

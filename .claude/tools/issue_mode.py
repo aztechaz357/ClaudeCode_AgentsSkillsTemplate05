@@ -1,33 +1,45 @@
-"""Issue 追跡（GitHub Issues）を使うかどうかの設定を、読む / 書き換える。
+"""チケット追跡のモード設定を、読む / 書き換える。
 
 規約の正は `.claude/skills/issue-tracking/SKILL.md`。
 設定の正は `CLAUDE.md` のプロジェクトプロファイルの
-「Issue 追跡（GitHub Issues）」節にある **`- 使用:` の 1 行だけ** 。
+「チケット追跡」節にある **`- 使用:` の 1 行だけ** 。
 
-    ### Issue 追跡（GitHub Issues）
+    ### チケット追跡
 
-    - 使用: off
-    - リポジトリ: なし
+    - 使用: github
+    - リポジトリ: owner/repo
     - ラベル: slice / debt / L1 / L2 / L3
 
-このツールがあるのは、モードを **エージェントの記憶や自然言語の解釈ではなく
-終了コードで判定させる** ため。`off` のプロジェクトで誤って GitHub へ
-書き込む事故は取り消せないので、判定を LLM に任せない。
+**チケット駆動が既定** 。置き場所が GitHub かローカルかだけが違う:
 
-判定不能（節が無い・値が `on` / `off` 以外）は **`on` ではなく 2** を返す。
-「読めなかったから使ってよい」という解釈を構造的に禁じる。
+    github … GitHub Issue（既定。リモートがあり gh が認証済みのとき）
+    local  … ハブ（docs/slices/S##-*.md）の「## チケット」節
+    off    … チケットを使わない（工房レーンだけの短命なリポジトリ向け）
+
+このツールがあるのは、モードを **エージェントの記憶や自然言語の解釈ではなく
+終了コードで判定させる** ため。`github` のつもりで `local` のプロジェクトに
+書き込む事故、`off` のプロジェクトから外部へ出す事故は取り消せないので、
+判定を LLM に任せない。
+
+判定不能（節が無い・値が不正）は **`github` ではなく 2** を返す。
+「読めなかったから外部へ出してよい」という解釈を構造的に禁じる。
+
+`on` は `github` の別名として読む（この節が 2 値だった頃の設定を壊さないため）。
+書き込むときは常に正式な値（`github`）に正規化する。
 
 使い方（前置コマンドはプロファイルの
 「.claude/tools/ の Python ツール実行」。例: uv run python）:
     <ツール実行コマンド> .claude/tools/issue_mode.py
-    <ツール実行コマンド> .claude/tools/issue_mode.py --set on --repo owner/repo
+    <ツール実行コマンド> .claude/tools/issue_mode.py --set github --repo owner/repo
+    <ツール実行コマンド> .claude/tools/issue_mode.py --set local
     <ツール実行コマンド> .claude/tools/issue_mode.py --set off
     <ツール実行コマンド> .claude/tools/issue_mode.py <リポジトリルート>
 
 終了コード（`--set` のときは書き換えた後のモードを返す）:
-    0 = 使用: on
+    0 = 使用: github
     1 = 使用: off
     2 = 判定不能（CLAUDE.md が無い・節が無い・値が不正・引数のエラー）
+    3 = 使用: local
 """
 
 from __future__ import annotations
@@ -38,18 +50,24 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# 節の見出し（記号や括弧の揺れを許すため、言葉だけで探す）
-SECTION_WORD = "Issue 追跡"
+# 節の見出し（記号や括弧の揺れを許すため、言葉だけで探す）。
+# 「チケット追跡」が正だが、旧名「Issue 追跡」の節も読めるようにしておく
+SECTION_WORDS = ("チケット追跡", "Issue 追跡")
 _HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 # 機械が読む 2 行。値だけを差し替えられるよう、前置きを捕獲する
 _USE = re.compile(r"^(\s*-\s*使用\s*[:：]\s*)(.*)$")
 _REPO = re.compile(r"^(\s*-\s*リポジトリ\s*[:：]\s*)(.*)$")
 
-MODES = ("on", "off")
+MODES = ("github", "local", "off")
+# 旧設定（2 値だった頃）の値。読むときだけ許し、書くときは正式名に直す
+ALIASES = {"on": "github"}
 # 「未設定」を意味する値（雛形の `{…}` は `_is_placeholder` で別に見る）
 _UNSET = ("なし", "none", "-", "")
 
 UNSET_REPO = "なし"
+
+# モードごとの終了コード。`github` を 0 に据え、判定不能は 2 のまま据え置く
+EXIT_CODES = {"github": 0, "off": 1, "local": 3}
 
 
 class ProfileError(Exception):
@@ -61,7 +79,8 @@ class Setting:
     """プロファイルから読み取った Issue 追跡の設定。
 
     Attributes:
-        mode: `on` / `off`。判定不能なら None（`on` に倒さない）。
+        mode: `github` / `local` / `off`。判定不能なら None
+            （読めなかったときに `github` へ倒さない —— 外部書き込みは戻せない）。
         repo: `owner/repo`。未設定・雛形のままなら None。
         line: `使用:` の行番号（1 始まり）。見つからなければ 0。
     """
@@ -93,7 +112,7 @@ def _section_range(lines: list[str]) -> tuple[int, int]:
         if not matched:
             continue
         if start < 0:
-            if SECTION_WORD in matched.group(2):
+            if any(word in matched.group(2) for word in SECTION_WORDS):
                 start = index + 1
                 level = len(matched.group(1))
             continue
@@ -126,6 +145,7 @@ def read_mode(text: str) -> Setting:
         used = _USE.match(line)
         if used and mode is None:
             value = used.group(2).strip().lower()
+            value = ALIASES.get(value, value)
             mode = value if value in MODES else None
             line_number = offset + 1
             continue
@@ -142,25 +162,28 @@ def set_mode(text: str, mode: str, repo: str | None = None) -> str:
 
     Args:
         text: `CLAUDE.md` の全文。
-        mode: `on` または `off`。
-        repo: `owner/repo`。None なら既存の値を保つ（`off` のときは消す）。
+        mode: `github` / `local` / `off`（`on` は `github` の別名）。
+        repo: `owner/repo`。None なら既存の値を保つ
+            （`github` 以外では「なし」に戻す —— リモートを持たないモードで
+            リポジトリ名が残っていると、次に読んだ人が誤解する）。
 
     Returns:
         書き換えた全文（他の行は 1 文字も変えない）。
 
     Raises:
-        ValueError: `mode` が `on` / `off` でない。
-        ProfileError: Issue 追跡の節、または `使用:` の行が無い。
+        ValueError: `mode` が `github` / `local` / `off` でない。
+        ProfileError: チケット追跡の節、または `使用:` の行が無い。
     """
+    mode = ALIASES.get(mode, mode)
     if mode not in MODES:
-        raise ValueError(f"モードは on / off のいずれか: {mode}")
+        raise ValueError(f"モードは github / local / off のいずれか: {mode}")
 
     lines = text.splitlines(keepends=True)
     plain = text.splitlines()
     start, end = _section_range(plain)
     if start < 0:
         raise ProfileError(
-            "CLAUDE.md に「Issue 追跡」の節が無い。プロファイルに節を作ってから切り替える"
+            "CLAUDE.md に「チケット追跡」の節が無い。プロファイルに節を作ってから切り替える"
         )
 
     use_at = -1
@@ -171,12 +194,12 @@ def set_mode(text: str, mode: str, repo: str | None = None) -> str:
         elif repo_at < 0 and _REPO.match(plain[offset]):
             repo_at = offset
     if use_at < 0:
-        raise ProfileError("「Issue 追跡」の節に `- 使用:` の行が無い")
+        raise ProfileError("「チケット追跡」の節に `- 使用:` の行が無い")
 
     newline = "\n" if not lines[use_at].endswith("\r\n") else "\r\n"
     lines[use_at] = _USE.match(plain[use_at]).group(1) + mode + newline
 
-    wanted = UNSET_REPO if mode == "off" else repo
+    wanted = repo if mode == "github" else UNSET_REPO
     if wanted is not None:
         if repo_at >= 0:
             lines[repo_at] = _REPO.match(plain[repo_at]).group(1) + wanted + newline
@@ -188,10 +211,10 @@ def set_mode(text: str, mode: str, repo: str | None = None) -> str:
 def _report(setting: Setting, path: Path) -> None:
     """読み取った設定を 3 行で出力する。"""
     if setting.mode is None:
-        print(f"UNKNOWN: {path} に Issue 追跡の設定が無い（節または `- 使用:` の行）")
-        print("HINT: `### Issue 追跡（GitHub Issues）` の節を作り `- 使用: off` を置く")
+        print(f"UNKNOWN: {path} にチケット追跡の設定が無い（節または `- 使用:` の行）")
+        print("HINT: `### チケット追跡` の節を作り `- 使用: github` を置く")
         return
-    print(f"Issue 追跡: {setting.mode}")
+    print(f"チケット追跡: {setting.mode}")
     print(f"リポジトリ: {setting.repo or UNSET_REPO}")
     print(f"設定: {path}:{setting.line}")
 
@@ -204,11 +227,13 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     parser = argparse.ArgumentParser(
-        description="Issue 追跡（GitHub Issues）の設定を読む / 書き換える"
+        description="チケット追跡（github / local / off）の設定を読む / 書き換える"
     )
     parser.add_argument("root", nargs="?", default=".", help="リポジトリルート")
-    parser.add_argument("--set", dest="target", default="", help="on または off")
-    parser.add_argument("--repo", default="", help="owner/repo（--set on のとき）")
+    parser.add_argument(
+        "--set", dest="target", default="", help="github / local / off"
+    )
+    parser.add_argument("--repo", default="", help="owner/repo（--set github のとき）")
     args = parser.parse_args(argv)
 
     path = Path(args.root) / "CLAUDE.md"
@@ -231,7 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     _report(setting, path)
     if setting.mode is None:
         return 2
-    return 0 if setting.mode == "on" else 1
+    return EXIT_CODES[setting.mode]
 
 
 if __name__ == "__main__":

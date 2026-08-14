@@ -1,7 +1,7 @@
-"""issue_mode.py のテスト。
+﻿"""issue_mode.py のテスト。
 
-Issue 追跡の on / off は **全エージェントの振る舞いを変える設定** なので、
-「読めること」だけでなく「読めないときに on と誤判定しないこと」を検証する
+チケット追跡のモードは **全エージェントの振る舞いを変える設定** なので、
+「読めること」だけでなく「読めないときに github と誤判定しないこと」を検証する
 （tool-authoring スキルの「ツールを作ったら必ず確認すること」）。
 
 実行（前置コマンドはプロファイルの「.claude/tools/ の Python ツール実行」）:
@@ -32,7 +32,7 @@ PROFILE_OFF = """\
 |---|---|
 | テスト | pytest |
 
-### Issue 追跡（GitHub Issues）
+### チケット追跡
 
 - 使用: off
 - リポジトリ: なし
@@ -43,8 +43,19 @@ PROFILE_OFF = """\
 - 既定ブランチ: main
 """
 
-PROFILE_ON = PROFILE_OFF.replace("使用: off", "使用: on").replace(
+PROFILE_GITHUB = PROFILE_OFF.replace("使用: off", "使用: github").replace(
     "リポジトリ: なし", "リポジトリ: owner/repo"
+)
+
+PROFILE_LOCAL = PROFILE_OFF.replace("使用: off", "使用: local")
+
+# この節が 2 値（on / off）だった頃のプロファイル。読めなくなると既存の
+# リポジトリが一斉に「判定不能」になるので、別名として読めることを固定する
+PROFILE_LEGACY_ON = PROFILE_OFF.replace("使用: off", "使用: on").replace(
+    "リポジトリ: なし", "リポジトリ: owner/repo"
+)
+PROFILE_LEGACY_HEADING = PROFILE_GITHUB.replace(
+    "### チケット追跡", "### Issue 追跡（GitHub Issues）"
 )
 
 PROFILE_NO_SECTION = """\
@@ -75,71 +86,103 @@ class ReadModeTest(unittest.TestCase):
         self.assertEqual(setting.mode, "off")
         self.assertIsNone(setting.repo)
 
-    def test_reads_on_with_repo(self) -> None:
-        """`使用: on` とリポジトリ名を読み取る。"""
-        setting = issue_mode.read_mode(PROFILE_ON)
-        self.assertEqual(setting.mode, "on")
+    def test_reads_github_with_repo(self) -> None:
+        """`使用: github` とリポジトリ名を読み取る。"""
+        setting = issue_mode.read_mode(PROFILE_GITHUB)
+        self.assertEqual(setting.mode, "github")
         self.assertEqual(setting.repo, "owner/repo")
 
+    def test_reads_local(self) -> None:
+        """`使用: local` を読み取る（リポジトリは不要）。"""
+        setting = issue_mode.read_mode(PROFILE_LOCAL)
+        self.assertEqual(setting.mode, "local")
+        self.assertIsNone(setting.repo)
+
+    def test_legacy_on_reads_as_github(self) -> None:
+        """旧設定の `使用: on` は github の別名として読む。"""
+        self.assertEqual(issue_mode.read_mode(PROFILE_LEGACY_ON).mode, "github")
+
+    def test_legacy_heading_is_found(self) -> None:
+        """旧見出し「Issue 追跡（GitHub Issues）」の節も読める。"""
+        self.assertEqual(issue_mode.read_mode(PROFILE_LEGACY_HEADING).mode, "github")
+
     def test_missing_section_is_unknown(self) -> None:
-        """Issue 追跡の節が無ければ判定不能（on と決めつけない）。"""
+        """チケット追跡の節が無ければ判定不能（github と決めつけない）。"""
         setting = issue_mode.read_mode(PROFILE_NO_SECTION)
         self.assertIsNone(setting.mode)
 
     def test_invalid_value_is_unknown(self) -> None:
-        """`使用: たぶん` を on 扱いしない（誤って外部送信するのを防ぐ）。"""
+        """`使用: たぶん` を github 扱いしない（誤って外部送信するのを防ぐ）。"""
         setting = issue_mode.read_mode(PROFILE_OFF.replace("使用: off", "使用: たぶん"))
         self.assertIsNone(setting.mode)
 
     def test_placeholder_repo_is_unset(self) -> None:
         """雛形のままの `{例: owner/repo}` は未設定として扱う。"""
-        text = PROFILE_ON.replace("リポジトリ: owner/repo", "リポジトリ: {例: owner/repo}")
+        text = PROFILE_GITHUB.replace(
+            "リポジトリ: owner/repo", "リポジトリ: {例: owner/repo}"
+        )
         self.assertIsNone(issue_mode.read_mode(text).repo)
 
     def test_ignores_lines_outside_section(self) -> None:
-        """別の節に `- 使用: on` があっても Issue 追跡の設定にしない。"""
-        text = PROFILE_OFF.replace("### ログ / Git", "### ログ / Git\n\n- 使用: on\n")
+        """別の節に `- 使用: github` があってもチケット追跡の設定にしない。"""
+        text = PROFILE_OFF.replace("### ログ / Git", "### ログ / Git\n\n- 使用: github\n")
         self.assertEqual(issue_mode.read_mode(text).mode, "off")
 
 
 class SetModeTest(unittest.TestCase):
     """設定の書き換え（`使用:` の行だけを触る）。"""
 
-    def test_turns_on(self) -> None:
-        """off から on へ切り替え、リポジトリも書き込む。"""
-        changed = issue_mode.set_mode(PROFILE_OFF, "on", repo="a/b")
+    def test_turns_github_on(self) -> None:
+        """off から github へ切り替え、リポジトリも書き込む。"""
+        changed = issue_mode.set_mode(PROFILE_OFF, "github", repo="a/b")
         setting = issue_mode.read_mode(changed)
-        self.assertEqual(setting.mode, "on")
+        self.assertEqual(setting.mode, "github")
         self.assertEqual(setting.repo, "a/b")
+
+    def test_turns_local_on(self) -> None:
+        """local に切り替えられる。"""
+        changed = issue_mode.set_mode(PROFILE_OFF, "local")
+        self.assertEqual(issue_mode.read_mode(changed).mode, "local")
+
+    def test_legacy_on_normalizes_to_github(self) -> None:
+        """`on` で書き換えても、ファイルには正式名 `github` が入る。"""
+        changed = issue_mode.set_mode(PROFILE_OFF, "on", repo="a/b")
+        self.assertIn("- 使用: github", changed)
+        self.assertNotIn("- 使用: on", changed)
 
     def test_keeps_other_lines(self) -> None:
         """プロファイルの他の行を壊さない。"""
-        changed = issue_mode.set_mode(PROFILE_OFF, "on")
+        changed = issue_mode.set_mode(PROFILE_OFF, "github")
         self.assertIn("| テスト | pytest |", changed)
         self.assertIn("- 既定ブランチ: main", changed)
         self.assertIn("- ラベル: slice / debt / L1 / L2 / L3", changed)
 
     def test_is_idempotent(self) -> None:
         """同じ値で 2 回書き換えても差分が出ない。"""
-        once = issue_mode.set_mode(PROFILE_ON, "on", repo="owner/repo")
-        twice = issue_mode.set_mode(once, "on", repo="owner/repo")
+        once = issue_mode.set_mode(PROFILE_GITHUB, "github", repo="owner/repo")
+        twice = issue_mode.set_mode(once, "github", repo="owner/repo")
         self.assertEqual(once, twice)
 
     def test_turning_off_clears_repo(self) -> None:
         """off にするとリポジトリは「なし」に戻る。"""
-        changed = issue_mode.set_mode(PROFILE_ON, "off")
+        changed = issue_mode.set_mode(PROFILE_GITHUB, "off")
         setting = issue_mode.read_mode(changed)
         self.assertEqual(setting.mode, "off")
         self.assertIsNone(setting.repo)
 
+    def test_local_clears_repo(self) -> None:
+        """local もリモートを使わないので、リポジトリ名を残さない。"""
+        changed = issue_mode.set_mode(PROFILE_GITHUB, "local")
+        self.assertIsNone(issue_mode.read_mode(changed).repo)
+
     def test_missing_section_raises(self) -> None:
         """節が無いプロファイルは書き換えず例外にする。"""
         with self.assertRaises(issue_mode.ProfileError):
-            issue_mode.set_mode(PROFILE_NO_SECTION, "on")
+            issue_mode.set_mode(PROFILE_NO_SECTION, "github")
 
 
 class MainTest(unittest.TestCase):
-    """終了コード（0 = on / 1 = off / 2 = 判定不能）。"""
+    """終了コード（0 = github / 1 = off / 2 = 判定不能 / 3 = local）。"""
 
     def _run(self, argv: list[str]) -> tuple[int, str]:
         buffer = io.StringIO()
@@ -147,13 +190,13 @@ class MainTest(unittest.TestCase):
             code = issue_mode.main(argv)
         return code, buffer.getvalue()
 
-    def test_on_exits_zero(self) -> None:
-        """on のとき終了コード 0 とリポジトリ名を出す。"""
+    def test_github_exits_zero(self) -> None:
+        """github のとき終了コード 0 とリポジトリ名を出す。"""
         with tempfile.TemporaryDirectory() as tmp:
-            _write(Path(tmp), PROFILE_ON)
+            _write(Path(tmp), PROFILE_GITHUB)
             code, out = self._run([tmp])
         self.assertEqual(code, 0)
-        self.assertIn("on", out)
+        self.assertIn("github", out)
         self.assertIn("owner/repo", out)
 
     def test_off_exits_one(self) -> None:
@@ -163,6 +206,14 @@ class MainTest(unittest.TestCase):
             code, out = self._run([tmp])
         self.assertEqual(code, 1)
         self.assertIn("off", out)
+
+    def test_local_exits_three(self) -> None:
+        """local のとき終了コード 3（off の 1 と混ざらない）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            _write(Path(tmp), PROFILE_LOCAL)
+            code, out = self._run([tmp])
+        self.assertEqual(code, 3)
+        self.assertIn("local", out)
 
     def test_missing_section_exits_two(self) -> None:
         """節が無ければ終了コード 2。"""
@@ -178,19 +229,26 @@ class MainTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
     def test_set_writes_file(self) -> None:
-        """--set on がファイルを書き換える。"""
+        """--set github がファイルを書き換える。"""
         with tempfile.TemporaryDirectory() as tmp:
             path = _write(Path(tmp), PROFILE_OFF)
-            code, _ = self._run([tmp, "--set", "on", "--repo", "a/b"])
+            code, _ = self._run([tmp, "--set", "github", "--repo", "a/b"])
             self.assertEqual(code, 0)
             text = path.read_text(encoding="utf-8")
-        self.assertEqual(issue_mode.read_mode(text).mode, "on")
+        self.assertEqual(issue_mode.read_mode(text).mode, "github")
         self.assertEqual(issue_mode.read_mode(text).repo, "a/b")
+
+    def test_set_local_exits_three(self) -> None:
+        """書き換え後のモードを終了コードで返す（読み取りと同じ意味にする）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            _write(Path(tmp), PROFILE_GITHUB)
+            code, _ = self._run([tmp, "--set", "local"])
+        self.assertEqual(code, 3)
 
     def test_set_off_exits_one(self) -> None:
         """書き換え後のモードを終了コードで返す（読み取りと同じ意味にする）。"""
         with tempfile.TemporaryDirectory() as tmp:
-            _write(Path(tmp), PROFILE_ON)
+            _write(Path(tmp), PROFILE_GITHUB)
             code, _ = self._run([tmp, "--set", "off"])
         self.assertEqual(code, 1)
 
