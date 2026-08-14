@@ -20,7 +20,9 @@
 | 今どこにいるか分からなくなった | `/status` |
 | しばらく席を外した・生成に追いつけない | `/catchup`（決まったことを後戻りコスト順に） |
 | 設計と実装がずれている気がする | `/arch`（乖離を色分けで 1 枚に） |
-| AI がどう考えたのかを学びたい・詰まった過程を残したい | `/journal`（外した仮説と却下案つき。任意） |
+| **一緒に設計したい・考え方を学びたい** | `/iterate --伴走`（段0〜段3 で毎回選択肢が出る。既定は `CLAUDE.md` の「関与モード」） |
+| **今回は速く回したい** | `/iterate --既定` / `/iterate --任せる` |
+| AI がどう考えたのかを学びたい・詰まった過程を残したい | `/journal`（外した仮説と却下案つき。合図が出た回は `/iterate` が自動で書く） |
 | PR やマージのコマンドを引きたい | `/journal commands`（型は `design-journal/git-commands.md`） |
 | 次に何をやるか決められない | `/backlog 次`（機械的に 1 つだけ返る） |
 | 負債がたまってきた（反復 2 回分） | `/refactor` |
@@ -36,33 +38,42 @@
 
 1 回 = 半日以内で 7 点セットをそろえ、成熟度を **1 段だけ** 上げる。
 
-| 段 | 誰が | 作るもの | 読むスキル | L1 の上限 |
-|---|---|---|---|---|
-| 1 | `requirement-writer` | `docs/usdm/src/S##-*.html` | `usdm` | 要求 1・理由 1 行・仕様 3 条 |
-| 2 | `designer` | `docs/design/S##-*.md` | `functional-design` `layered-architecture` | 構造の図 ＋ 10 行 ＋ 判断の記録 |
-| 3 | `unit-tester` | 単体テスト（**Red 確認まで**） | `development-guidelines` `visual-debugging` | 1〜3 本 |
-| 4 | `coder` | 実装（Green まで） | `layered-architecture` | 差分 20〜30 行で区切る |
-| 5 | `integration-tester` | E2E テスト・実物の出力 | —— | 正常系 1 本 |
-| 6 | `test-summarizer` | `docs/test-reports/S##-*.md` | `test-reporting` | 1 枚（実測のみ） |
-| 7 | `manual-writer` | `docs/manual.md` の `## S##` 節 | `writing-conventions` | 節 1 つ |
-| 8 | `implementation-validator` → `doc-syncer` | 判定・記録の同期 | `maturity.md` `steering` | —— |
+| 段 | 誰が | 作るもの | 読むスキル | L1 の上限 | `伴走` で止まる |
+|---|---|---|---|---|---|
+| 0 | 親 | 対象スライスの決定 | `maturity.md` | —— | **○** 切り方 |
+| 1 | `requirement-writer` | `docs/usdm/src/S##-*.html` | `usdm` | 要求 1・理由 1 行・仕様 3 条 | **○** 要求と理由 |
+| 2 | `designer` | `docs/design/S##-*.md` | `functional-design` `layered-architecture` | 構造の図 ＋ 10 行 ＋ 判断の記録 | **○** 層と契約 |
+| 3 | `test-designer` → `unit-tester` | 単体テスト（**Red 確認まで**） | `test-design` `development-guidelines` `visual-debugging` | 1〜3 本 | **○** テスト観点 |
+| 4 | `coder` | 実装（Green まで） | `layered-architecture` | 差分 20〜30 行で区切る | —— |
+| 5 | `integration-tester` | E2E テスト・実物の出力 | —— | 正常系 1 本 | —— |
+| 6 | `test-summarizer` | `docs/test-reports/S##-*.md` | `test-reporting` | 1 枚（実測のみ） | —— |
+| 7 | `manual-writer` | `docs/manual.md` の `## S##` 節 | `writing-conventions` | 節 1 つ | —— |
+| 8 | `implementation-validator` → `doc-syncer` | 判定・記録の同期 | `maturity.md` `steering` | —— | —— |
+
+**止まるのは段0〜段3 だけ。** 段4 以降は判断ではなく翻訳作業なので、
+`伴走` でも止まらない。段4 以降で判断が必要になったら、段2 の設計が足りていない。
 
 **順序は動かせない。** 実装を先に書くと、要求と設計が後追いの言い訳になる。
 **1 つでも次の反復へ送らない。** 送った 1 つは二度と書かれない。
 
 ## エージェントの起動（Task で委譲するとき）
 
-プロンプトに **次の 4 つを必ず書く** 。書き忘れが事故の最大の原因。
+プロンプトに **次の 5 つを必ず書く** 。書き忘れが事故の最大の原因。
 
 ```
 1. .steering/20260807-S03-csv-filter/     ← 作業ディレクトリ
 2. S03、現在 L1、目標 L2                   ← 目標成熟度（★ 省略厳禁）
-3. reports/02-designer.md を読んでから     ← 前の段のレポート
-4. reports/03-unit-tester.md に書き出し、応答はパスと 5 行以内の要約のみ
+3. 関与モード: 伴走                        ← どこで止まるか（★ 省略厳禁）
+4. reports/02-designer.md を読んでから     ← 前の段のレポート
+5. reports/03-unit-tester.md に書き出し、応答はパスと 5 行以内の要約のみ
 ```
 
 **目標成熟度を書かないと、エージェントは最上位の基準で判定する。**
 その結果 L1 の反復で失敗経路を網羅し始め、半日で終わらなくなる。
+
+**関与モードを書かないと、エージェントは決めてから説明する。**
+成果物は出るが、ユーザーには判断の経験が積まれない
+（`伴走` を選んでいるのに置いてけぼりになる、最も多い原因）。
 
 規模が小さければ委譲せず自分でやってよい。ただし **その場合も同じ
 レポートを残す** （誰がやったかにかかわらず、受け渡しの形は変えない）。
@@ -88,6 +99,8 @@
 | どの層に置くか分からない | `layered-architecture` の判定フローを上から順に問う |
 | 契約を切るべきか分からない | 外部 I/O（ファイル・DB・通信・時刻・乱数）があるときだけ切る |
 | エージェントが越権した | 起動プロンプトの目標成熟度を確認する（大抵は書き忘れ） |
+| **置いてけぼりになる・完成品が降ってくる** | 関与モードを `伴走` にする（`CLAUDE.md` の「関与モード」または `/iterate --伴走`）。`伴走` なのに降ってくるなら、起動プロンプトの関与モードの書き忘れ |
+| **毎段止められて進まない** | `/iterate --既定` か `--任せる` に落とす（モードは反復単位で変えてよい） |
 
 ## やってはいけない 5 つ
 
