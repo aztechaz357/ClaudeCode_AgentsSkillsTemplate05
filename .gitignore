@@ -24,5 +24,11 @@ logs/test-artifacts/
 # Claude Code の個人設定（許可リストは環境ごとに違う）
 .claude/settings.local.json
 
+# draw.io の書き出し（生成物。正は .drawio の方）
+# 成果物として配る画像だけ `git add -f <file>` で明示的に追跡する
+*.drawio.png
+*.drawio.svg
+*.drawio.pdf
+*.drawio.bkp
 
 ignore/
