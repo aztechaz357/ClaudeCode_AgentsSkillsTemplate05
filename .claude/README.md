@@ -262,6 +262,7 @@ REQ2「列を指定して絞り込みたい」
 | `repository-structure` | 共通 | ファイル・文書の置き場所 |
 | `development-guidelines` | 共通 | コーディング・テスト・コミットの規約（成熟度別） |
 | `writing-conventions` | 共通 | 文書の記法（Markdown・数式と図表の番号・作図言語・マニュアル） |
+| `drawio` | 共通 | 図を **単体のファイル** で渡すときだけ（`.drawio` / PNG / SVG / PDF / URL）。文書内の図は `writing-conventions` が正 |
 | `workshop` | 工房 | レーンの正（置き場所・命名・status・カタログ・昇格判断） |
 | `quick-tool` | 工房 | ツール 1 本を作りきる 8 手順 |
 | `note-taking` | 工房 | ノート 1 本の手順と記録先の判定 |
