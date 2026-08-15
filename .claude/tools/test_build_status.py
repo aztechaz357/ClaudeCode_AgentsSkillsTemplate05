@@ -50,11 +50,42 @@ BACKLOG = """\
 """
 
 
+DESIGN_S01 = """\
+# S01. 行数を数える — 設計
+
+## 主張（契約式）
+
+| ID | 種別 | 主張 | assert | 状態 | 根拠 |
+|---|---|---|---|---|---|
+| Q1 | 事後 | `count(in) = \\|in\\|` | `assert n == len(rows)` | ⊢ | `test_counts_rows` |
+| Q2 | 事後 | `in = ∅ → count(in) = 0` | `assert n == 0` | ⊢ | `test_empty` |
+"""
+
+DESIGN_S02 = """\
+# S02. 列で絞り込む — 設計
+
+## 主張（契約式）
+
+| ID | 種別 | 主張 | assert | 状態 | 根拠 |
+|---|---|---|---|---|---|
+| Q1 | 事後 | `∀r ∈ out. r ∈ in` | `assert all(r in rows for r in out)` | ⊢ | `test_subset` |
+| Q2 | 事後 | `∀r ∈ in. pred(r) → r ∈ out` | `assert all(...)` | ⊬ | 未（D02） |
+"""
+
+
 def _make_repo(root: Path, backlog: str = BACKLOG) -> None:
     """バックログだけがある最小のリポジトリを作る。"""
     path = root / "docs" / "backlog.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(backlog, encoding="utf-8")
+
+
+def _make_designs(root: Path) -> None:
+    """主張の表を持つ設計書を 2 枚置く（⊢ 3 本・⊬ 1 本）。"""
+    design = root / "docs" / "design"
+    design.mkdir(parents=True, exist_ok=True)
+    (design / "S01-count.md").write_text(DESIGN_S01, encoding="utf-8")
+    (design / "S02-filter.md").write_text(DESIGN_S02, encoding="utf-8")
 
 
 def _run(root: Path, *args: str) -> tuple[int, str]:
@@ -123,6 +154,75 @@ class RenderTest(unittest.TestCase):
             _make_repo(root)
             code, out = _run(root)
             self.assertEqual(code, 0, out)
+
+
+class ClaimsTest(unittest.TestCase):
+    """主張（契約式）の一覧。
+
+    **この 1 画面が、人が正しさを判断する唯一の監査面** 。散文の要約では
+    「保証が減ったこと」に気づけないので、⊢ / ⊬ をそのまま数えて出す
+    （規約: `.claude/skills/verifiable-claims/SKILL.md`）。
+    """
+
+    def test_counts_proved_and_unproved(self) -> None:
+        """⊢ と ⊬ の件数をカードに出す。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root)
+            _make_designs(root)
+            _run(root)
+            page = _page(root)
+        self.assertIn("⊢ 3 / ⊬ 1", page)
+
+    def test_lists_each_claim_with_its_slice(self) -> None:
+        """主張を 1 行 1 主張で、どのスライスのものか分かる形で並べる。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root)
+            _make_designs(root)
+            _run(root)
+            page = _page(root)
+        self.assertIn("test_subset", page)
+        self.assertIn("pred(r)", page)
+
+    def test_unproved_comes_first(self) -> None:
+        """⊬（未証明 = 負債）を先頭に置く。
+
+        証明済みが先に並ぶと、読む人は最後まで読まないと負債に届かない。
+        **読まれない記録は無いのと同じ** なので、順序で優先度を示す。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root)
+            _make_designs(root)
+            _run(root)
+            page = _page(root)
+        section = page.split("主張（契約式）", 1)[1]
+        self.assertLess(section.index("⊬"), section.index("⊢"))
+
+    def test_says_so_when_there_are_no_claims(self) -> None:
+        """主張がまだ 1 本も無いときは、空であることを明示する。
+
+        表を黙って省くと「主張が無い」のか「節を作っていない」のか
+        区別できず、L1 の条件（事後条件 1 本以上 ⊢）を判定できない。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root)
+            code, out = _run(root)
+            self.assertEqual(code, 0, out)
+            page = _page(root)
+        self.assertIn("主張（契約式）", page)
+        self.assertIn("まだ無い", page)
+
+    def test_reports_the_counts_on_stdout(self) -> None:
+        """標準出力の 1 行にも件数を出す（HTML を開かずに分かる）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root)
+            _make_designs(root)
+            _, out = _run(root)
+        self.assertIn("⊢ 3 / ⊬ 1", out)
 
 
 class ArgumentTest(unittest.TestCase):

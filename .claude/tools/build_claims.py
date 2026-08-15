@@ -42,6 +42,10 @@ _HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 _ROW = re.compile(r"^\|(.+)\|\s*$")
 # 表の区切り行（`|---|---|`）
 _SEPARATOR = re.compile(r"^[\s|:-]+$")
+# セルの区切り。 **`\|` は区切りではない** —— 語彙の `\|S\|`（要素数）は
+# セルの中に現れるので、素朴に `|` で割ると主張が途中で切れ、状態列が
+# ずれて ⊢ / ⊬ を数え違える（台帳の数字そのものが狂う）
+_CELL_SPLIT = re.compile(r"(?<!\\)\|")
 # 主張の ID。事前 P / 事後 Q / 不変 I の 3 種だけ（増やさない）
 _CID = re.compile(r"^[PQI][0-9]+$")
 
@@ -106,11 +110,14 @@ def _section_lines(text: str) -> list[str]:
 
 
 def _cells(line: str) -> list[str]:
-    """表の 1 行をセルに割る。"""
+    """表の 1 行をセルに割る（`\\|` は区切りではなく `|` の文字）。"""
     matched = _ROW.match(line.strip())
     if not matched or _SEPARATOR.match(line.strip()):
         return []
-    return [cell.strip().strip("`") for cell in matched.group(1).split("|")]
+    return [
+        cell.strip().strip("`").replace("\\|", "|")
+        for cell in _CELL_SPLIT.split(matched.group(1))
+    ]
 
 
 def parse_claims(text: str, slice_key: str) -> list[Claim]:

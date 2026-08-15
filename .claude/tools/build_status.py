@@ -6,8 +6,14 @@
     1. ゴールと完走の定義（何ができたら終わりか）
     2. 進捗（スライスごとの成熟度と、全体の到達度）
     3. 7 点セットの充足マトリクス（どの成果物が欠けているか）
-    4. 負債（未返却の件数と痛み 高 の件数）
-    5. 直近の作業（コミットと、`.steering/` に残ったレポート）
+    4. **主張（契約式）の台帳** —— ⊢（証明済み）と ⊬（未証明 = 負債）
+    5. 負債（未返却の件数と痛み 高 の件数）
+    6. 直近の作業（コミットと、`.steering/` に残ったレポート）
+
+4 が要るのは、 **成果物がそろっていることと、正しさが保証されていることが
+別物** だから。7 点セットの充足だけを見ると「全部 ✅ なのに何も証明されて
+いない」状態が緑に見える。主張は書く場所が設計書に分散するので、
+読む場所をここ 1 枚に集める（規約: `verifiable-claims` スキル）。
 
 読む元は `docs/backlog.md`（進捗の正）と実物のファイル。
 このツールは何も書き換えず、集めて描くだけ。
@@ -35,6 +41,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import build_claims
 import check_deliverables
 
 _NL = chr(10)
@@ -161,11 +168,58 @@ def _bar(counts: dict[int, int], total: int) -> str:
     return '<div class="bar">' + "".join(parts) + "</div>"
 
 
+def claims_summary(claims: list[build_claims.Claim]) -> str:
+    """主張の件数を 1 行で（HTML と標準出力で同じ文字列を使う）。
+
+    画面と出力で数え方がずれると、どちらが正か分からなくなるので、
+    書式もここ 1 か所に置く。
+    """
+    proved = sum(1 for claim in claims if claim.proved)
+    return (
+        f"{build_claims.PROVED} {proved} / "
+        f"{build_claims.UNPROVED} {len(claims) - proved}"
+    )
+
+
+def sort_claims(claims: list[build_claims.Claim]) -> list[build_claims.Claim]:
+    """未証明（⊬）を先に、あとはスライス順・ID 順に並べる。
+
+    証明済みが先に並ぶと、読む人は最後まで読まないと負債に届かない。
+    **読まれない記録は無いのと同じ** なので、順序で優先度を示す。
+    """
+    return sorted(claims, key=lambda c: (c.proved, c.slice_key, c.cid))
+
+
+def _claim_rows(claims: list[build_claims.Claim]) -> str:
+    """主張の表の行（⊬ を先頭に、状態を色で示す）。"""
+    esc = html.escape
+    if not claims:
+        return (
+            '<tr><td colspan="6" class="muted">'
+            "主張の表（`## 主張（契約式）`）を持つ設計書がまだ無い"
+            "</td></tr>"
+        )
+    rows = []
+    for claim in sort_claims(claims):
+        mark = build_claims.PROVED if claim.proved else build_claims.UNPROVED
+        css = "ok" if claim.proved else "bad"
+        rows.append(
+            f'<tr><td class="id">{esc(claim.slice_key)}</td>'
+            f'<td class="id">{esc(claim.cid)}</td>'
+            f"<td>{esc(claim.kind)}</td>"
+            f"<td><code>{esc(claim.statement)}</code></td>"
+            f'<td class="mark {css}">{mark}</td>'
+            f"<td>{esc(claim.evidence)}</td></tr>"
+        )
+    return "".join(rows)
+
+
 def render(
     root: Path,
     fields: dict[str, str],
     results: list[check_deliverables.Result],
     debts: list[dict[str, str]],
+    claims: list[build_claims.Claim] | None = None,
 ) -> str:
     """1 画面の HTML を組み立てる（外部参照ゼロ）。"""
     esc = html.escape
@@ -179,6 +233,8 @@ def render(
     started = [r for r in results if r.maturity >= 1]
     complete = [r for r in started if r.ok]
 
+    claims = claims or []
+
     cards = [
         ("スライス", f"{total} 本", "、".join(
             f"{_LEVELS[level]} {counts.get(level, 0)}" for level in (3, 2, 1, 0)
@@ -186,6 +242,7 @@ def render(
         ) or "なし"),
         ("7 点セット", f"{len(complete)}/{len(started)}",
          "着手済みのうち、そろっているスライス"),
+        ("主張", claims_summary(claims), "⊬ は未証明（L3 の条件は 0 件）"),
         ("負債", f"未返却 {len(open_debts)} 件", f"痛み 高 {len(high)} 件"),
         ("骨組み", esc(fields.get("骨組み", "不明")), "通っていなければ他のことをしない"),
     ]
@@ -248,6 +305,15 @@ def render(
         "</tbody></table></div>",
         '<p class="legend">⬜ はまだ無い成果物。'
         "実装コードと単体テストの線は要求一覧（USDM のトレース表）が見る。</p>",
+        "<h2>主張（契約式）</h2>",
+        '<p class="legend">成果物がそろっていることと、正しさが保証されている'
+        "ことは別物。⊬ は未証明でそのまま負債（L1 = 事後条件 1 本以上 ⊢ ／ "
+        "L2 = 全部 ⊢ ／ L3 = ⊬ が 0 件）。</p>",
+        '<div class="scroll"><table>',
+        "<thead><tr><th>S##</th><th>ID</th><th>種別</th><th>主張</th>"
+        "<th>状態</th><th>根拠</th></tr></thead><tbody>",
+        _claim_rows(claims),
+        "</tbody></table></div>",
         "<h2>負債（未返却）</h2>",
         '<div class="scroll"><table>',
         "<thead><tr><th>D##</th><th>内容</th><th>出所</th><th>痛み</th>"
@@ -284,15 +350,19 @@ def main(argv: list[str] | None = None) -> int:
         for item in check_deliverables.parse_backlog(text)
     ]
 
+    claims = build_claims.collect(root)
+
     out = root / (args.out or _OUT)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
-        render(root, parse_fields(text), results, parse_debts(text)), encoding="utf-8"
+        render(root, parse_fields(text), results, parse_debts(text), claims),
+        encoding="utf-8",
     )
     started = [r for r in results if r.maturity >= 1]
     print(
         f"OK: {out.as_posix()} を生成"
-        f"（スライス {len(results)} 本 / 着手済み {len(started)} 本）"
+        f"（スライス {len(results)} 本 / 着手済み {len(started)} 本"
+        f" / 主張 {claims_summary(claims)}）"
     )
     return 0
 
