@@ -89,6 +89,26 @@ class ParseTest(unittest.TestCase):
         claims = build_claims.parse_claims(DESIGN, "S03")
         self.assertTrue(all(c.cid.startswith(("P", "Q", "I")) for c in claims))
 
+    def test_escaped_pipe_is_part_of_the_claim(self) -> None:
+        """語彙の `\\|S\\|`（要素数）でセルが割れない。
+
+        素朴に `|` で割ると主張が途中で切れ、状態列が 1 つずれて
+        ⊢ を ⊬ と数える —— **台帳の数字そのものが狂う** 。
+        記法の正は verifiable-claims スキル（`\\|out\\|` と書く）。
+        """
+        text = (
+            "## 主張（契約式）\n\n"
+            "| ID | 種別 | 主張 | assert | 状態 | 根拠 |\n"
+            "|---|---|---|---|---|---|\n"
+            "| Q1 | 事後 | `\\|out\\| ≤ \\|in\\|` | `assert len(out) <= len(rows)`"
+            " | ⊢ | `test_no_growth` |\n"
+        )
+        claims = build_claims.parse_claims(text, "S05")
+        self.assertEqual(len(claims), 1)
+        self.assertEqual(claims[0].statement, "|out| ≤ |in|")
+        self.assertTrue(claims[0].proved)
+        self.assertEqual(claims[0].evidence, "test_no_growth")
+
 
 class CollectTest(unittest.TestCase):
     """リポジトリ全体から集める。"""
