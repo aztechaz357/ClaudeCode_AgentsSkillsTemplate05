@@ -20,7 +20,7 @@ this is the only authoring route, so the coordinates are yours to compute.
 A vertex and an edge between two vertices:
 
 ```xml
-<mxCell id="a" value="入力" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxCell id="a" value="入力" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Yu Gothic;" vertex="1" parent="1">
   <mxGeometry x="40" y="40" width="160" height="40" as="geometry"/>
 </mxCell>
 <mxCell id="b" value="出力" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
@@ -41,6 +41,11 @@ Without `--layout` (see `mermaid-and-layout.md`), pick coordinates yourself:
 - Keep a constant column x and a constant row pitch (e.g. 120 px) so edges stay
   straight and the diagram reads as a grid.
 - Standard vertex size is 120×60; widen rather than wrap long Japanese labels.
+- Put `fontFamily=Yu Gothic;` in every styled cell. draw.io's default font is
+  Helvetica, which carries no Japanese glyphs — the label text still survives
+  the export (verified: the SVG holds the original string), but the shapes are
+  left to the viewer's fallback. With the style set, the export carries
+  `font-family: 'Yu Gothic'` (verified).
 - For a top-to-bottom flow, increase `y` monotonically; branches get symmetric
   `x` offsets around the parent's centre.
 - Add `edgeStyle=orthogonalEdgeStyle;rounded=0;` to an edge's style when a
