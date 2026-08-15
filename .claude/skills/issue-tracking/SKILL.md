@@ -420,6 +420,56 @@ glab auth login --hostname <ホスト> --api-protocol http --git-protocol http
 **トークンを CLAUDE.md やリポジトリ内のどこにも書かない** ——
 CLAUDE.md はコミットされる。
 
+#### 「ログインできているのに未認証」と言われたら
+
+対話シェルでは `already logged into … as <user>` と出るのに、
+エージェントのプロセスからは `has not been authenticated` と言われる
+—— **これは認証の問題ではない** 。ここで認証を疑うと輪から出られない
+（図 1）。
+
+```mermaid
+flowchart TD
+  login["glab auth login した<br/>（対話シェルでは成功と出る）"]
+  token["トークン → OS のキーリング"]
+  cfg["ホストの節が<br/><b>config.yml に書かれていない</b>"]
+  status["auth status が「未認証」と言う"]
+  loop["認証の失敗と読む<br/>→ ログインし直す → 同じ"]
+  api["<b>glab api user を 1 回叩く</b>"]
+  proto["真因が 1 行で出る<br/>Get https://… : EOF<br/>= https で叩いていた"]
+  fix["glab config set --host … api_protocol http"]
+  ok["✓ Logged in （keyring）"]
+
+  login --> token
+  login --> cfg
+  cfg --> status
+  status --> loop
+  loop -.->|ここを何周もする| status
+  status --> api
+  api --> proto
+  proto --> fix
+  fix --> ok
+
+  classDef trap fill:#fdecea,stroke:#b3261e,color:#5f1512
+  classDef cure fill:#e7f5ec,stroke:#1f7a4d,color:#0d3b25
+  class cfg,status,loop,proto trap
+  class api,fix,ok cure
+```
+
+図 1: 「未認証」と言われたときの切り分け（赤が罠・緑が抜け道）
+
+`auth status` の「未認証」は正確ではない（実際は **そのホストを知らない** ）。
+直すのは認証ではなく設定で、 **トークンには触らない** :
+
+```bash
+glab config set --host <ホスト> api_protocol http
+glab config set --host <ホスト> api_host   <ホスト>
+glab config set --host <ホスト> git_protocol http
+```
+
+**教訓: 状態を尋ねるより、1 回やらせて出力を読むほうが速い。**
+`auth status` は嘘に近い要約を返したが、`glab api user` は真因を 1 行で出した
+（絶対ルール 1「環境を正とする」の実例）。
+
 ### 実際の出力: `local`（2026-08-14 に S01 で通したもの）
 
 起票（`--apply` 前は 1 文字も書かない）:
