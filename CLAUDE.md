@@ -366,6 +366,7 @@ infrastructure に限定する。該当が無ければこの項目ごと削除�
 | ノートを残す | `.claude/skills/note-taking/` |
 | 工房の置き場所・status・昇格を知る | `.claude/skills/workshop/` |
 | 文書を書く（Markdown・数式・図・マニュアル） | `.claude/skills/writing-conventions/` |
+| 図を **単体のファイル** として渡す（`.drawio` / PNG / SVG / PDF / URL） | `.claude/skills/drawio/` |
 | ファイル・文書の置き場所を知る | `.claude/skills/repository-structure/` |
 | 現状設計を更新する（L3 のみ） | `.claude/skills/architecture-design/` |
 | 用語集を更新する | `.claude/skills/glossary-creation/` |
