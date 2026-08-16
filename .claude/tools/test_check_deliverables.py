@@ -1,6 +1,6 @@
 """check_deliverables.py のテスト。
 
-7 点セットの正は `.claude/skills/agile-process/deliverables.md`。
+8 点セットの正は `.claude/skills/agile-process/deliverables.md`。
 このテストは「そろっている一式を通すこと」と「欠けを検出できること」の
 両方を検証する。後者を落とすと、永遠に緑のまま何も検査しないツールになる
 （tool-authoring スキルの「ツールを作ったら必ず確認すること」）。
@@ -56,6 +56,24 @@ flowchart TD
 - **メリット / デメリット**: 採用案 = 早く動く / 網羅性は無い
 """
 
+TEST_SPEC = """\
+# S01. 骨組み — テスト仕様
+
+## 入出力
+
+| | 内容 |
+|---|---|
+| **入力** | CSV ファイルのパス |
+| **出力** | 行数を標準出力へ |
+
+## 確かめること（入出力の例）
+
+| ID | 種別 | 入力 | 期待する出力 | 観点 | テスト名 |
+|---|---|---|---|---|---|
+| N1 | 正常系 | `data.csv`（3 行） | 標準出力に `3` ／ 終了コード `0` | 代表値 | 未 |
+| E1 | 異常系 | 存在しないパス `nope.csv` | 標準エラーに `見つかりません` ／ 終了コード `2` | 失敗経路 | 未 |
+"""
+
 TEST_REPORT = """\
 # S01 テスト結果
 
@@ -97,7 +115,7 @@ uv run pytest -q
 
 
 def _make_repo(root: Path, **override: str | None) -> None:
-    """7 点セットがそろった最小のリポジトリを作る。
+    """8 点セットがそろった最小のリポジトリを作る。
 
     Args:
         root: 作成先。
@@ -107,6 +125,7 @@ def _make_repo(root: Path, **override: str | None) -> None:
         "docs/backlog.md": BACKLOG,
         "docs/usdm/src/S01-count.html": "<html><body>要求</body></html>",
         "docs/design/S01-count.md": DESIGN,
+        "docs/test-specs/S01-count.md": TEST_SPEC,
         "docs/test-reports/S01-count.md": TEST_REPORT,
         "docs/slices/S01-count.md": "# S01\n\n実績あり。\n",
         "docs/manual.md": MANUAL,
@@ -132,7 +151,7 @@ class OkTest(unittest.TestCase):
     """一式がそろっていれば通ること。"""
 
     def test_complete_set_exits_0(self) -> None:
-        """7点そろっていれば終了コード0。"""
+        """8点そろっていれば終了コード0。"""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _make_repo(root)
@@ -163,6 +182,49 @@ class MissingTest(unittest.TestCase):
             code, out = _run(root)
             self.assertEqual(code, 1)
             self.assertIn("設計書", out)
+
+    def test_fails_without_test_spec(self) -> None:
+        """テスト仕様書が無ければ落ちる。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _make_repo(root, **{"docs/test-specs/S01-count.md": None})
+            code, out = _run(root)
+            self.assertEqual(code, 1)
+            self.assertIn("テスト仕様書", out)
+
+    def test_fails_when_test_spec_has_no_normal_case(self) -> None:
+        """テスト仕様書に正常系の例が無ければ落ちる。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            body = "\n".join(
+                line for line in TEST_SPEC.splitlines() if not line.startswith("| N1 ")
+            )
+            _make_repo(root, **{"docs/test-specs/S01-count.md": body})
+            code, out = _run(root)
+            self.assertEqual(code, 1)
+            self.assertIn("正常系", out)
+
+    def test_fails_when_test_spec_has_no_error_case(self) -> None:
+        """テスト仕様書に異常系の例が無ければ落ちる（要求の穴が残る）。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            body = "\n".join(
+                line for line in TEST_SPEC.splitlines() if not line.startswith("| E1 ")
+            )
+            _make_repo(root, **{"docs/test-specs/S01-count.md": body})
+            code, out = _run(root)
+            self.assertEqual(code, 1)
+            self.assertIn("異常系", out)
+
+    def test_fails_on_leftover_placeholder_in_test_spec(self) -> None:
+        """テスト仕様書に雛形の穴が残っていれば落ちる。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            body = TEST_SPEC.replace("CSV ファイルのパス", "{何を受け取るか}")
+            _make_repo(root, **{"docs/test-specs/S01-count.md": body})
+            code, out = _run(root)
+            self.assertEqual(code, 1)
+            self.assertIn("雛形", out)
 
     def test_fails_without_test_report(self) -> None:
         """テスト結果まとめが無ければ落ちる。"""

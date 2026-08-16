@@ -1,6 +1,6 @@
-"""スライスごとの成果物 7 点セットがそろっているかを終了コードで判定する。
+"""スライスごとの成果物 8 点セットがそろっているかを終了コードで判定する。
 
-7 点セットの正は `.claude/skills/agile-process/deliverables.md`。
+8 点セットの正は `.claude/skills/agile-process/deliverables.md`。
 このツールは「やり切る」を努力目標ではなく **機械判定** にするためにある。
 
 見るのは `docs/backlog.md` のスライス表。 **成熟度 L1 以上のスライスだけ**
@@ -10,14 +10,20 @@
 
     要求仕様書         docs/usdm/src/S##-*.html が実在する
     設計書             docs/design/S##-*.md が実在し、図と「判断の記録」を持つ
+    テスト仕様書       docs/test-specs/S##-*.md が実在し、正常系（N##）と
+                       異常系（E##）の例を 1 行以上ずつ持つ
     テスト結果まとめ   docs/test-reports/S##-*.md が実在し、実測の出力を持つ
     ハブ               docs/slices/S##-*.md が実在する
     マニュアル         docs/manual.md に共通 3 節と `S##` の節がある
     雛形の残り         `{…}` のプレースホルダが残っていない
 
+異常系の例を必須にしているのは、ここが空のまま次へ進むと
+**失敗時の振る舞いを実装者がその場で決めてしまう** ため。
+空欄は要求の穴であり、埋めずに通してはならない。
+
 実装コードと単体テストの実在は、このツールでは見ない（配置がプロファイル
 依存のため）。それらは USDM のトレース表（`build_usdm.py` の
-`missing-trace`）が仕様 1 条ごとに検査する —— 2 本で 7 点を覆う。
+`missing-trace`）が仕様 1 条ごとに検査する —— 2 本で 8 点を覆う。
 
 使い方（前置コマンドはプロファイルの
 「.claude/tools/ の Python ツール実行」。例: uv run python）:
@@ -52,6 +58,10 @@ _PLACEHOLDER = re.compile(
 )
 # マニュアルの共通 3 節（見出しの番号は揺れてよい。言葉で見る）
 _MANUAL_SECTIONS = ("環境構築", "実行方法", "テストの実行")
+# テスト仕様書の入出力の例。表の行頭で ID を見る（N## = 正常系、E## = 異常系）。
+# ID の規約の正は deliverables.md の「入出力と例（正常系・異常系）」。
+_NORMAL_CASE = re.compile(r"^\|\s*N[0-9]+\s*\|", re.MULTILINE)
+_ERROR_CASE = re.compile(r"^\|\s*E[0-9]+\s*\|", re.MULTILINE)
 
 
 @dataclass
@@ -64,7 +74,7 @@ class Slice:
 
 
 # 充足マトリクスの列（ダッシュボードと共有する。順番が表示順）
-ITEMS = ("要求仕様書", "設計書", "テスト結果", "マニュアル", "ハブ")
+ITEMS = ("要求仕様書", "設計書", "テスト仕様", "テスト結果", "マニュアル", "ハブ")
 
 
 @dataclass
@@ -146,6 +156,7 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
     ident = item.ident
     requirement = _find(root, f"docs/usdm/src/{ident}-*.html")
     design = _find(root, f"docs/design/{ident}-*.md")
+    spec = _find(root, f"docs/test-specs/{ident}-*.md")
     report = _find(root, f"docs/test-reports/{ident}-*.md")
     hub = _find(root, f"docs/slices/{ident}-*.md")
 
@@ -165,6 +176,19 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
         if "判断の記録" not in body:
             result.missing.append(f"設計書に「判断の記録」節がない: {design.name}")
 
+    if spec is None:
+        result.missing.append(f"テスト仕様書がない: docs/test-specs/{ident}-*.md")
+    else:
+        body = spec.read_text(encoding="utf-8")
+        if not _NORMAL_CASE.search(body):
+            result.missing.append(
+                f"テスト仕様書に正常系の例（`N1` の行）がない: {spec.name}"
+            )
+        if not _ERROR_CASE.search(body):
+            result.missing.append(
+                f"テスト仕様書に異常系の例（`E1` の行）がない: {spec.name}"
+            )
+
     if report is None:
         result.missing.append(f"テスト結果まとめがない: docs/test-reports/{ident}-*.md")
     elif not _FENCE.search(report.read_text(encoding="utf-8")):
@@ -181,7 +205,7 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
         if not re.search(rf"^#{{1,3}}\s.*{ident}\b", manual, re.MULTILINE):
             result.missing.append(f"マニュアルに {ident} の節がない: docs/manual.md")
 
-    for path in (design, report, hub):
+    for path in (design, spec, report, hub):
         if path is None:
             continue
         holes = _placeholders(path.read_text(encoding="utf-8"))
@@ -196,6 +220,7 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
     result.items = {
         "要求仕様書": "要求仕様書" not in text,
         "設計書": "設計書" not in text,
+        "テスト仕様": "テスト仕様" not in text,
         "テスト結果": "テスト結果" not in text,
         "マニュアル": "マニュアル" not in text,
         "ハブ": "ハブ" not in text,
@@ -206,7 +231,7 @@ def check_slice(root: Path, item: Slice, manual: str) -> Result:
 def main(argv: list[str] | None = None) -> int:
     """コマンドとして実行する。詳しくはモジュールの docstring を参照。"""
     parser = argparse.ArgumentParser(
-        description="スライスごとの成果物 7 点セットがそろっているかを検査する"
+        description="スライスごとの成果物 8 点セットがそろっているかを検査する"
     )
     parser.add_argument("root", nargs="?", default=".", help="リポジトリルート")
     parser.add_argument("--slice", dest="target", default="", help="対象を 1 本に絞る")
@@ -233,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     checked = [r for r in results if r.maturity >= 1]
     for result in checked:
         if result.ok:
-            print(f"OK: {result.ident}（L{result.maturity}）7 点セットがそろっている")
+            print(f"OK: {result.ident}（L{result.maturity}）8 点セットがそろっている")
         else:
             print(f"NG: {result.ident}（L{result.maturity}）")
             for item in result.missing:
