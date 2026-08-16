@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Bash
 
 # 設計書作成スキル（functional-design）
 
-設計書は **7 点セットの 2 番目** 。 **どのスライスでも必ず 1 枚書く** 。
+設計書は **8 点セットの 2 番目** 。 **どのスライスでも必ず 1 枚書く** 。
 省くのは分量であって、設計書という成果物そのものではない
 （正: `agile-process/deliverables.md`）。
 

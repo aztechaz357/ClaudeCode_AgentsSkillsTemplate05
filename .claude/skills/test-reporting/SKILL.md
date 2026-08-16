@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Bash
 
 # テスト結果まとめ（test-reporting）
 
-**7 点セットの 6 番目。** スライス 1 本につき 1 枚
+**8 点セットの 7 番目。** スライス 1 本につき 1 枚
 （`docs/test-reports/S##-<name>.md`）を必ず作り、反復のたびに更新する。
 
 ## この 1 枚だけが答えられる問い

@@ -11,7 +11,7 @@
    網羅的な仕様・詳細な文書は後の反復で厚くする
 2. **省くのは分量であって、成果物の種類ではない**: 要求仕様書・設計書・
    単体テスト・実装・統合テスト・テスト結果まとめ・マニュアルの
-   **7 点を毎反復そろえる** 。代わりに 1 枚ずつを極端に薄くする
+   **8 点を毎反復そろえる** 。代わりに 1 枚ずつを極端に薄くする
 3. **完璧を積み上げない**: 1 つを完璧にしてから次へ行くのではなく、
    全スライスを L1（動く）まで上げてから L2（固い）へ上げる
 4. **手抜きは許す。隠すのは許さない**: 仮実装・ハードコードは
@@ -44,11 +44,11 @@
 検証・レビュー・文書同期はすべて **「現在 → 目標」の 1 段だけ** で判定します。
 上のレベルの条件で不合格にしないのが、このテンプレートの最重要ルールです。
 
-**どのレベルでも成果物の種類は 7 点で固定** （正: `skills/agile-process/
+**どのレベルでも成果物の種類は 8 点で固定** （正: `skills/agile-process/
 deliverables.md`）。レベルで変わるのは各成果物の深さだけで、
 「L1 だからマニュアルは書かない」のような省略はどのレベルでも認められません。
 
-## 成果物 7 点セット（スライス 1 本が生むもの）
+## 成果物 8 点セット（スライス 1 本が生むもの）
 
 | # | 成果物 | 置き場所 | 担当エージェント |
 |---|---|---|---|
@@ -63,7 +63,7 @@ deliverables.md`）。レベルで変わるのは各成果物の深さだけで�
 そろっているかは目視で数えず、終了コードで判定します:
 
 ```
-<ツール実行コマンド> .claude/tools/check_deliverables.py   # 7 点の存在と形
+<ツール実行コマンド> .claude/tools/check_deliverables.py   # 8 点の存在と形
 <ツール実行コマンド> .claude/tools/build_usdm.py           # 仕様ごとの線（トレース）
 ```
 
@@ -79,7 +79,7 @@ deliverables.md`）。レベルで変わるのは各成果物の深さだけで�
 | 前工程 | なし | ゴールと完走の定義 → バックログ |
 | 構造 | 1 ディレクトリ完結。層構成なし | クリーンアーキテクチャ（4 層 + 契約） |
 | テスト | 必須（テスト先行） | 必須（テスト先行 + E2E） |
-| 文書 | `README.md` 1 枚 | **7 点セット**（要求・設計・テスト結果・マニュアル ほか） |
+| 文書 | `README.md` 1 枚 | **8 点セット**（要求・設計・テスト結果・マニュアル ほか） |
 | 入口 | `/tool` `/note` `/workshop` | `/backlog` `/skeleton` `/iterate` `/status` `/refactor` |
 | 所要 | 数十分 | 1 反復あたり半日以内 |
 
@@ -138,7 +138,7 @@ deliverables.md`）。レベルで変わるのは各成果物の深さだけで�
 |---|---|---|
 | ゴール定義 | `docs/concept.md`（一行 + 完走の定義） | concept-definition |
 | バックログ | `docs/backlog.md`（スライス 3〜8 本） | agile-process |
-| 骨組み | 7 点セット（S01）＋ 4 層と契約 1 本 | walking-skeleton |
+| 骨組み | 8 点セット（S01）＋ 4 層と契約 1 本 | walking-skeleton |
 | 反復 段1 | `docs/usdm/src/S##-*.html`（要求・理由・仕様） | usdm / requirement-writer |
 | 反復 段2 | `docs/design/S##-*.md`（図・層・契約・判断の記録） | functional-design / designer |
 | 反復 段3 | 単体テスト（Red 確認まで） | development-guidelines / unit-tester |
@@ -174,7 +174,7 @@ REQ2「列を指定して絞り込みたい」
 理由の欠落・番号の不整合・ **検証済み（`☑`）の仕様の線の切れ** は
 `build_usdm.py` が終了コードで落とす（LLM の判断に頼らない）。
 同じツールが全スライスを束ねた **要求一覧 1 枚**（`docs/usdm/index.html`）を
-生成する。`check_deliverables.py` はスライス単位で 7 点の存在を、
+生成する。`check_deliverables.py` はスライス単位で 8 点の存在を、
 `/check-docs` はバックログと実物の食い違いを検出します。
 
 ## 構成
@@ -185,7 +185,7 @@ REQ2「列を指定して絞り込みたい」
 |---|---|---|
 | `/backlog [init\|status\|次]` | 反復開発 | ゴールとスライス一覧・現在地・次の一手 |
 | `/skeleton` | 反復開発 | 骨組みを作り切る（1 回だけ） |
-| `/iterate [S##]` | 反復開発 | **既定の入口** 。7 点セットをそろえ成熟度を 1 段上げる |
+| `/iterate [S##]` | 反復開発 | **既定の入口** 。8 点セットをそろえ成熟度を 1 段上げる |
 | `/status` | 反復開発 | **現在地を 1 画面に** （ゴール・充足・負債・直近の作業） |
 | `/arch [diff\|actual]` | 反復開発 | **設計と実装の乖離を図で見る**（未実装 = 灰 / 設計に無い = 黄 / 逆流 = 赤） |
 | `/catchup [ref]` | 共通 | **決まったことに追いつく** （後戻りコストの高い順＋読む順。既読地点は `.steering/last-reviewed`） |
@@ -198,7 +198,7 @@ REQ2「列を指定して絞り込みたい」
 | `/promote <tool> S##` | 橋渡し | 育った工房ツールを反復開発レーンへ昇格 |
 | `/issue [status\|on\|off\|sync\|new\|pull\|close]` | 反復開発 | GitHub Issue を **使う / やめる** ・バックログと同期（既定は `off`） |
 | `/setup-project` | 共通 | プロジェクトプロファイルの確定と骨組みの作成 |
-| `/check-docs` | 共通 | 7 点セット・バックログ・実物の整合の点検（機械検証つき） |
+| `/check-docs` | 共通 | 8 点セット・バックログ・実物の整合の点検（機械検証つき） |
 | `/review-docs <path>` | 共通 | 個別文書の詳細レビュー |
 | `/improve-process` | 共通 | 記録を分析してエージェント・スキル・ツールを改善 |
 | `/local-mode [check\|on\|off]` | 共通 | ローカル LLM で駆動するときの適合検査とモード切り替え |
@@ -210,7 +210,7 @@ REQ2「列を指定して絞り込みたい」
 | 種別 | エージェント |
 |---|---|
 | 指揮 | `orchestrator`（バックログから次の一手を 1 つ決める） |
-| **7 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → （`test-designer`）→ `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
+| **8 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → （`test-designer`）→ `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
 | 調査 | `impact-analyzer`・`file-finder`・`dependency-checker`・`log-analyzer` |
 | 整理 | `refactorer`（振る舞い不変で負債を返す） |
 | 実行 | `test-runner`・`build-executor` |
@@ -239,12 +239,12 @@ REQ2「列を指定して絞り込みたい」
 
 | スキル | レーン | 用途 |
 |---|---|---|
-| **`agile-process`** | 反復開発 | **プロセスの正** （`usage.md` = 使い方 1 枚 / `deliverables.md` = 7 点セット / `maturity.md` = DoD / `SKILL.md` = 考え方） |
+| **`agile-process`** | 反復開発 | **プロセスの正** （`usage.md` = 使い方 1 枚 / `deliverables.md` = 8 点セット / `maturity.md` = DoD / `SKILL.md` = 考え方） |
 | `walking-skeleton` | 反復開発 | 骨組みを作り切る手順（E2E 先行・4 層と契約の骨格） |
 | **`usdm`** | 反復開発 | **要求記述の正**（HTML の表・理由は必須・仕様は番号で導出・ **成果物へのトレース表** ） |
 | **`functional-design`** | 反復開発 | **設計書の正**（薄い版 = 毎スライス / 厚い版 = 例外。図と判断の記録） |
 | **`test-reporting`** | 反復開発 | **テスト結果まとめの正**（実測のみ・仕様とテストの対応） |
-| `slice-definition` | 反復開発 | ハブ 1 枚（7 点への索引・実績・残した手抜き） |
+| `slice-definition` | 反復開発 | ハブ 1 枚（8 点への索引・実績・残した手抜き） |
 | `refactoring` | 反復開発 | 負債の返し方（緑を保ち 1 手 1 コミット） |
 | **`layered-architecture`** | 反復開発 | **構造の正**（クリーンアーキテクチャ。内向きの依存と契約） |
 | **`visual-debugging`** | 反復開発 | 構造化トレース・グラフ化・失敗が残す証拠 |
@@ -255,7 +255,7 @@ REQ2「列を指定して絞り込みたい」
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
 | `architecture-drift` | 反復開発 | 設計図と実装の乖離（3 種）の意味・図の id 規約・成熟度ごとの許容 |
 | `option-first` | 共通 | 判断点でだけ選択肢を出す（3〜4 択・推奨を先頭・選ばないとどうなるか） |
-| **`design-journal`** | 共通 | **思考の記録の正**（6 節の構成・3 種類の作図・操作コマンドの型 `git-commands.md`）。7 点セットの外・任意 |
+| **`design-journal`** | 共通 | **思考の記録の正**（6 節の構成・3 種類の作図・操作コマンドの型 `git-commands.md`）。8 点セットの外・任意 |
 | `test-design` | 反復開発 | テスト観点のカタログと選び方（採らない観点は非目標として記録） |
 | `catchup` | 共通 | 追いつき方（何を「決まったこと」とみなすか・後戻りコストの判定・読む順・既読地点） |
 | `issue-tracking` | 共通 | GitHub Issue の使い方（on / off の切り替え・単位・対応付け・二重管理の禁止） |
@@ -289,7 +289,7 @@ REQ2「列を指定して絞り込みたい」
 | `check_unchanged.py` | 中核ファイル（L3 到達分）の「core 無変更」を検証 | git・`core_files.txt` の記入 |
 | `mutate.py` | 変異テストでテストの有効性を検証 | 非 0 で失敗を返すテストコマンド |
 | `build_usdm.py` | 手書きの要求 HTML（`docs/usdm/src/`）を検証し、束ねた要求一覧（自己完結 HTML）を生成する。見た目と操作（折りたたみ・絞り込み・検索）は手書きと共有の `skills/usdm/usdm.css` / `usdm.js`。`--check` で古さを検出 | Python プロジェクト |
-| `check_deliverables.py` | スライスごとに **7 点セットがそろっているか** を検査（設計書の図と判断の記録・テスト結果の実測・マニュアルの共通 3 節と `S##` 節・雛形の残りまで見る） | Python プロジェクト |
+| `check_deliverables.py` | スライスごとに **8 点セットがそろっているか** を検査（設計書の図と判断の記録・テスト結果の実測・マニュアルの共通 3 節と `S##` 節・雛形の残りまで見る） | Python プロジェクト |
 | `build_structure.py` | 実物のツリーから `docs/structure.md` を生成（`--check` で古さを検出。説明は `.claude/structure-notes.txt`） | Python プロジェクト |
 | `build_status.py` | 現在地を 1 画面（`docs/status.html`）にまとめる。ゴール・成熟度の帯・充足マトリクス・負債・直近の作業 | Python プロジェクト |
 | `build_arch.py` | 実装の import から実際の依存図（Mermaid）を生成し、逆流を検出 | Python プロジェクト |
