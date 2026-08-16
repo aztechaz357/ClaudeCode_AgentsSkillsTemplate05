@@ -101,7 +101,8 @@ Windows / PowerShell 5.1 環境では here-string（`@'…'@`）でコミット�
 
 L3 に上げる反復でだけ追加するもの（チェックリスト B）:
 
-3. `docs/design.md`（現状設計 1 枚）・`docs/reference.md`・`docs/manual.md`
+3. `docs/design.md`（全体像 1 枚）・`docs/architecture.md`・
+   `docs/reference.md`・`docs/manual.md`
 
 **L1・L2 の反復で現状設計書やマニュアルを触らない。**
 これが従来プロセスで最も時間を食っていた工程であり、
