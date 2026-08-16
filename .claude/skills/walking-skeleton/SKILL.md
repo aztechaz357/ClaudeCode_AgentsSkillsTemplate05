@@ -107,7 +107,7 @@ infrastructure）に分け、外部 I/O があれば契約（Port）を **1 本�
 
 ### 7. 記録してコミットする
 
-骨組みでも **7 点セットをそろえる**（正: `agile-process/deliverables.md`）。
+骨組みでも **8 点セットをそろえる**（正: `agile-process/deliverables.md`）。
 ここで作った 2 枚（テスト結果まとめ・マニュアル）が、以降の全反復の型になる。
 
 - `docs/usdm/src/S01-<name>.html`（要求。`usdm`）
@@ -115,7 +115,7 @@ infrastructure）に分け、外部 I/O があれば契約（Port）を **1 本�
 - `docs/test-reports/S01-<name>.md`（テスト結果。`test-reporting`）
 - `docs/manual.md`（**共通 3 節** = 環境構築・実行方法・テストの実行方法
   ＋ `## S01` 節。`writing-conventions/guides/manual.md`）
-- `docs/slices/S01-<name>.md`（ハブ。7 点への索引・実績・手抜き）
+- `docs/slices/S01-<name>.md`（ハブ。8 点への索引・実績・手抜き）
 - 生成物を作る: `build_structure.py` / `check_deliverables.py` / `build_status.py`
 - バックログの S01 を `L1 動く` に、「骨組み」を「通った（S01・日付）」に更新
 - コミット（接頭辞 `骨組み:`）
@@ -124,7 +124,7 @@ infrastructure）に分け、外部 I/O があれば契約（Port）を **1 本�
 
 - [ ] E2E テストが 1 本あり、緑である（テスト先行で書いた証跡がある）
 - [ ] 4 層に分かれている（外部 I/O があれば契約 1 本を経由している）
-- [ ] **7 点セットがそろっている**（`check_deliverables.py` が 0）
+- [ ] **8 点セットがそろっている**（`check_deliverables.py` が 0）
 - [ ] マニュアルに共通 3 節があり、コマンドが実際に動く
 - [ ] プロファイルの動作確認コマンドで実物が動き、出力を貼った
 - [ ] `docs/backlog.md` の「骨組み」が「通った」になっている

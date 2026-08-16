@@ -1,6 +1,6 @@
 ---
 name: test-summarizer
-description: 7 点セットの 6 番目（テスト結果まとめ）を担当するエージェント。テストを実際に走らせ、実測の件数・仕様とテストの対応・実物の出力を docs/test-reports/S##-*.md に残し、要求の検証欄とトレース表を更新する。推測の数値は書かない。反復の段6 で使う。
+description: 8 点セットの 7 番目（テスト結果まとめ）を担当するエージェント。テストを実際に走らせ、実測の件数・仕様とテストの対応・実物の出力を docs/test-reports/S##-*.md に残し、要求の検証欄とトレース表を更新する。推測の数値は書かない。反復の段6 で使う。
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---

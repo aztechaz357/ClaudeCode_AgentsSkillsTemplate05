@@ -1,6 +1,6 @@
 ---
 name: requirement-writer
-description: 7 点セットの 1 番目（要求仕様書）だけを担当するエージェント。USDM の表で「〜したい」の要求・必須の理由・観測できる仕様を書き、トレース表の枠を用意する。実装・設計には踏み込まない。反復の最初の段で使う。
+description: 8 点セットの 1 番目（要求仕様書）だけを担当するエージェント。USDM の表で「〜したい」の要求・必須の理由・観測できる仕様を書き、トレース表の枠を用意する。実装・設計には踏み込まない。反復の最初の段で使う。
 model: opus
 tools: Read, Grep, Glob, Bash, Write, Edit, AskUserQuestion
 ---

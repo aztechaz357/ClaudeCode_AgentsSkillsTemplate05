@@ -31,7 +31,7 @@ allowed-tools: Read, Write
 
 ## 文書の置き場所
 
-反復開発の既定の文書構成。 **①〜⑦ は 7 点セット**
+反復開発の既定の文書構成。 **①〜⑦ は 8 点セット**
 （正: `agile-process/deliverables.md`）。
 
 | 文書 | パス | いつ作るか |
@@ -42,7 +42,7 @@ allowed-tools: Read, Write
 | ② 設計書（図・判断の記録） | `docs/design/S##-<name>.md` | **各スライスで必ず** |
 | ⑥ テスト結果まとめ | `docs/test-reports/S##-<name>.md` | **各スライスで必ず** |
 | ⑦ マニュアル | `docs/manual.md` | **骨組みで作り、各スライスで追記** |
-| ハブ（7 点への索引・実績・手抜き） | `docs/slices/S##-<name>.md` | 各スライスに着手するとき |
+| ハブ（8 点への索引・実績・手抜き） | `docs/slices/S##-<name>.md` | 各スライスに着手するとき |
 | 判断の記録（スライスを越えるもの） | `docs/decisions/ADR-###-<name>.md` | 2 つ以上のスライスが従う判断をしたとき |
 | 思考の記録（学習用・任意） | `docs/journal/YYYYMMDD-<slug>.md` ／ `docs/journal/commands.md` | 判断点・詰まり・節目の操作があったとき（`design-journal`） |
 | 要求一覧（生成物・gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成 |
@@ -55,9 +55,9 @@ allowed-tools: Read, Write
 | 実装前設計書（厚い経路） | `docs/design/proposals/S##-<name>.md` | 同上 |
 | 工房の成果物 | `workshop/tools/` `workshop/notes/` | 思いついたとき |
 
-**7 点セット以外は先に作らない。** `docs/design.md`・`docs/reference.md`・
+**8 点セット以外は先に作らない。** `docs/design.md`・`docs/reference.md`・
 `docs/glossary.md` は、必要になった時点で作る（空のファイルを置かない）。
-7 点セットは着手したスライスでは常にそろっているのが正常。
+8 点セットは着手したスライスでは常にそろっているのが正常。
 
 ## テストの配置
 
