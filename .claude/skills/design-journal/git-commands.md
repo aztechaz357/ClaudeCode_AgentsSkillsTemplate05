@@ -56,8 +56,27 @@ git rev-parse HEAD origin/<ブランチ>
 6194a383eaa264a38b6aee40f986d58e53408a3b
 ```
 
-**落とし穴**: `origin/<ブランチ>` は手元のキャッシュ。疑わしいときは先に
-`git fetch` してから比べる。
+**ブランチがまだリモートに無い場合は、先に push する。**
+`git branch -vv` の行に `[origin/...]` が付いていなければ未追跡:
+
+```
+git push -u origin <ブランチ>
+```
+
+実測:
+
+```
+ * [new branch]      feature_06 -> feature_06
+branch 'feature_06' set up to track 'origin/feature_06'.
+```
+
+**落とし穴**
+
+- `origin/<ブランチ>` は手元のキャッシュ。疑わしいときは先に
+  `git fetch` してから比べる
+- **未追跡のまま `gh pr create` を打たない。** `gh` が push を代行することも
+  あるが、何が上がったかを自分で確かめられなくなる。 **先に `-u` 付きで
+  push して、項目 2 のハッシュ比較を通してから PR を作る**
 
 ## 3. PR を作る
 
@@ -67,8 +86,25 @@ git rev-parse HEAD origin/<ブランチ>
 gh pr create --base main --head <ブランチ> --title "<題名>" --body-file <本文.md>
 ```
 
-実測: 未取得（次に PR を作ったときに出力を貼る）。
-成功すると PR の URL が 1 行返る。
+実測（成功すると PR の URL が 1 行だけ返る）:
+
+```
+https://github.com/<owner>/<repo>/pull/5
+```
+
+作った直後に **マージできる状態か** を見ておく（項目 5 で慌てないため）:
+
+```
+gh pr view <番号> --json number,title,baseRefName,headRefName,mergeable,mergeStateStatus,changedFiles,commits --jq '{number,title,base:.baseRefName,head:.headRefName,mergeable,state:.mergeStateStatus,files:.changedFiles,commits:(.commits|length)}'
+```
+
+実測:
+
+```
+{"base":"main","commits":21,"files":102,"head":"feature_06",
+ "mergeable":"MERGEABLE","number":5,
+ "title":"プロセス: 8 点セット・入出力の例・記入用ワークシート・設計書 3 階層"}
+```
 
 **落とし穴**
 
@@ -155,14 +191,16 @@ git branch -a
 実測:
 
 ```
- - [deleted]         (none)     -> origin/feature_05
+ - [deleted]         (none)     -> origin/feature_06
 * main
   remotes/origin/HEAD -> origin/main
   remotes/origin/main
 ```
 
 **落とし穴**: `--prune` が消すのは **参照だけ** 。
-ローカルのブランチ本体は消えないので、`git branch -d <名前>` で別に消す
+`gh pr merge --delete-branch` を **作業ブランチにいる状態で打った場合は**
+手元のブランチも消えて `main` に切り替わる（上の実測がその状態）。
+別のブランチから打ったときは手元に残るので、`git branch -d <名前>` で別に消す
 （`-d` は未マージなら拒否する安全側。`-D` は強制なので理由が無いと使わない）。
 
 ## 7. 次の作業ブランチを切る
