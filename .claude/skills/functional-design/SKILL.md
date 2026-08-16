@@ -30,7 +30,8 @@ allowed-tools: Read, Write, Edit, Bash
    `docs/requirements/S##-*.md`）—— 設計の入力
 3. `.claude/skills/layered-architecture/SKILL.md` —— 層と契約の正
 4. `.claude/skills/writing-conventions/guides/diagrams.md` —— 図の記法と見た目
-5. `docs/design.md`（現状設計。あれば）—— 既存構造との整合
+5. `docs/design.md`（全体像）と `docs/architecture.md`（層と技術選定）
+   —— 既存構造との整合。骨組み以降は必ずある（正: `architecture-design`）
 
 ## 層の扱い（クリーンアーキテクチャ）
 

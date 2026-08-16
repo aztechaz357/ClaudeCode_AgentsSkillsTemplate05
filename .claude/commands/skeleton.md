@@ -55,10 +55,10 @@ description: 端から端まで通る最も薄い経路（骨組み）を作り�
 
 骨組みでも **要求と設計を先に書く** 。ただし極端に薄く。
 
-1. `docs/usdm/src/S01-<name>.html`: 要求 1・理由 1 行・仕様 1 条
-   （`Skill('usdm')`）
-2. `docs/design/S01-<name>.md`: 構造を表す図を 1 枚 ＋ 構成 10 行 ＋
-   判断の記録（`Skill('functional-design')`）
+1. `docs/usdm/src/S01-<name>.html`: 要求 1・理由 1 行・仕様 1 条 ＋
+   **入出力と例（正常系 `N1`・異常系 `E1` を 1 行ずつ）**（`Skill('usdm')`）
+2. `docs/design/S01-<name>.md`: **入出力と例（`N1`・`E1`）** ＋
+   4 種の図 ＋ 構成 10 行 ＋ 判断の記録（`Skill('functional-design')`）
    - **ここで 4 層の骨格を決める**（presentation / application / domain /
      infrastructure）。1 層 1 ファイルでよい
    - **外部 I/O があるなら契約（Port）を 1 本だけ切る** 。
@@ -66,9 +66,16 @@ description: 端から端まで通る最も薄い経路（骨組み）を作り�
    - 無ければ切らない。切らない判断も「判断の記録」に書く
 3. 検証: `build_usdm.py` と `check_diagrams.ps1` がどちらも 0
 
-## ステップ2: E2E テストを先に書く（Red 確認）
+## ステップ2: テスト仕様書と E2E テスト（段3。Red 確認まで）
 
 **この順序は動かせない。** テストが骨組みの定義そのものになる。
+
+まず `docs/test-specs/S01-<name>.md` を書く（`Skill('test-design')`）。
+骨組みでは **観点は代表値 ＋ 失敗経路の 2 つまで** 、
+入出力の例は **`N1`・`E1` の 2 行 ＋ 必要なら 1 行** で足りる。
+**実行結果は書かない**（走らせる前の文書）。
+
+そのうえで:
 
 1. プロファイルの「統合テスト」パスに E2E テストを 1 本書く
    - 検証するのは **入口を叩いて出口を見る** ことだけ
@@ -118,7 +125,26 @@ description: 端から端まで通る最も薄い経路（骨組み）を作り�
    （コマンドはプロファイルから写し、実際に動くことを確かめる）。
    その下に `## S01 <スライス名>` を足す
 
-## ステップ6: 手抜きの記録と一式の確認（段8）
+## ステップ6: 上位 2 枚の設計書を作る（薄く）
+
+`Skill('architecture-design')` に従い、 **ここで薄く作る** 。
+L3 まで待つと、全体像を見る場所が無い状態が L1・L2 の間ずっと続く。
+
+1. `docs/design.md`（全体像）—— 雛形 `architecture-design/template.md` 。
+   **図を 1 枚 ＋ 10 行** 。図のノードは **スライス** （層ではない）
+2. `docs/architecture.md`（層と技術選定）—— 雛形
+   `architecture-design/template-architecture.md` 。
+   **図を 1 枚 ＋ 決めた理由 3 行** 。ここで書くのは
+   **なぜその層構成にしたか・契約の線引き・技術選定** だけ。
+   **層のパス一覧を複写しない** —— それは `CLAUDE.md` の層構成表が唯一の正
+3. 図を検証する:
+
+   ```
+   powershell -File .claude/tools/check_diagrams.ps1 -Path docs/design.md
+   powershell -File .claude/tools/check_diagrams.ps1 -Path docs/architecture.md
+   ```
+
+## ステップ7: 手抜きの記録と一式の確認（段8）
 
 1. `docs/slices/S01-<name>.md`（ハブ）を作り、8 点セットへのリンク・実績・
    「残した手抜き」表を埋める（`Skill('slice-definition')`）
@@ -144,6 +170,8 @@ description: 端から端まで通る最も薄い経路（骨組み）を作り�
 - [ ] プロファイルの動作確認コマンドで実物が動き、出力を貼った
 - [ ] **`check_deliverables.py` が 0**（S01 の 8 点セットがそろっている）
 - [ ] **`build_usdm.py` が 0**（理由・番号・トレースが通っている）
+- [ ] **`docs/design.md` と `docs/architecture.md` があり、図が 1 枚ずつある**
+      （`architecture.md` に層のパス一覧を複写していないこと）
 - [ ] `docs/manual.md` に共通 3 節がある（コマンドが実際に動く）
 - [ ] `docs/backlog.md` の「骨組み」が `通った` になっている
 - [ ] 残した手抜きが負債表に記録されている

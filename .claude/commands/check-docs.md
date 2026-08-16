@@ -43,7 +43,8 @@ description: バックログ・スライス文書・実物の整合を点検す�
 |---|---|---|
 | `docs/concept.md` | 常に（一行 + 完走の定義） | 重大問題 |
 | `docs/backlog.md` | 常に | 重大問題 |
-| `docs/design.md` | L3 のスライスがある場合 | L3 があれば重大問題。無ければ **正常** |
+| `docs/design.md`（全体像） | **骨組みが通っていれば常に** | 骨組み後に無ければ重大問題 |
+| `docs/architecture.md`（層と技術選定） | **骨組みが通っていれば常に** | 同左。 **層のパス一覧を複写していたら問題**（`CLAUDE.md` が正） |
 | `docs/decisions/ADR-*.md` | スライスを越える判断があった場合 | 設計書に大きな判断が埋もれていれば ADR 化を提案 |
 | `docs/reference.md` | 任意 | 作成提案（急がない） |
 | `docs/structure.md` | 常に（生成物） | 無ければ `build_structure.py` の実行を提案 |

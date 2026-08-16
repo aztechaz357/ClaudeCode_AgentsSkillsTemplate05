@@ -52,13 +52,19 @@ deliverables.md`）。レベルで変わるのは各成果物の深さだけで�
 
 | # | 成果物 | 置き場所 | 担当エージェント |
 |---|---|---|---|
-| 1 | 要求仕様書 | `docs/usdm/src/S##-*.html`（＋トレース表） | `requirement-writer` |
-| 2 | 設計書 | `docs/design/S##-*.md`（図＋判断の記録） | `designer` |
-| 3 | 単体テスト | テストルート（Red 確認まで） | `unit-tester` |
-| 4 | 実装 | ソースルート（Green まで） | `coder` |
-| 5 | 統合テスト | 統合テストルート | `integration-tester` |
-| 6 | テスト結果まとめ | `docs/test-reports/S##-*.md` | `test-summarizer` |
-| 7 | マニュアル | `docs/manual.md`（共通 3 節＋`## S##`） | `manual-writer` |
+| 1 | 要求仕様書 | `docs/usdm/src/S##-*.html`（入出力＋例＋トレース表） | `requirement-writer` |
+| 2 | 設計書 | `docs/design/S##-*.md`（入出力＋4 種の図＋判断の記録） | `designer` |
+| 3 | **テスト仕様書** | `docs/test-specs/S##-*.md`（観点＋入出力の例） | `test-designer` |
+| 4 | 単体テスト | テストルート（Red 確認まで） | `unit-tester` |
+| 5 | 実装 | ソースルート（Green まで） | `coder` |
+| 6 | 統合テスト | 統合テストルート | `integration-tester` |
+| 7 | テスト結果まとめ | `docs/test-reports/S##-*.md`（実測のみ） | `test-summarizer` |
+| 8 | マニュアル | `docs/manual.md`（共通 3 節＋`## S##`） | `manual-writer` |
+
+**要求・設計・テスト仕様の 3 枚には、同じ書式の入出力表を置きます。**
+正常系 `N##` と異常系 `E##` の ID を 3 文書で共有し、粒度だけを変える
+（要求は利用者の言葉、設計は型と層、テスト仕様は実際の値）。
+仕様文を 10 行読むより、具体例 2 行のほうが速く正確に伝わるためです。
 
 そろっているかは目視で数えず、終了コードで判定します:
 
@@ -138,17 +144,17 @@ deliverables.md`）。レベルで変わるのは各成果物の深さだけで�
 |---|---|---|
 | ゴール定義 | `docs/concept.md`（一行 + 完走の定義） | concept-definition |
 | バックログ | `docs/backlog.md`（スライス 3〜8 本） | agile-process |
-| 骨組み | 8 点セット（S01）＋ 4 層と契約 1 本 | walking-skeleton |
-| 反復 段1 | `docs/usdm/src/S##-*.html`（要求・理由・仕様） | usdm / requirement-writer |
-| 反復 段2 | `docs/design/S##-*.md`（図・層・契約・判断の記録） | functional-design / designer |
-| 反復 段3 | 単体テスト（Red 確認まで） | development-guidelines / unit-tester |
+| 骨組み | 8 点セット（S01）＋ 4 層と契約 1 本 ＋ **`docs/design.md`・`docs/architecture.md`** | walking-skeleton / architecture-design |
+| 反復 段1 | `docs/usdm/src/S##-*.html`（要求・理由・仕様・入出力と例） | usdm / requirement-writer（＋ **intake**） |
+| 反復 段2 | `docs/design/S##-*.md`（入出力・図・層・契約・判断の記録） | functional-design / designer（＋ **intake**） |
+| 反復 段3 | **`docs/test-specs/S##-*.md`** ＋ 単体テスト（Red 確認まで） | test-design / test-designer → unit-tester |
 | 反復 段4 | 実装（Green まで）・マイクロコミット | layered-architecture / coder |
 | 反復 段5 | E2E テスト・実物の出力 | integration-tester |
 | 反復 段6 | `docs/test-reports/S##-*.md` | test-reporting / test-summarizer |
 | 反復 段7 | `docs/manual.md` の `## S##` 節 | writing-conventions / manual-writer |
 | 反復 段8 | 目標レベルの合否・記録の同期 | implementation-validator / doc-syncer |
 | リファクタリング | `整理:` コミット群・負債の `済` | refactoring / refactorer |
-| L3 へ（渡すとき） | `docs/design.md` へ統合・マニュアルの深化 | architecture-design / doc-syncer（B） |
+| L3 へ（渡すとき） | `docs/design.md`（全体像）へ統合・`docs/architecture.md` の技術選定を埋める・マニュアルの深化 | architecture-design / doc-syncer（B） |
 | 厚い経路（例外） | 網羅した要求仕様書 + 設計書 + tasklist | requirements-definition / functional-design |
 | 振り返り | プロセス改善提案 | steering（振り返りモード） |
 
@@ -186,6 +192,7 @@ REQ2「列を指定して絞り込みたい」
 | `/backlog [init\|status\|次]` | 反復開発 | ゴールとスライス一覧・現在地・次の一手 |
 | `/skeleton` | 反復開発 | 骨組みを作り切る（1 回だけ） |
 | `/iterate [S##]` | 反復開発 | **既定の入口** 。8 点セットをそろえ成熟度を 1 段上げる |
+| `/intake [要求\|設計\|作る]` | 反復開発 | **ユーザーが自分の言葉で書く用紙** を用意し、記入済みのものを回収して深掘りする（理由・非目標・異常系） |
 | `/status` | 反復開発 | **現在地を 1 画面に** （ゴール・充足・負債・直近の作業） |
 | `/arch [diff\|actual]` | 反復開発 | **設計と実装の乖離を図で見る**（未実装 = 灰 / 設計に無い = 黄 / 逆流 = 赤） |
 | `/catchup [ref]` | 共通 | **決まったことに追いつく** （後戻りコストの高い順＋読む順。既読地点は `.steering/last-reviewed`） |
@@ -210,7 +217,7 @@ REQ2「列を指定して絞り込みたい」
 | 種別 | エージェント |
 |---|---|
 | 指揮 | `orchestrator`（バックログから次の一手を 1 つ決める） |
-| **8 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → （`test-designer`）→ `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
+| **8 点セットの担当（段1〜7）** | `requirement-writer` → `designer` → `test-designer` → `unit-tester` → `coder` → `integration-tester` → `test-summarizer` → `manual-writer` |
 | 調査 | `impact-analyzer`・`file-finder`・`dependency-checker`・`log-analyzer` |
 | 整理 | `refactorer`（振る舞い不変で負債を返す） |
 | 実行 | `test-runner`・`build-executor` |
@@ -251,7 +258,8 @@ REQ2「列を指定して絞り込みたい」
 | `concept-definition` | 反復開発 | ゴールと完走の定義 |
 | **`steering`** | 反復開発 | **役割間の受け渡し** ・タスク管理・節目報告・振り返り |
 | `requirements-definition` | 厚い経路 | 網羅した要求仕様書（既定ではない） |
-| `architecture-design` | L3 のみ | 現状設計（`docs/design.md` 1 枚） |
+| `architecture-design` | 骨組み以降 | **設計書 3 階層の上位 2 枚**（全体像 `docs/design.md` ／ アーキテクチャ `docs/architecture.md`）。骨組みで薄く作り、L3 で仕上げる |
+| **`intake`** | 反復開発 | **ユーザーが自分の言葉で書く記入用ワークシート**（`.steering/<反復>/intake/`）。理由・非目標・異常系を受ける |
 | `glossary-creation` | 共通 | 用語集（必要になったら） |
 | `architecture-drift` | 反復開発 | 設計図と実装の乖離（3 種）の意味・図の id 規約・成熟度ごとの許容 |
 | `option-first` | 共通 | 判断点でだけ選択肢を出す（3〜4 択・推奨を先頭・選ばないとどうなるか） |
