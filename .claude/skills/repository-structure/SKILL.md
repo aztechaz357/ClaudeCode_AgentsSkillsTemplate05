@@ -48,7 +48,8 @@ allowed-tools: Read, Write
 | 要求一覧（生成物・gitignore） | `docs/usdm/index.html` | `build_usdm.py` が生成 |
 | ディレクトリ構成（生成物） | `docs/structure.md` | `build_structure.py` が生成 |
 | 現在地の 1 画面（生成物・gitignore） | `docs/status.html` | `build_status.py` が生成 |
-| 現状設計（1 枚） | `docs/design.md` | **L3 に上げるときだけ** |
+| 全体像（1 枚） | `docs/design.md` | **骨組みで作る** 。以降スライスが増えたら索引に 1 行 |
+| アーキテクチャ（1 枚） | `docs/architecture.md` | **骨組みで作る** 。判断が増えたときだけ追記 |
 | リファレンス | `docs/reference.md` | L3。無くてもよい |
 | 用語集 | `docs/glossary.md` | 用語の齟齬が実際に起きたとき |
 | 要求仕様書（厚い経路） | `docs/requirements/S##-<name>.md` | `/add-feature` のときだけ |

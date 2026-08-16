@@ -108,14 +108,27 @@ infrastructure）に分け、外部 I/O があれば契約（Port）を **1 本�
 ### 7. 記録してコミットする
 
 骨組みでも **8 点セットをそろえる**（正: `agile-process/deliverables.md`）。
-ここで作った 2 枚（テスト結果まとめ・マニュアル）が、以降の全反復の型になる。
+ここで作った枚数が、以降の全反復の型になる。
 
-- `docs/usdm/src/S01-<name>.html`（要求。`usdm`）
-- `docs/design/S01-<name>.md`（設計。構造を表す図と判断の記録。`functional-design`）
+- `docs/usdm/src/S01-<name>.html`（要求。 **入出力と `N1`・`E1`** を含む。`usdm`）
+- `docs/design/S01-<name>.md`（設計。入出力・4 種の図・判断の記録。`functional-design`）
+- `docs/test-specs/S01-<name>.md`（テスト仕様。観点と入出力の例。`test-design`）
 - `docs/test-reports/S01-<name>.md`（テスト結果。`test-reporting`）
 - `docs/manual.md`（**共通 3 節** = 環境構築・実行方法・テストの実行方法
   ＋ `## S01` 節。`writing-conventions/guides/manual.md`）
 - `docs/slices/S01-<name>.md`（ハブ。8 点への索引・実績・手抜き）
+
+**上位 2 枚もここで薄く作る**（正: `architecture-design`）。
+L3 まで待つと、全体像を見る場所が無い状態が L1・L2 の間ずっと続く。
+
+- `docs/design.md`（全体像。 **図を 1 枚 ＋ 10 行** 。雛形は
+  `architecture-design/template.md`）
+- `docs/architecture.md`（層と技術選定。 **図を 1 枚 ＋ 決めた理由 3 行** 。
+  雛形は `architecture-design/template-architecture.md`）
+  —— **層のパス一覧を書かない** 。それは `CLAUDE.md` が正
+
+仕上げ:
+
 - 生成物を作る: `build_structure.py` / `check_deliverables.py` / `build_status.py`
 - バックログの S01 を `L1 動く` に、「骨組み」を「通った（S01・日付）」に更新
 - コミット（接頭辞 `骨組み:`）
@@ -125,6 +138,8 @@ infrastructure）に分け、外部 I/O があれば契約（Port）を **1 本�
 - [ ] E2E テストが 1 本あり、緑である（テスト先行で書いた証跡がある）
 - [ ] 4 層に分かれている（外部 I/O があれば契約 1 本を経由している）
 - [ ] **8 点セットがそろっている**（`check_deliverables.py` が 0）
+- [ ] **`docs/design.md` と `docs/architecture.md` があり、図が 1 枚ずつある**
+      （`architecture.md` に層のパス一覧を複写していないこと）
 - [ ] マニュアルに共通 3 節があり、コマンドが実際に動く
 - [ ] プロファイルの動作確認コマンドで実物が動き、出力を貼った
 - [ ] `docs/backlog.md` の「骨組み」が「通った」になっている
