@@ -21,8 +21,65 @@
   <span class="badge">機能要求</span>
   ハブ: <a href="../../slices/S{番号}-{name}.md">docs/slices/S{番号}-{name}.md</a>
   ｜ 設計書: <a href="../../design/S{番号}-{name}.md">docs/design/S{番号}-{name}.md</a>
+  ｜ テスト仕様: <a href="../../test-specs/S{番号}-{name}.md">docs/test-specs/S{番号}-{name}.md</a>
   ｜ テスト結果: <a href="../../test-reports/S{番号}-{name}.md">docs/test-reports/S{番号}-{name}.md</a>
 </p>
+
+<!--
+  ── 入出力と例 ─────────────────────────────────────────
+  **要求表より先に、ここを埋める。** 仕様文を 10 行読むより、
+  具体例 2 行のほうが「何をするものか」が速く正確に伝わる。
+
+  書式と ID の規約の正は
+  .claude/skills/agile-process/deliverables.md の
+  「入出力と例（正常系・異常系）」。要点:
+
+    - ここでは **利用者から見た言葉** で書く（型・クラス名を出さない）
+    - 例は **N1 と E1 の 2 行だけ** 。増やすのはテスト仕様書の仕事
+    - 同じ ID が設計書・テスト仕様書の同じケースを指す（粒度だけが違う）
+    - 「入力なし」ではなく「引数なし・標準入力なし」と書く
+    - **異常系（E1）を空にしない。** 決まっていないなら、それは要求の穴
+-->
+<h2 class="io-title">入出力</h2>
+<div class="scroll">
+<table class="io">
+<colgroup><col style="width:7rem"><col></colgroup>
+<tbody>
+<tr><th>入力</th><td>{使う人が何を渡すか。ファイル・引数・画面の操作。
+  無いなら「引数なし・標準入力なし」}</td></tr>
+<tr><th>出力</th><td>{使う人が何を受け取るか。画面の表示・作られるファイル。
+  無いなら「画面表示なし ／ 正常終了のみ」}</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 class="io-title">例（正常系・異常系）</h2>
+<div class="scroll">
+<table class="io-cases">
+<colgroup>
+  <col style="width:4rem"><col style="width:5rem"><col><col><col style="width:12rem">
+</colgroup>
+<thead>
+<tr><th>ID</th><th>種別</th><th>入力</th><th>期待する出力</th><th>備考</th></tr>
+</thead>
+<tbody>
+<tr class="normal">
+  <td class="id">N1</td>
+  <td class="kind">正常系</td>
+  <td class="input">{うまくいく入力の例（利用者の言葉で）}</td>
+  <td class="output">{そのとき何が見えるか（観測できる形で）}</td>
+  <td class="note"></td>
+</tr>
+<tr class="error">
+  <td class="id">E1</td>
+  <td class="kind">異常系</td>
+  <td class="input">{最も起きやすい失敗の例}</td>
+  <td class="output">{そのとき何が見えるか。メッセージの文言まで書く}</td>
+  <td class="note">{止まるのか続くのか}</td>
+</tr>
+</tbody>
+</table>
+</div>
 
 <!--
   記法の正は .claude/skills/usdm/SKILL.md 。

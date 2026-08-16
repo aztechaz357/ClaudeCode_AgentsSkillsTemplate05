@@ -49,6 +49,23 @@ table.usdm th,table.usdm td{border:1px solid var(--line);padding:.35rem .6rem;
  vertical-align:top;text-align:left}
 table.usdm thead th{background:var(--head);white-space:nowrap;font-size:.85rem}
 
+/* 入出力と例（正常系・異常系）。要求表より先に読ませる 2 枚。
+   仕様文より具体例のほうが速く伝わるので、上に置いて目立たせる。 */
+.io-title{font-size:.95rem;margin:1.4rem 0 .5rem;color:var(--muted)}
+table.io,table.io-cases{border-collapse:collapse;width:100%;
+ background:var(--card);font-size:.88rem}
+table.io-cases{min-width:46rem}
+table.io th,table.io td,table.io-cases th,table.io-cases td{
+ border:1px solid var(--line);padding:.35rem .6rem;vertical-align:top;text-align:left}
+table.io th{background:var(--head);white-space:nowrap;width:7rem}
+table.io-cases thead th{background:var(--head);white-space:nowrap;font-size:.82rem}
+table.io-cases td.id{white-space:nowrap;color:var(--accent);font-weight:600;
+ font-family:ui-monospace,Consolas,"Cascadia Mono",monospace}
+table.io-cases td.kind{white-space:nowrap;font-weight:600}
+table.io-cases tr.normal td.kind{color:var(--ok)}
+table.io-cases tr.error td.kind{color:var(--todo)}
+table.io-cases tr.error{background:var(--req)}
+
 /* トレース表（仕様 → 設計 / 実装 / 単体 / 統合 / マニュアル）。
    要求表とは別の表にして、要求表の読みやすさを保つ。 */
 .trace-title{font-size:.95rem;margin:1.1rem 0 .5rem;color:var(--muted)}
