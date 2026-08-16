@@ -30,6 +30,7 @@
       "Skill(verifiable-claims)",
       "Skill(visual-debugging)",
       "Skill(drawio)",
+      "Skill(intake)",
       "Bash(git rev-list:*)",
       "PowerShell(git rev-list:*)",
       "Bash(gh auth status:*)",
