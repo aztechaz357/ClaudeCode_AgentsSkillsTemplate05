@@ -1,13 +1,16 @@
-# 現状設計書 更新ガイド
+# 全体像・アーキテクチャ 更新ガイド
+
+上位 2 枚（`docs/design.md` = 全体像、`docs/architecture.md` = 層と技術選定）を
+書き足すときの細則。 **どちらに何を書くかの正は同じスキルの `SKILL.md`** 。
 
 ## 図の使い分け
 
 | 図 | 使いどころ | 主に使う文書 |
 |---|---|---|
-| クラス図（classDiagram） | 契約の継承関係・エンティティの構造 | domain 層設計書 |
-| シーケンス図（sequenceDiagram） | ユースケースの協調・注入されたオブジェクトのやり取り | application 層設計書・設計書（proposal） |
-| フローチャート（flowchart） | 入力ループ・エントリポイントの分岐 | presentation 層・配線箇所 |
-| コンポーネント図（graph） | 層・パッケージ間の依存（全体像） | `docs/design.md` の冒頭 |
+| クラス図（classDiagram） | 契約の継承関係・エンティティの構造 | 設計書（`docs/design/S##-*.md`） |
+| シーケンス図（sequenceDiagram） | ユースケースの協調・注入されたオブジェクトのやり取り | 設計書 ／ 実装前設計書（`proposals/`） |
+| フローチャート（flowchart） | 入力ループ・エントリポイントの分岐 | 設計書 ／ 全体像（`docs/design.md`）の全体の流れ |
+| コンポーネント図（graph） | 層・パッケージ間の依存 | アーキテクチャ（`docs/architecture.md`）の冒頭 |
 
 - 1つの変更で図を増やしすぎない。既存の図に要素を足すのが基本
 - 図が読めなくなってきたら分割ではなく **抽象度を上げる**（クラス単位 →
@@ -38,9 +41,12 @@
 
 ## よくある更新パターン
 
+断りがなければ更新先は `docs/architecture.md` 。
+**契約（Port）は application に置く** （正は `CLAUDE.md` の層構成表）。
+
 | 実装内容 | 更新箇所 |
 |---|---|
-| 新しい契約（インタフェース）追加 | domain のクラス図と契約一覧表、infrastructure の対応表 |
+| 新しい契約（インタフェース）追加 | application の契約一覧表とクラス図、infrastructure の対応表 |
 | 契約の実装クラス追加 | infrastructure の契約→実装対応表（必要なら横断方針も） |
 | デコレータ追加 | infrastructure のデコレータ図、Composition Root の包み順の決定事項 |
 | 共有状態追加 | domain（契約）、infrastructure（実装）、Composition Root（注入の配線表） |

@@ -54,9 +54,10 @@ _MATURITY = re.compile(r"L([0-3])")
 # Issue タイトルの接頭辞。ここだけが対応付けの鍵
 _PREFIX = re.compile(r"^\s*([SD][0-9]+)\s*[:：]")
 
-SEVEN = (
+EIGHT = (
     ("要求仕様書", "docs/usdm/src/{key}-*.html"),
     ("設計書", "docs/design/{key}-*.md"),
+    ("テスト仕様書", "docs/test-specs/{key}-*.md"),
     ("単体テスト", "テストルート"),
     ("実装", "ソースルート"),
     ("統合テスト", "統合テストルート"),
@@ -198,7 +199,7 @@ def build_body(row: Row) -> str:
         row: バックログの 1 行。
 
     Returns:
-        Markdown の本文。7 点セットのチェックリストと、正の所在を必ず含む。
+        Markdown の本文。8 点セットのチェックリストと、正の所在を必ず含む。
     """
     if row.kind == "debt":
         source = row.cells[1] if len(row.cells) > 1 else "—"
@@ -212,13 +213,13 @@ def build_body(row: Row) -> str:
         )
 
     checklist = "\n".join(
-        f"- [ ] {name} —— {where.format(key=row.key)}" for name, where in SEVEN
+        f"- [ ] {name} —— {where.format(key=row.key)}" for name, where in EIGHT
     )
     return (
         f"## {row.key} {row.name}\n\n"
         f"- 現在の成熟度: L{row.maturity}\n"
         f"- 次の反復で上げる先: L{min(row.maturity + 1, 3)}\n\n"
-        f"### 成果物 7 点セット\n\n{checklist}\n\n"
+        f"### 成果物 8 点セット\n\n{checklist}\n\n"
         f"### リンク\n\n"
         f"- バックログ: `docs/backlog.md`\n"
         f"- ハブ: `docs/slices/{row.key}-*.md`\n\n"
@@ -230,7 +231,7 @@ def build_body(row: Row) -> str:
 # ローカルチケット（使用: local）
 #
 # 置き場所はハブ（docs/slices/S##-*.md）の「## チケット」節。
-# 新しいファイルを作らないのは、ハブが既に 7 点セットの索引であり、
+# 新しいファイルを作らないのは、ハブが既に 8 点セットの索引であり、
 # 別ファイルを立てると同じ内容が 2 か所に並んで必ずずれるため。
 # GitHub Issue がハブに足しているのは 状態・目標・履歴 の 3 つだけなので、
 # その 3 つを節として足す。

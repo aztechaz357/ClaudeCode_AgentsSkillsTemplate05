@@ -65,7 +65,7 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 
 - 要求仕様書・設計書・`.steering/` ノートの作成
 - 層構成（domain / application / …）への配置
-- 統合テスト・現状設計書・リファレンス・`docs/manual.md` の更新
+- 統合テスト・全体像・リファレンス・`docs/manual.md` の更新
 - `.claude/tools/` への追加 —— そちらは開発プロセス自体の道具であり、
   `tool-authoring` スキルの領分。工房で作ったものがそれだと分かったら報告する
 
