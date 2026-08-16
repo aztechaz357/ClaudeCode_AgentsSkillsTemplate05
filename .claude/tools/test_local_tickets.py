@@ -1,4 +1,4 @@
-﻿"""sync_issues.py のローカルチケット（使用: local）のテスト。
+"""sync_issues.py のローカルチケット（使用: local）のテスト。
 
 ローカルチケットは **ハブ（docs/slices/S##-*.md）を書き換える** ので、
 「履歴を消さないこと」と「2 回流しても差分が出ないこと」を固定する。
@@ -42,7 +42,7 @@ BACKLOG = """\
 HUB = """\
 # S02 CSV のフィルタ
 
-## 7 点セット
+## 8 点セット
 
 - 要求仕様書: docs/usdm/src/S02-csv.html
 """
@@ -109,7 +109,7 @@ class ReadTicketTest(unittest.TestCase):
             HUB, sync_issues.build_ticket_section(row, "2026-08-14")
         )
         self.assertLess(text.index("# S02"), text.index("## チケット"))
-        self.assertLess(text.index("## チケット"), text.index("## 7 点セット"))
+        self.assertLess(text.index("## チケット"), text.index("## 8 点セット"))
 
     def test_ticket_goes_under_the_title_with_bom(self) -> None:
         """BOM 付き UTF-8 のハブでも、節が題名より上に入らない。

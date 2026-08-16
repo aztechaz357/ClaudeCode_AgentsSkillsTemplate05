@@ -337,12 +337,19 @@ class ForgeTest(unittest.TestCase):
 class BodyTest(unittest.TestCase):
     """Issue 本文（雛形の正はこのツールにだけ置く）。"""
 
-    def test_slice_body_has_seven_deliverables(self) -> None:
-        """スライスの本文に 7 点セットのチェックリストが入る。"""
+    def test_slice_body_has_eight_deliverables(self) -> None:
+        """スライスの本文に 8 点セットのチェックリストが入る。"""
         row = {row.key: row for row in sync_issues.parse_backlog(BACKLOG)}["S02"]
         body = sync_issues.build_body(row)
-        for item in ("要求仕様書", "設計書", "単体テスト", "実装", "統合テスト", "テスト結果", "マニュアル"):
+        for item in ("要求仕様書", "設計書", "テスト仕様書", "単体テスト", "実装",
+                     "統合テスト", "テスト結果", "マニュアル"):
             self.assertIn(item, body)
+
+    def test_slice_body_orders_test_spec_before_unit_test(self) -> None:
+        """テスト仕様書は単体テストより前に並ぶ（書く順序がそのまま出る）。"""
+        row = {row.key: row for row in sync_issues.parse_backlog(BACKLOG)}["S02"]
+        body = sync_issues.build_body(row)
+        self.assertLess(body.index("テスト仕様書"), body.index("単体テスト"))
 
     def test_body_states_backlog_is_the_source(self) -> None:
         """本文に「正はバックログ」と明記する（二重管理の防止）。"""
